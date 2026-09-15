@@ -1,3 +1,4 @@
+import os
 import subprocess
 import sys
 import json
@@ -14,7 +15,14 @@ def get_base_dir():
 
 BASE_DIR         = get_base_dir()
 API_CONFIG_PATH  = BASE_DIR / "config" / "api_keys.json"
-PROJECTS_DIR     = Path.home() / "Desktop" / "JarvisProjects"
+def _projects_dir() -> Path:
+    desktop = Path.home() / "Desktop"
+    if desktop.is_dir():
+        return desktop / "JarvisProjects"
+    return Path.home() / "Documents" / "JarvisProjects"
+
+
+PROJECTS_DIR     = _projects_dir()
 MAX_FIX_ATTEMPTS = 5
 MODEL_PLANNER    = "gemini-flash-latest"
 MODEL_WRITER     = "gemini-flash-latest"
@@ -270,25 +278,50 @@ def _install_dependencies(dependencies: list[str], project_dir: Path) -> str:
         return f"Install error (non-fatal): {e}"
 
 def _open_vscode(project_dir: Path) -> bool:
-    vscode_candidates = [
-        "code",
-        rf"C:\Users\{Path.home().name}\AppData\Local\Programs\Microsoft VS Code\bin\code.cmd",
-        r"C:\Program Files\Microsoft VS Code\bin\code.cmd",
-    ]
-    for cmd in vscode_candidates:
-        try:
-            subprocess.Popen(
-                [cmd, str(project_dir)],
-                shell=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
-            time.sleep(1.5)
-            print(f"[DevAgent] 💻 VSCode opened: {project_dir}")
-            return True
-        except Exception:
-            continue
-    return False
+    import shutil
+
+    # Cross-platform VS Code candidates: try shutil.which first,
+    # then fall back to known paths per OS.
+    candidates: list[str] = ["code"]
+
+    if os.name == "nt":
+        candidates += [
+            rf"C:\Users\{Path.home().name}\AppData\Local\Programs\Microsoft VS Code\bin\code.cmd",
+            r"C:\Program Files\Microsoft VS Code\bin\code.cmd",
+            r"C:\Program Files (x86)\Microsoft VS Code\bin\code.cmd",
+        ]
+    elif sys.platform == "darwin":
+        candidates += [
+            r"/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code",
+        ]
+
+    executable = shutil.which(candidates[0]) if shutil.which else None
+    if not executable:
+        # Fall back to Path.exists() for absolute paths in the list
+        for c in candidates:
+            path = Path(c)
+            if path.exists():
+                executable = str(path)
+                break
+
+    if not executable:
+        return False
+
+    # Use shell=True only for .cmd/.bat executables
+    use_shell = executable.lower().endswith((".cmd", ".bat"))
+
+    try:
+        subprocess.Popen(
+            [executable, str(project_dir)],
+            shell=use_shell,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+        time.sleep(1.5)
+        print(f"[DevAgent] 💻 VSCode opened: {project_dir}")
+        return True
+    except Exception:
+        return False
 
 def _run_project(run_command: str, project_dir: Path, timeout: int = 30) -> str:
     print(f"[DevAgent] 🚀 Running: {run_command}")

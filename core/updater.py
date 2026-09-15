@@ -71,6 +71,6 @@ def apply_update_and_restart():
         
         print("[Updater] Update applied successfully. Restarting application...")
         # Restart the app
-        os.execv(sys.executable, ['python'] + sys.argv)
+        os.execv(sys.executable, [sys.executable] + sys.argv)
     except Exception as e:
         print(f"[Updater] Failed to apply update: {e}")

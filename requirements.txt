@@ -6,24 +6,21 @@ requests
 python-kasa
 beautifulsoup4
 duckduckgo-search
-playwright          
+playwright
 pyautogui
 pyperclip
-pygetwindow       
+pygetwindow
 opencv-python
 numpy
 mediapipe
 mss
-Pillow
 psutil
-comtypes
-pycaw               
+comtypes; sys_platform == "win32"
+pycaw; sys_platform == "win32"
 instagrapi
-win10toast          
 send2trash
 youtube-transcript-api
-pywinauto
-pyaudio
+pywinauto; sys_platform == "win32"
 openpyxl
 python-pptx
 python-docx

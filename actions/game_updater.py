@@ -5,12 +5,29 @@ import json
 import time
 import subprocess
 import threading
-import winreg
 from pathlib import Path
 from datetime import datetime
 
+try:
+    import winreg
+except ImportError:
+    winreg = None
+
 
 def _find_steam_path() -> Path | None:
+    if winreg is None:
+        steam_dirs = [
+            Path.home() / ".steam" / "debian-installation",
+            Path.home() / ".steam" / "steam",
+            Path.home() / ".local" / "share" / "Steam",
+            Path("/usr/share/games/steam"),
+            Path("/Applications/Steam.app/Contents/MacOS"),
+        ]
+        exe_names = ("steam.exe", "steam") if os.name == "nt" else ("steam",)
+        for p in steam_dirs:
+            if p.exists() and any((p / name).exists() for name in exe_names):
+                return p
+        return None
     registry_keys = [
         (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\WOW6432Node\Valve\Steam"),
         (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Valve\Steam"),
@@ -37,6 +54,20 @@ def _find_steam_path() -> Path | None:
 
 
 def _find_epic_path() -> Path | None:
+    if winreg is None:
+        # Linux/macOS common locations
+        epic_dirs = [
+            Path.home() / ".local" / "share" / "legendary",
+            Path.home() / ".config" / "legendary",
+            Path("/usr/share/legendary"),
+            Path("/Applications/Epic Games Launcher.app/Contents/MacOS"),
+            Path.home() / "Applications" / "Epic Games Launcher.app" / "Contents" / "MacOS",
+            Path.home() / ".wine" / "drive_c" / "Program Files" / "Epic Games" / "Launcher" / "Portal" / "Binaries" / "Win64",
+        ]
+        for p in epic_dirs:
+            if p.exists() and any((p / name).exists() for name in ("EpicGamesLauncher.exe", "legendary")):
+                return p
+        return None
     registry_keys = [
         (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\WOW6432Node\EpicGames\EpicGamesLauncher"),
         (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\EpicGames\EpicGamesLauncher"),

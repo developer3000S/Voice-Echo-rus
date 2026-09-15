@@ -593,27 +593,33 @@ def _quote_cmd_arg(path: str) -> str:
     return f'"{path}"'
 
 
+def _pythonw_candidates() -> list[Path]:
+    """Windows GUI interpreter candidates, in preference order."""
+    cands: list[Path] = []
+    if os.name == "nt":
+        cands.append(BASE_DIR / ".venv" / "Scripts" / "pythonw.exe")
+        local = os.environ.get("LOCALAPPDATA", "")
+        if local:
+            cands.append(Path(local) / "Programs" / "Python" / "Python313" / "pythonw.exe")
+            cands.append(Path(local) / "Programs" / "Python" / "Python312" / "pythonw.exe")
+            cands.append(Path(local) / "Programs" / "Python" / "Python311" / "pythonw.exe")
+    return [c for c in cands if c.exists()]
+
+
 def _hidden_launch_args(*extra_args: str) -> list[str]:
-    pythonw = Path(r"C:\Users\ravit\AppData\Local\Programs\Python\Python313\pythonw.exe")
-    python = Path(sys.executable)
     main_py = BASE_DIR / "main.py"
     if getattr(sys, "frozen", False):
-        exe = Path(sys.executable)
-        return [str(exe), *extra_args]
-    if pythonw.exists():
+        return [str(Path(sys.executable)), *extra_args]
+    for pythonw in _pythonw_candidates():
         return [str(pythonw), str(main_py), *extra_args]
-    return [str(python), str(main_py), *extra_args]
+    return [str(Path(sys.executable)), str(main_py), *extra_args]
 
 def _startup_run_value() -> str:
     if getattr(sys, "frozen", False):
         exe = Path(sys.executable)
         return f'{_quote_cmd_arg(str(exe))} --startup'
     main_py = BASE_DIR / "main.py"
-    venv_pythonw = BASE_DIR / ".venv" / "Scripts" / "pythonw.exe"
-    pythonw = Path(r"C:\Users\ravit\AppData\Local\Programs\Python\Python313\pythonw.exe")
-    if venv_pythonw.exists():
-        return f'{_quote_cmd_arg(str(venv_pythonw))} {_quote_cmd_arg(str(main_py))} --startup'
-    if pythonw.exists():
+    for pythonw in _pythonw_candidates():
         return f'{_quote_cmd_arg(str(pythonw))} {_quote_cmd_arg(str(main_py))} --startup'
     return f'{_quote_cmd_arg(sys.executable)} {_quote_cmd_arg(str(main_py))} --startup'
 
@@ -2286,7 +2292,12 @@ class ArtifactCard(QFrame):
         if not self._path or not Path(self._path).exists():
             return
         try:
-            os.startfile(self._path)
+            if platform.system() == "Windows":
+                os.startfile(self._path)
+            elif sys.platform == "darwin":
+                subprocess.Popen(["open", self._path])
+            else:
+                subprocess.Popen(["xdg-open", str(self._path)])
         except Exception:
             pass
 
@@ -2296,8 +2307,10 @@ class ArtifactCard(QFrame):
         try:
             if platform.system() == "Windows":
                 subprocess.Popen(["explorer", "/select,", self._path])
+            elif sys.platform == "darwin":
+                subprocess.Popen(["open", "-R", self._path])
             else:
-                os.startfile(str(Path(self._path).parent))
+                subprocess.Popen(["xdg-open", str(Path(self._path).parent)])
         except Exception:
             pass
 
@@ -8921,13 +8934,23 @@ class SystemConnectivitySidebar(QFrame):
 
     def _open_data_folder(self):
         try:
-            os.startfile(str(CONFIG_DIR))
+            if platform.system() == "Windows":
+                os.startfile(str(CONFIG_DIR))
+            elif sys.platform == "darwin":
+                subprocess.Popen(["open", str(CONFIG_DIR)])
+            else:
+                subprocess.Popen(["xdg-open", str(CONFIG_DIR)])
         except Exception:
             pass
 
     def _view_logs(self):
         try:
-            os.startfile(str(BASE_DIR))
+            if platform.system() == "Windows":
+                os.startfile(str(BASE_DIR))
+            elif sys.platform == "darwin":
+                subprocess.Popen(["open", str(BASE_DIR)])
+            else:
+                subprocess.Popen(["xdg-open", str(BASE_DIR)])
         except Exception:
             pass
 
@@ -9976,13 +9999,23 @@ class SystemConnectivityPage(QWidget):
 
     def _open_data_folder(self):
         try:
-            os.startfile(str(CONFIG_DIR))
+            if platform.system() == "Windows":
+                os.startfile(str(CONFIG_DIR))
+            elif sys.platform == "darwin":
+                subprocess.Popen(["open", str(CONFIG_DIR)])
+            else:
+                subprocess.Popen(["xdg-open", str(CONFIG_DIR)])
         except Exception:
             pass
 
     def _view_logs(self):
         try:
-            os.startfile(str(BASE_DIR))
+            if platform.system() == "Windows":
+                os.startfile(str(BASE_DIR))
+            elif sys.platform == "darwin":
+                subprocess.Popen(["open", str(BASE_DIR)])
+            else:
+                subprocess.Popen(["xdg-open", str(BASE_DIR)])
         except Exception:
             pass
 
@@ -10087,6 +10120,9 @@ class SystemConnectivityPage(QWidget):
             import shutil
             import subprocess
             from pathlib import Path
+
+            if platform.system() != "Windows":
+                return False, "Desktop .lnk shortcuts are only supported on Windows."
             import winreg
             
             # Find the correct Desktop folder path using registry (OneDrive safe!)

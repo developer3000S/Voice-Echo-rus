@@ -5,6 +5,7 @@ import os
 import platform
 import re
 import sqlite3
+import subprocess
 import tempfile
 import threading
 import time
@@ -262,6 +263,8 @@ def _window_pid(hwnd: int) -> int:
 
 def _enum_visible_windows() -> list[dict]:
     results: list[dict] = []
+    if os.name != "nt":
+        return results
     user32 = ctypes.windll.user32
     enum_proc = ctypes.WINFUNCTYPE(ctypes.c_bool, wintypes.HWND, wintypes.LPARAM)
 
@@ -320,14 +323,15 @@ def set_speech_sink(sink: Callable[[str], None] | None) -> None:
 def _cleanup_current_audio() -> None:
     global _current_player_alias, _current_audio_path
     if _current_player_alias is not None:
-        try:
-            ctypes.windll.winmm.mciSendStringW(f"stop {_current_player_alias}", None, 0, None)
-        except Exception:
-            pass
-        try:
-            ctypes.windll.winmm.mciSendStringW(f"close {_current_player_alias}", None, 0, None)
-        except Exception:
-            pass
+        if os.name == "nt":
+            try:
+                ctypes.windll.winmm.mciSendStringW(f"stop {_current_player_alias}", None, 0, None)
+            except Exception:
+                pass
+            try:
+                ctypes.windll.winmm.mciSendStringW(f"close {_current_player_alias}", None, 0, None)
+            except Exception:
+                pass
         _current_player_alias = None
 
     if _current_audio_path is not None:
@@ -337,6 +341,23 @@ def _cleanup_current_audio() -> None:
         except Exception:
             pass
         _current_audio_path = None
+
+
+def _play_posix_audio(audio_path: str) -> None:
+    """Play an MP3 on macOS/Linux without MCI. Tries afplay → ffplay → aplay → mpv."""
+    for cmd in (
+        ["afplay", audio_path],            # macOS
+        ["ffplay", "-autoexit", "-nodisp", audio_path],
+        ["aplay", audio_path],
+        ["mpv", "--no-terminal", audio_path],
+    ):
+        try:
+            subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+            return
+        except FileNotFoundError:
+            continue
+        except Exception:
+            continue
 
 
 def _speak_edge_native(text: str) -> None:
@@ -369,6 +390,11 @@ def _speak_edge_native(text: str) -> None:
 
     player_alias = f"brahma_tts_{uuid.uuid4().hex}"
     try:
+        if os.name != "nt":
+            _play_posix_audio(audio_path)
+            _current_audio_path = audio_path
+            return
+
         result = ctypes.windll.winmm.mciSendStringW(
             f'open "{audio_path}" type mpegvideo alias {player_alias}',
             None,

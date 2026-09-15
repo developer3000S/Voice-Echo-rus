@@ -3,12 +3,12 @@
 
   <h1>Brahma Echo</h1>
 
-  <p><strong>Open-source Windows desktop AI assistant</strong></p>
+  <p><strong>Open-source desktop AI assistant for Windows, macOS, and Linux</strong></p>
   <p>Voice-first automation · contextual desktop intelligence · productivity workflows</p>
 
   <p>
     <a href="#overview"><img src="https://img.shields.io/badge/experience-open%20source-blue?style=for-the-badge" alt="Open Source" /></a>
-    <a href="#getting-started"><img src="https://img.shields.io/badge/platform-Windows%2010%2F11-lightgrey?style=for-the-badge" alt="Windows" /></a>
+    <a href="#getting-started"><img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey?style=for-the-badge" alt="Platforms" /></a>
     <a href="#features"><img src="https://img.shields.io/badge/tech-Gemini%20%2B%20OpenRouter-green?style=for-the-badge" alt="Gemini + OpenRouter" /></a>
   </p>
 
@@ -23,7 +23,7 @@
 
 ## Overview
 
-Brahma Echo is a premium Windows desktop assistant that combines voice and text control with automated workflows, screen-aware intelligence, and rich content generation.
+Brahma Echo is a premium desktop assistant for Windows, macOS, and Linux that combines voice and text control with automated workflows, screen-aware intelligence, and rich content generation.
 
 Designed for advanced desktop productivity, Brahma Echo delivers:
 
@@ -94,29 +94,40 @@ Designed for advanced desktop productivity, Brahma Echo delivers:
 
 ### Prerequisites
 
-- Windows 10 or Windows 11
+- Windows 10/11, macOS 12+, or a modern Linux distribution
 - Python 3.11 or Python 3.12
 - Git installed
 - Gemini API key
 - OpenRouter API key (optional but recommended)
 
+> **Linux notes:** voice/audio uses `sounddevice` (PortAudio). Install it with your package manager (e.g. `sudo apt install libportaudio2`). Screen features that rely on `pyautogui` need an active X11/Wayland session. Desktop autostart is Windows-only; on Linux/macOS launch via the commands below.
+
 ### 1. Clone the repository
 
-```powershell
+```bash
 git clone https://github.com/titechprabhasolutions/Brahma-AI---Lite.git
 cd "Brahma AI - Lite"
 ```
 
 ### 2. Create and activate a virtual environment
 
+**Windows (PowerShell):**
+
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
+**macOS / Linux:**
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
 ### 3. Install dependencies
 
-```powershell
+```bash
 pip install -r requirements.txt
 playwright install
 ```
@@ -152,8 +163,14 @@ If you want Discord remote control, populate `config/discord_bot.json` with your
 
 ### 6. Launch Brahma Echo
 
-```powershell
+```bash
 python main.py
+```
+
+**macOS / Linux:** `run.sh` sets up `.venv` and installs dependencies on first run, then launches the app:
+
+```bash
+./run.sh
 ```
 
 For a cleaner startup experience on Windows:
