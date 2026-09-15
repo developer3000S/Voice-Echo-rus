@@ -22,8 +22,8 @@ class IdentityService:
                 "about": ""
             },
             "assistant": {
-                "name": "Brahma",
-                "application_name": "Brahma Echo",
+                "name": "Voice",
+                "application_name": "Voice Echo",
                 "title": "Personal AI Assistant"
             },
             "behavior": {
@@ -64,14 +64,14 @@ class IdentityService:
 
     # Assistant methods
     def get_assistant_name(self) -> str:
-        return self.data["assistant"].get("name", "Brahma")
+        return self.data["assistant"].get("name", "Voice")
         
     def set_assistant_name(self, name: str):
         self.data["assistant"]["name"] = name
         self.save()
 
     def get_application_name(self) -> str:
-        return self.data["assistant"].get("application_name", "Brahma Echo")
+        return self.data["assistant"].get("application_name", "Voice Echo")
         
     def set_application_name(self, name: str):
         self.data["assistant"]["application_name"] = name

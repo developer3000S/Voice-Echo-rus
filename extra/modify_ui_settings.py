@@ -14,14 +14,14 @@ if "identity_card = self._card(\"Identity & Profile\"," not in content:
         ast_row = QHBoxLayout()
         ast_row.addWidget(QLabel("Assistant Name"))
         self._set_ast_name = QLineEdit(identity.get_assistant_name())
-        self._set_ast_name.textChanged.connect(lambda t: identity.set_assistant_name(t.strip() or "Brahma"))
+        self._set_ast_name.textChanged.connect(lambda t: identity.set_assistant_name(t.strip() or "Voice"))
         ast_row.addWidget(self._set_ast_name)
         ilay.addLayout(ast_row)
         
         app_row = QHBoxLayout()
         app_row.addWidget(QLabel("Application Name"))
         self._set_app_name = QLineEdit(identity.get_application_name())
-        self._set_app_name.textChanged.connect(lambda t: identity.set_application_name(t.strip() or "Brahma Echo"))
+        self._set_app_name.textChanged.connect(lambda t: identity.set_application_name(t.strip() or "Voice Echo"))
         app_row.addWidget(self._set_app_name)
         ilay.addLayout(app_row)
 

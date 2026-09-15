@@ -1,7 +1,7 @@
 import os
 import re
 
-file_path = r"d:\TiTech Prabha Solution\Brahma Echo\Brahma Echo\Brahma Echo-AI---Lite-main\Brahma Echo-AI---Lite-main\ui.py"
+file_path = r"d:\TiTech Prabha Solution\Voice Echo\Voice Echo\Voice Echo-AI---Lite-main\Voice Echo-AI---Lite-main\ui.py"
 with open(file_path, "r", encoding="utf-8") as f:
     text = f.read()
 
@@ -294,16 +294,16 @@ new_setup_overlay = """class SetupOverlay(QWidget):
             self._key_input.setStyleSheet(self._key_input.styleSheet().replace("rgba(255, 170, 48, 0.4)", C.GREEN).replace("#ffaa30", C.GREEN))
             self._s3_title.setStyleSheet(f"color: {C.GREEN}; background: transparent; border: none;")
             
-            QTimer.singleShot(1500, self._intro_brahma)
+            QTimer.singleShot(1500, self._intro_voice)
             
-    def _intro_brahma(self):
+    def _intro_voice(self):
         self._s3_box.hide()
-        self._intro_lbl = QLabel("Identity confirmed.\\n\\nHello.\\n\\nI'm Brahma Echo.\\n\\nReady whenever you are.")
+        self._intro_lbl = QLabel("Identity confirmed.\\n\\nHello.\\n\\nI'm Voice Echo.\\n\\nReady whenever you are.")
         self._intro_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._intro_lbl.setFont(QFont("Segoe UI", 16))
         self._intro_lbl.setStyleSheet("color: #ffffff; background: transparent; border: none;")
         
-        self._launch_btn = QPushButton("Launch Brahma Echo →")
+        self._launch_btn = QPushButton("Launch Voice Echo →")
         self._launch_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._launch_btn.setFixedSize(240, 50)
         self._launch_btn.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))

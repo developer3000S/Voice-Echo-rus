@@ -160,7 +160,7 @@ def _summarize_with_gemini(transcript: str, video_url: str) -> str:
     return client.chat(
         f"Please summarize this YouTube video transcript:\n\n{truncated}",
         system=(
-            "You are Brahma AI - Lite, an AI assistant. "
+            "You are Voice AI - Lite, an AI assistant. "
             "Summarize YouTube video transcripts clearly and concisely. "
             "Structure: 1-sentence overview, then 3-5 key points. "
             "Be direct. Address the user as 'sir'. "
@@ -178,7 +178,7 @@ def _save_summary(content: str, video_url: str) -> str:
     filepath = desktop / filename
 
     header = (
-        f"Brahma AI - YouTube Summary\n"
+        f"Voice AI - YouTube Summary\n"
         f"{'─' * 50}\n"
         f"URL    : {video_url}\n"
         f"Date   : {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"

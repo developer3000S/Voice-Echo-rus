@@ -1,6 +1,6 @@
 import re
 
-file_path = r'd:\TiTech Prabha Solution\Brahma Echo\Brahma Echo\Brahma Echo-AI---Lite-main\Brahma Echo-AI---Lite-main\ui.py'
+file_path = r'd:\TiTech Prabha Solution\Voice Echo\Voice Echo\Voice Echo-AI---Lite-main\Voice Echo-AI---Lite-main\ui.py'
 with open(file_path, 'r', encoding='utf-8') as f:
     text = f.read()
 
@@ -196,7 +196,7 @@ or_prompt_code = '''
         self._show_intro_final()
 
     def _show_intro_final(self):
-        """Show the Brahma Echo intro sequence."""
+        """Show the Voice Echo intro sequence."""
         page = self._stack.widget(2)
         lay = page.layout()
         self._intro_widget.setParent(None)

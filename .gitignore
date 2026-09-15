@@ -11,7 +11,7 @@ crash_log.txt
 downloads/
 memory/calendar_events.json
 config/identity.json
-config/brahma_connect/devices.json
+config/voice_connect/devices.json
 
 # Local secrets and environment-specific config
 config/api_keys.json

@@ -67,8 +67,8 @@ if "_build_stage_identity" not in content:
         self._stack.addWidget(page)
 
     def _save_identity_and_next(self):
-        identity.set_assistant_name(self._inp_ast.text().strip() or "Brahma")
-        identity.set_application_name(self._inp_app.text().strip() or "Brahma Echo")
+        identity.set_assistant_name(self._inp_ast.text().strip() or "Voice")
+        identity.set_application_name(self._inp_app.text().strip() or "Voice Echo")
         self._stack.setCurrentIndex(2)
 
     # ── STAGE 1.2: Owner Profile ────────────────────────────────

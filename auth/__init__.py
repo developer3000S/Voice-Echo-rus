@@ -1,2 +1,2 @@
-"""Authentication helpers for Brahma AI - Lite."""
+"""Authentication helpers for Voice AI - Lite."""
 

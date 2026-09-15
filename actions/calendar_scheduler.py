@@ -1,6 +1,6 @@
 # actions/calendar_scheduler.py
 """
-Calendar and Schedule Management for Brahma AI.
+Calendar and Schedule Management for Voice AI.
 
 Allows creating, listing, checking, and managing calendar appointments,
 meetings, and events with local persistent storage and .ics calendar exports.
@@ -219,7 +219,7 @@ def calendar_scheduler(
         ics_lines = [
             "BEGIN:VCALENDAR",
             "VERSION:2.0",
-            "PRODID:-//Brahma AI//Calendar Scheduler//EN",
+            "PRODID:-//Voice AI//Calendar Scheduler//EN",
         ]
         for ev in events:
             try:
@@ -227,7 +227,7 @@ def calendar_scheduler(
                 dt_end = dt_start + timedelta(minutes=ev.get("duration_minutes", 30))
                 ics_lines.extend([
                     "BEGIN:VEVENT",
-                    f"UID:{ev.get('id', uuid.uuid4())}@brahma.ai",
+                    f"UID:{ev.get('id', uuid.uuid4())}@voice.ai",
                     f"DTSTAMP:{datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}",
                     f"DTSTART:{dt_start.strftime('%Y%m%dT%H%M%S')}",
                     f"DTEND:{dt_end.strftime('%Y%m%dT%H%M%S')}",
@@ -240,7 +240,7 @@ def calendar_scheduler(
                 continue
         ics_lines.append("END:VCALENDAR")
 
-        desktop_ics = Path.home() / "Desktop" / "brahma_calendar.ics"
+        desktop_ics = Path.home() / "Desktop" / "voice_calendar.ics"
         desktop_ics.write_text("\n".join(ics_lines), encoding="utf-8")
         return f"Exported calendar events to {desktop_ics}"
 

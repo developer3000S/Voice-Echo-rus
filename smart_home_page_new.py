@@ -689,7 +689,7 @@ class _DeviceTile(ClickableFrame):
             self.select_requested.emit(str(device_id))
 
 
-class BrahmaHomePage(QWidget):
+class VoiceHomePage(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._service = SmartHomeService()
@@ -701,8 +701,8 @@ class BrahmaHomePage(QWidget):
         self._activity_items: list[dict[str, Any]] = []
         self._device_columns_cached = 0
 
-        self.setObjectName("BrahmaHomePageModern")
-        self.setStyleSheet(f"QWidget#BrahmaHomePageModern {{ background: transparent; }} QScrollArea {{ background: transparent; border: none; }}")
+        self.setObjectName("VoiceHomePageModern")
+        self.setStyleSheet(f"QWidget#VoiceHomePageModern {{ background: transparent; }} QScrollArea {{ background: transparent; border: none; }}")
 
         root = QHBoxLayout(self)
         root.setContentsMargins(18, 16, 18, 16)
@@ -813,10 +813,10 @@ class BrahmaHomePage(QWidget):
         row = QHBoxLayout()
         row.setSpacing(12)
         text = QVBoxLayout()
-        title = QLabel("BRAHMA ECHO HOME")
+        title = QLabel("VOICE ECHO HOME")
         title.setFont(QFont("Segoe UI", 24, QFont.Weight.Black))
         title.setStyleSheet(f"color: {TEXT}; letter-spacing: 1px;")
-        subtitle = QLabel("Control your smart home with Brahma Echo.")
+        subtitle = QLabel("Control your smart home with Voice Echo.")
         subtitle.setFont(QFont("Segoe UI", 11))
         subtitle.setStyleSheet(f"color: {TEXT_DIM};")
         text.addWidget(title)
@@ -958,7 +958,7 @@ class BrahmaHomePage(QWidget):
         lbl.setFont(QFont("Segoe UI", 9))
         lbl.setStyleSheet(f"color: {TEXT_DIM};")
         
-        word = QLabel("Brahma Echo")
+        word = QLabel("Voice Echo")
         word.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
         word.setStyleSheet(f"color: {ACCENT};")
         
@@ -1376,7 +1376,7 @@ class BrahmaHomePage(QWidget):
                 bar.setFixedHeight(max(6, min(24, height)))
                 bar.setStyleSheet(f"background: {'rgba(255, 179, 0,0.35)' if self._voice_state in ('Listening', 'Executing') else 'rgba(255,255,255,0.15)'}; border-radius: 2px;")
         if hasattr(self, "_voice_cmd_lbl") and self._voice_cmd_lbl:
-            self._voice_cmd_lbl.setText({"Idle": '"Brahma Echo"', "Listening": '"Turn bedroom fan to speed 4"', "Thinking": '"Understanding..."', "Executing": '"Applying command..."', "Completed": '"Done"'}.get(self._voice_state, '"Brahma Echo"'))
+            self._voice_cmd_lbl.setText({"Idle": '"Voice Echo"', "Listening": '"Turn bedroom fan to speed 4"', "Thinking": '"Understanding..."', "Executing": '"Applying command..."', "Completed": '"Done"'}.get(self._voice_state, '"Voice Echo"'))
         if hasattr(self, "_mic_orb") and self._mic_orb:
             self._mic_orb.setText("🎙️" if self._voice_state in ("Listening", "Executing") else "🎙️")
 

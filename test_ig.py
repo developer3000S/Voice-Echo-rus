@@ -53,7 +53,7 @@ def test_ig():
                 last_msg = thread.messages[0]
                 if str(last_msg.user_id) != str(client.user_id):
                     print(f"    - Replying to {last_msg.user_id}: {last_msg.text}")
-                    client.direct_send("Hello from Brahma AI! Your request was approved.", thread_ids=[thread.id])
+                    client.direct_send("Hello from Voice AI! Your request was approved.", thread_ids=[thread.id])
                     time.sleep(2)
                 else:
                     print("    - Already replied or sent by us.")

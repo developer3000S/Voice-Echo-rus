@@ -22,7 +22,7 @@ except Exception:
 import sounddevice as sd
 from google import genai
 from google.genai import types
-from ui import BrahmaUI
+from ui import VoiceUI
 from memory.memory_manager import (
     load_memory, update_memory, format_memory_for_prompt,
     should_extract_memory, extract_memory
@@ -45,7 +45,7 @@ from actions.website_builder   import website_builder
 from actions.office_builder     import create_presentation, create_spreadsheet
 from actions.docx_tools        import word_document
 from actions.pdf_tools         import create_pdf
-from actions.brahma_connect    import (
+from actions.voice_connect    import (
     connect_list_devices,
     connect_get_device,
     connect_get_capabilities,
@@ -76,9 +76,9 @@ except ImportError:
     start_ig_daemon = None
 
 try:
-    from brahma_connect.service import get_service as get_brahma_connect_service
+    from voice_connect.service import get_service as get_voice_connect_service
 except Exception:
-    get_brahma_connect_service = None
+    get_voice_connect_service = None
 
 
 def get_base_dir():
@@ -90,7 +90,7 @@ def get_base_dir():
 BASE_DIR        = get_base_dir()
 API_CONFIG_PATH = BASE_DIR / "config" / "api_keys.json"
 PROMPT_PATH     = BASE_DIR / "core" / "prompt.txt"
-STARTUP_LOG     = Path(os.environ.get("LOCALAPPDATA", str(BASE_DIR))) / "Brahma Echo" / "startup.log"
+STARTUP_LOG     = Path(os.environ.get("LOCALAPPDATA", str(BASE_DIR))) / "Voice Echo" / "startup.log"
 LIVE_MODEL          = "models/gemini-2.5-flash-native-audio-preview-12-2025"
 CHANNELS            = 1
 SEND_SAMPLE_RATE    = 16000
@@ -138,9 +138,9 @@ def _ensure_desktop_shortcut() -> None:
             desktop_dir = Path(os.path.expanduser("~")) / "Desktop"
             
         desktop_dir.mkdir(parents=True, exist_ok=True)
-        shortcut_path = desktop_dir / "Brahma Echo.lnk"
+        shortcut_path = desktop_dir / "Voice Echo.lnk"
         script_path = BASE_DIR / "main.py"
-        icon_path = BASE_DIR / "assets" / "Brahma_Lite_Logo.ico"
+        icon_path = BASE_DIR / "assets" / "Voice_Lite_Logo.ico"
 
         if not icon_path.exists():
             icon_path = None
@@ -171,7 +171,7 @@ def _ensure_desktop_shortcut() -> None:
             f"$Shortcut.Arguments = '{_ps_escape(shortcut_args)}'",
             f"$Shortcut.WorkingDirectory = '{_ps_escape(str(BASE_DIR))}'",
             "$Shortcut.WindowStyle = 7",
-            "$Shortcut.Description = 'Launch Brahma Echo'",
+            "$Shortcut.Description = 'Launch Voice Echo'",
             f"if ('{_ps_escape(icon_value)}') {{ $Shortcut.IconLocation = '{_ps_escape(icon_value)},0' }}",
             "$Shortcut.Save()",
         ])
@@ -194,7 +194,7 @@ def _load_system_prompt() -> str:
         base_prompt = PROMPT_PATH.read_text(encoding="utf-8")
     except Exception:
         base_prompt = (
-            "You are Brahma Echo, a calm, direct, and professional AI assistant. "
+            "You are Voice Echo, a calm, direct, and professional AI assistant. "
             "Be concise, direct, and always use the provided tools to complete tasks. "
             "Never simulate or guess results — always call the appropriate tool. "
             "If the user asks to create, build, launch, or open a website, always use the selected workspace folder."
@@ -202,7 +202,7 @@ def _load_system_prompt() -> str:
         
     try:
         from core.identity import identity
-        ast_name = identity.get_assistant_name() or "Brahma Echo"
+        ast_name = identity.get_assistant_name() or "Voice Echo"
         own_name = identity.get_owner_name() or "the user"
         role = identity.get_owner_role()
         mode = identity.get_behavior_mode()
@@ -234,7 +234,7 @@ def _speak_daily_briefing(ui=None) -> None:
         text = compile_daily_briefing()
         if ui:
             ui.show_daily_briefing(text)
-            ui.write_log(f"Brahma Echo: {text}")
+            ui.write_log(f"Voice Echo: {text}")
         speak_native(text)
     except Exception as e:
         print(f"[DailyBriefing] Error: {e}")
@@ -269,7 +269,7 @@ def _gemini_text_reply(prompt: str) -> str:
         http_options={"api_version": "v1beta"},
     )
     system_prompt = (
-        "You are Brahma Echo, a concise, helpful desktop assistant. "
+        "You are Voice Echo, a concise, helpful desktop assistant. "
         "Reply naturally and briefly. Do not mention internal implementation details."
     )
     response = client.models.generate_content(
@@ -282,7 +282,7 @@ def _gemini_text_reply(prompt: str) -> str:
 
 def _ig_gemini_reply(username: str, text: str) -> str:
     system_prompt = (
-        "You are Brahma Echo, an AI personal assistant acting on behalf of your user. "
+        "You are Voice Echo, an AI personal assistant acting on behalf of your user. "
         "You have taken over their Instagram chat with the user's permission. "
         "Reply naturally, briefly, and conversationally to the incoming message. "
         "Do not sound like a bot. Keep your replies under 2 sentences."
@@ -315,7 +315,7 @@ def _ig_gemini_reply(username: str, text: str) -> str:
 
 def _clipboard_gemini_reply(text: str) -> str:
     system_prompt = (
-        "You are Brahma Echo, a witty and helpful AI assistant. "
+        "You are Voice Echo, a witty and helpful AI assistant. "
         "The user just copied the following text to their clipboard. "
         "Make a very short, interesting, or helpful 1-sentence comment or question about it. "
         "Do not offer to 'help' or ask 'how can I help'. Just make a standalone witty observation or summary."
@@ -416,10 +416,10 @@ def _wakeword_detected(text: str) -> bool:
     if not words:
         return False
     phrases = (
-        "brahma echo",
-        "hey brahma echo",
-        "hi brahma echo",
-        "hello brahma echo",
+        "voice echo",
+        "hey voice echo",
+        "hi voice echo",
+        "hello voice echo",
         "hey",
         "hi",
         "hello",
@@ -427,7 +427,7 @@ def _wakeword_detected(text: str) -> bool:
     compact = " ".join(words)
     if compact in phrases or any(p in compact for p in phrases):
         return True
-    return any(word in {"brahma echo", "hey", "hi", "hello"} for word in words)
+    return any(word in {"voice echo", "hey", "hi", "hello"} for word in words)
 
 
 def _build_task_plan(text: str) -> list[str]:
@@ -491,11 +491,11 @@ def _build_task_plan(text: str) -> list[str]:
 
 _last_memory_input = ""
 
-def _update_memory_async(user_text: str, brahma_text: str) -> None:
+def _update_memory_async(user_text: str, voice_text: str) -> None:
     global _last_memory_input
 
     user_text   = (user_text   or "").strip()
-    brahma_text = (brahma_text or "").strip()
+    voice_text = (voice_text or "").strip()
 
     if len(user_text) < 5 or user_text == _last_memory_input:
         return
@@ -503,9 +503,9 @@ def _update_memory_async(user_text: str, brahma_text: str) -> None:
 
     try:
         api_key = _get_api_key()
-        if not should_extract_memory(user_text, brahma_text, api_key):
+        if not should_extract_memory(user_text, voice_text, api_key):
             return
-        data = extract_memory(user_text, brahma_text, api_key)
+        data = extract_memory(user_text, voice_text, api_key)
         if data:
             update_memory(data)
             print(f"[Memory] ✅ {list(data.keys())}")
@@ -823,7 +823,7 @@ TOOL_DECLARATIONS = [
     {
         "name": "connect_list_devices",
         "description": (
-            "Lists devices connected to Brahma Connect. Use when the user asks what devices are connected, "
+            "Lists devices connected to Voice Connect. Use when the user asks what devices are connected, "
             "what is online, or wants a simple inventory of paired devices."
         ),
         "parameters": {
@@ -871,7 +871,7 @@ TOOL_DECLARATIONS = [
     {
         "name": "connect_execute",
         "description": (
-            "Routes a Brahma Connect command to a paired device through the gateway. "
+            "Routes a Voice Connect command to a paired device through the gateway. "
             "Use for actions such as launch_app, open_url, get_battery, capture_screen, take_photo, "
             "clipboard_get, clipboard_set, send_file, receive_file, media_play, media_pause, volume_set, "
             "notification_list, get_device_info, close_app, mouse_move, keyboard_type, unlock_phone, file_list, file_read, file_write, file_delete."
@@ -905,7 +905,7 @@ TOOL_DECLARATIONS = [
     {
         "name": "connect_pair_device",
         "description": (
-            "Creates or approves Brahma Connect pairing. Use to generate a QR code / pairing code for a new device, "
+            "Creates or approves Voice Connect pairing. Use to generate a QR code / pairing code for a new device, "
             "or to approve a pending pairing request."
         ),
         "parameters": {
@@ -921,7 +921,7 @@ TOOL_DECLARATIONS = [
     {
         "name": "connect_disconnect_device",
         "description": (
-            "Disconnects a device from Brahma Connect and marks it offline. "
+            "Disconnects a device from Voice Connect and marks it offline. "
             "Use when the user asks to disconnect, log out, or stop a paired device."
         ),
         "parameters": {
@@ -1150,7 +1150,7 @@ TOOL_DECLARATIONS = [
         "name": "presentation_builder",
         "description": (
             "Creates editable PowerPoint presentations (.pptx) from a structured slide outline. "
-            "Brahma Echo automatically infers the best visual style from the topic, searches for a matching online template when available, "
+            "Voice Echo automatically infers the best visual style from the topic, searches for a matching online template when available, "
             "reuses cached templates, and falls back to the built-in designer if no suitable template is found. "
             "Use when the user asks for a deck, slideshow, presentation, pitch deck, or report slides."
         ),
@@ -1161,7 +1161,7 @@ TOOL_DECLARATIONS = [
                 "subtitle": {"type": "STRING", "description": "Optional subtitle or audience line"},
                 "theme": {
                     "type": "STRING",
-                    "description": "Optional presentation theme or visual direction such as neon, corporate, luxury, academic, sunset, or creative. If omitted, Brahma Echo infers the best style automatically."
+                    "description": "Optional presentation theme or visual direction such as neon, corporate, luxury, academic, sunset, or creative. If omitted, Voice Echo infers the best style automatically."
                 },
                 "outline": {
                     "type": "STRING",
@@ -1317,11 +1317,11 @@ TOOL_DECLARATIONS = [
         }
     },
     {
-        "name": "shutdown_brahma",
+        "name": "shutdown_voice",
         "description": (
             "Shuts down the assistant completely. "
         "Call this when the user expresses intent to end the conversation, "
-        "close the assistant, say goodbye, or stop Brahma Echo. "
+        "close the assistant, say goodbye, or stop Voice Echo. "
         "The user can say this in ANY language."
     ),
     "parameters": {
@@ -1446,9 +1446,9 @@ TOOL_DECLARATIONS = [
 ]
 
 
-class BrahmaLive:
+class VoiceLive:
 
-    def __init__(self, ui: BrahmaUI, dashboard=None, dashboard_started: bool = False, enable_dashboard: bool = True):
+    def __init__(self, ui: VoiceUI, dashboard=None, dashboard_started: bool = False, enable_dashboard: bool = True):
         self.ui             = ui
         self._smart_home    = SmartHomeService()
         self.session        = None
@@ -1629,7 +1629,7 @@ class BrahmaLive:
             if not recipient:
                 self._email_step = 0
                 prompt = "Who would you like to send the email to?"
-                self.ui.write_log(f"Brahma Echo: {prompt}")
+                self.ui.write_log(f"Voice Echo: {prompt}")
                 self.speak(prompt)
                 try:
                     self.ui.update_task_workspace(
@@ -1642,7 +1642,7 @@ class BrahmaLive:
             else:
                 self._email_step = 1
                 prompt = "Which email app would you like to use? (Gmail, default mail app, etc.)"
-                self.ui.write_log(f"Brahma Echo: {prompt}")
+                self.ui.write_log(f"Voice Echo: {prompt}")
                 self.speak(prompt)
                 try:
                     self.ui.update_task_workspace(
@@ -1660,10 +1660,10 @@ class BrahmaLive:
             devices = self._smart_home.list_devices()
             routed_text_home = sd_mgr.route_command(text, devices)
             if routed_text_home != text:
-                print(f"[BRAHMA ECHO] Redirection: '{text}' -> '{routed_text_home}'")
+                print(f"[VOICE ECHO] Redirection: '{text}' -> '{routed_text_home}'")
                 text = routed_text_home
         except Exception as e:
-            print(f"[BRAHMA ECHO] Redirection error: {e}")
+            print(f"[VOICE ECHO] Redirection error: {e}")
 
         developer_settings = self.ui._load_app_settings() if hasattr(self.ui, "_load_app_settings") else {}
         developer_enabled = bool(developer_settings.get("developer_mode_enabled", False))
@@ -1711,7 +1711,7 @@ class BrahmaLive:
             self.ui.begin_task_workspace(text, _build_task_plan(text), source=source or "local")
         except Exception:
             pass
-        if source != "instagram" and self._handle_brahma_connect_command(text, source=source or "local"):
+        if source != "instagram" and self._handle_voice_connect_command(text, source=source or "local"):
             return
         if self._handle_smart_home_command(text, source=source or "local"):
             return
@@ -1719,7 +1719,7 @@ class BrahmaLive:
             try:
                 self.ui.update_task_workspace(
                     status="Scanning screen",
-                    output="Brahma Echo is inspecting the screen for what you asked about.",
+                    output="Voice Echo is inspecting the screen for what you asked about.",
                     percent=40,
                 )
             except Exception:
@@ -1773,7 +1773,7 @@ class BrahmaLive:
     def _handle_smart_home_command(self, text: str, source: str = "local") -> bool:
         normalized = re.sub(r"\s+", " ", re.sub(r"[^a-z0-9\s%]", " ", text.lower())).strip()
         connect_words = (
-            "phone", "mobile", "android", "tablet", "device", "devices", "brahma connect",
+            "phone", "mobile", "android", "tablet", "device", "devices", "voice connect",
             "my phone", "my mobile", "my tablet", "my android", "turn on flashlight", "flashlight",
             "volume", "open url", "launch app", "get battery", "device info",
         )
@@ -1806,7 +1806,7 @@ class BrahmaLive:
                 percent=100,
                 source=source,
             )
-            self.ui.write_log(f"Brahma Echo: {detail}")
+            self.ui.write_log(f"Voice Echo: {detail}")
             self.speak(detail)
             if not self.ui.muted:
                 self.ui.set_state("LISTENING")
@@ -1862,10 +1862,10 @@ class BrahmaLive:
         candidate = re.sub(r"\s+", " ", candidate)
         return candidate
 
-    def _handle_brahma_connect_command(self, text: str, source: str = "local") -> bool:
+    def _handle_voice_connect_command(self, text: str, source: str = "local") -> bool:
         normalized = re.sub(r"\s+", " ", re.sub(r"[^a-z0-9\s%]", " ", text.lower())).strip()
         connect_words = (
-            "phone", "mobile", "android", "tablet", "device", "devices", "brahma connect",
+            "phone", "mobile", "android", "tablet", "device", "devices", "voice connect",
             "my phone", "my mobile", "my tablet", "my android", "turn on flashlight",
             "turn off flashlight", "flashlight", "volume", "get battery", "battery", "launch app",
             "open url", "device info", "my laptop", "my pc", "my computer",
@@ -1944,13 +1944,13 @@ class BrahmaLive:
             result = json.loads(result_json)
             if result.get("success", False):
                 detail = str(result.get("detail") or result.get("error") or "Device command completed.")
-                title = f"Brahma Connect: {action}"
+                title = f"Voice Connect: {action}"
                 self.ui.update_task_workspace(
                     title=title,
                     command=text,
                     plan=[
                         "Identify the paired phone or device",
-                        "Route the command through Brahma Connect",
+                        "Route the command through Voice Connect",
                         "Verify the device response",
                         "Report the result",
                     ],
@@ -1959,13 +1959,13 @@ class BrahmaLive:
                     percent=100,
                     source=source,
                 )
-                self.ui.write_log(f"Brahma Echo: {detail}")
+                self.ui.write_log(f"Voice Echo: {detail}")
                 self.speak(detail)
                 if not self.ui.muted:
                     self.ui.set_state("LISTENING")
                 return True
 
-            self.ui.write_log(f"ERR: Brahma Connect command failed: {result.get('error') or 'Unknown error'}")
+            self.ui.write_log(f"ERR: Voice Connect command failed: {result.get('error') or 'Unknown error'}")
             return False
         except Exception:
             return False
@@ -2031,7 +2031,7 @@ class BrahmaLive:
 
     def _announce_attention(self, event: dict):
         msg = self._attention_message(event)
-        self.ui.write_log(f"Brahma Echo: {msg}")
+        self.ui.write_log(f"Voice Echo: {msg}")
         if self.session and self._loop:
             self.speak(msg)
         else:
@@ -2104,7 +2104,7 @@ class BrahmaLive:
         if summary:
             self.ui.write_log(f"[Meeting] {summary}")
         if answer:
-            self.ui.write_log(f"Brahma Echo: {answer}")
+            self.ui.write_log(f"Voice Echo: {answer}")
 
     def _on_meeting_state(self, state: str):
         if state == "LISTENING":
@@ -2125,7 +2125,7 @@ class BrahmaLive:
             self._reply_mode = True
 
         message = "What would you like to say in reply?"
-        self.ui.write_log(f"Brahma Echo: {message}")
+        self.ui.write_log(f"Voice Echo: {message}")
         if self.session and self._loop:
             self.speak(message)
         else:
@@ -2281,7 +2281,7 @@ class BrahmaLive:
             if intent == "CANCEL":
                 self._ig_reply_mode = False
                 msg = "Instagram reply cancelled."
-                self.ui.write_log(f"Brahma Echo: {msg}")
+                self.ui.write_log(f"Voice Echo: {msg}")
                 self.speak(msg)
                 self._ig_pending_thread = None
                 return True
@@ -2319,7 +2319,7 @@ class BrahmaLive:
             self._email_step = 0
             self._email_profiles = {}
             msg = "Email sending cancelled, sir."
-            self.ui.write_log(f"Brahma Echo: {msg}")
+            self.ui.write_log(f"Voice Echo: {msg}")
             self.speak(msg)
             try:
                 self.ui.finish_task_workspace("Email sending cancelled.", "Cancelled", 100)
@@ -2332,7 +2332,7 @@ class BrahmaLive:
             self._email_recipient = text.strip()
             self._email_step = 1
             prompt = "Which email app would you like to use? (Gmail, default mail app, etc.)"
-            self.ui.write_log(f"Brahma Echo: {prompt}")
+            self.ui.write_log(f"Voice Echo: {prompt}")
             self.speak(prompt)
             try:
                 self.ui.update_task_workspace(
@@ -2350,7 +2350,7 @@ class BrahmaLive:
             self._email_step = 2
             
             prompt = "What is the message you'd like to send?"
-            self.ui.write_log(f"Brahma Echo: {prompt}")
+            self.ui.write_log(f"Voice Echo: {prompt}")
             self.speak(prompt)
             try:
                 self.ui.update_task_workspace(
@@ -2370,7 +2370,7 @@ class BrahmaLive:
             
             # Now let's execute composing!
             msg = f"Opening {self._email_app} and composing email to {self._email_recipient}..."
-            self.ui.write_log(f"Brahma Echo: {msg}")
+            self.ui.write_log(f"Voice Echo: {msg}")
             self.speak(msg)
             try:
                 self.ui.update_task_workspace(
@@ -2384,7 +2384,7 @@ class BrahmaLive:
             try:
                 import urllib.parse
                 import webbrowser
-                subject = "Message from Brahma Echo"
+                subject = "Message from Voice Echo"
                 quoted_recipient = urllib.parse.quote(self._email_recipient)
                 quoted_subject = urllib.parse.quote(subject)
                 quoted_body = urllib.parse.quote(self._email_message)
@@ -2399,7 +2399,7 @@ class BrahmaLive:
                 if "gmail" in app_lower or "chrome" in app_lower:
                     import urllib.parse
                     quoted_recipient = urllib.parse.quote(self._email_recipient)
-                    quoted_subject = urllib.parse.quote("Message from Brahma Echo")
+                    quoted_subject = urllib.parse.quote("Message from Voice Echo")
                     quoted_body = urllib.parse.quote(self._email_message)
                     url = f"https://mail.google.com/mail/?view=cm&fs=1&to={quoted_recipient}&su={quoted_subject}&body={quoted_body}"
                     
@@ -2444,7 +2444,7 @@ class BrahmaLive:
                 return self._prompt_message_reply(event)
             if self._attention_matches(lower, ("hear", "read", "what is it", "tell me", "show it", "open it")):
                 preview = read_event_preview(event)
-                self.ui.write_log(f"Brahma Echo: {preview}")
+                self.ui.write_log(f"Voice Echo: {preview}")
                 threading.Thread(target=speak_native, args=(preview,), daemon=True).start()
                 with self._attention_lock:
                     self._pending_attention = None
@@ -2494,7 +2494,7 @@ class BrahmaLive:
         if kind == "message":
             if decision == "hear":
                 preview = read_event_preview(event)
-                self.ui.write_log(f"Brahma Echo: {preview}")
+                self.ui.write_log(f"Voice Echo: {preview}")
                 threading.Thread(target=speak_native, args=(preview,), daemon=True).start()
             elif decision == "reply":
                 self._prompt_message_reply(event)
@@ -2526,7 +2526,7 @@ class BrahmaLive:
             try:
                 self.ui.update_task_workspace(
                     status="Thinking",
-                    output="Brahma Echo is drafting a direct reply.",
+                    output="Voice Echo is drafting a direct reply.",
                     percent=35,
                 )
             except Exception:
@@ -2539,7 +2539,7 @@ class BrahmaLive:
                 try:
                     reply = _gemini_text_reply(request_text)
                 except Exception as e:
-                    print(f"[BRAHMA ECHO] ⚠️ Gemini fallback failed: {e}")
+                    print(f"[VOICE ECHO] ⚠️ Gemini fallback failed: {e}")
                     if _is_gemini_limit_error(e):
                         self._use_openrouter_first = True
 
@@ -2548,18 +2548,18 @@ class BrahmaLive:
                     reply = openrouter_client.chat(
                         request_text,
                         system=(
-                            "You are Brahma Echo, a concise, helpful desktop assistant. "
+                            "You are Voice Echo, a concise, helpful desktop assistant. "
                             "Reply naturally and briefly. Do not mention internal implementation details."
                         ),
                     )
                 except Exception as e:
-                    print(f"[BRAHMA ECHO] ⚠️ OpenRouter fallback failed: {e}")
+                    print(f"[VOICE ECHO] ⚠️ OpenRouter fallback failed: {e}")
                     if gemini_first and not self._use_openrouter_first and _is_gemini_limit_error(e):
                         self._use_openrouter_first = True
             reply = (reply or "").strip()
             if not reply:
                 reply = "I’m ready, sir."
-            self.ui.write_log(f"Brahma Echo: {reply}")
+            self.ui.write_log(f"Voice Echo: {reply}")
             try:
                 self.ui.finish_task_workspace(reply, "Reply delivered.", 100)
             except Exception:
@@ -2568,7 +2568,7 @@ class BrahmaLive:
                 self.ui.set_state("LISTENING")
         except Exception as e:
             msg = f"Fallback reply failed: {e}"
-            print(f"[BRAHMA ECHO] ⚠️ {msg}")
+            print(f"[VOICE ECHO] ⚠️ {msg}")
             self.ui.write_log(f"ERR: {msg}")
             try:
                 self.ui.finish_task_workspace(msg, "Reply failed.", 100)
@@ -2598,7 +2598,7 @@ class BrahmaLive:
                     prompt = f"System Alert / Context: {text}\n\nPlease relay this information to me naturally now."
                     await self.session.send(input=prompt, end_of_turn=True)
                 except Exception as e:
-                    print(f"[BRAHMA ECHO] Unified Speak err: {e}")
+                    print(f"[VOICE ECHO] Unified Speak err: {e}")
             asyncio.run_coroutine_threadsafe(_send(), self._loop)
         else:
             # Fallback to Edge TTS if Gemini Live is disconnected
@@ -2636,7 +2636,7 @@ class BrahmaLive:
             parts.append(mem_str)
         parts.append(sys_prompt)
         parts.append(
-            "Wake-word mode: if the microphone is muted, still listen for the words 'Brahma Echo', 'hey', 'hi', and 'hello'. "
+            "Wake-word mode: if the microphone is muted, still listen for the words 'Voice Echo', 'hey', 'hi', and 'hello'. "
             "When you hear one of these activation cues, keep the session friendly and concise, "
             "and wait for the user's next command. "
             "IMPORTANT: Do NOT speak an unprompted generic greeting (like 'Thank you, how can I help you?') upon connecting. "
@@ -2663,7 +2663,7 @@ class BrahmaLive:
         name = fc.name
         args = dict(fc.args or {})
 
-        print(f"[BRAHMA ECHO] 🔧 {name}  {args}")
+        print(f"[VOICE ECHO] 🔧 {name}  {args}")
         self.speak(f"Working on {name.replace('_', ' ')}...")
         self.ui.set_state("THINKING")
         try:
@@ -2910,7 +2910,7 @@ class BrahmaLive:
                 from actions.unlock_device import unlock_device
                 r = await loop.run_in_executor(None, lambda: unlock_device(parameters=args, player=self.ui))
                 result = r or "Done."
-            elif name == "shutdown_brahma":
+            elif name == "shutdown_voice":
                 self.ui.write_log("SYS: Shutdown requested.")
                 self.speak("Goodbye, sir.")
 
@@ -2937,7 +2937,7 @@ class BrahmaLive:
         tool_voice = self._connect_tool_voice(name, result)
         if tool_voice:
             try:
-                self.ui.write_log(f"Brahma Echo: {tool_voice}")
+                self.ui.write_log(f"Voice Echo: {tool_voice}")
             except Exception:
                 pass
             try:
@@ -2948,7 +2948,7 @@ class BrahmaLive:
         if not self.ui.muted:
             self.ui.set_state("LISTENING")
 
-        print(f"[BRAHMA ECHO] 📤 {name} → {str(result)[:80]}")
+        print(f"[VOICE ECHO] 📤 {name} → {str(result)[:80]}")
 
         return types.FunctionResponse(
             id=fc.id, name=name,
@@ -2999,13 +2999,13 @@ class BrahmaLive:
             await self.session.send_realtime_input(media=msg)
 
     async def _listen_audio(self):
-        print("[BRAHMA ECHO] 🎤 Mic started")
+        print("[VOICE ECHO] 🎤 Mic started")
         loop = asyncio.get_event_loop()
         import numpy as np
 
         def callback(indata, frames, time_info, status):
             with self._speaking_lock:
-                brahma_speaking = self._is_speaking
+                voice_speaking = self._is_speaking
             if self._phone_active:
                 return
             
@@ -3014,7 +3014,7 @@ class BrahmaLive:
                 rms = np.sqrt(np.mean(np.square(indata, dtype=np.float32)))
                 
                 # Smart Echo Gate: High threshold if AI is speaking, very low if silent
-                threshold = 1200.0 if brahma_speaking else 10.0
+                threshold = 1200.0 if voice_speaking else 10.0
                 
                 if rms > threshold:
                     data = indata.tobytes()
@@ -3035,15 +3035,15 @@ class BrahmaLive:
                 blocksize=CHUNK_SIZE,
                 callback=callback,
             ):
-                print("[BRAHMA ECHO] 🎤 Mic stream open")
+                print("[VOICE ECHO] 🎤 Mic stream open")
                 while True:
                     await asyncio.sleep(0.1)
         except Exception as e:
-            print(f"[BRAHMA ECHO] ❌ Mic: {e}")
+            print(f"[VOICE ECHO] ❌ Mic: {e}")
             raise
 
     async def _receive_audio(self):
-        print("[BRAHMA ECHO] 👂 Recv started")
+        print("[VOICE ECHO] 👂 Recv started")
         out_buf, in_buf = [], []
 
         try:
@@ -3088,7 +3088,7 @@ class BrahmaLive:
 
                             full_out = " ".join(out_buf).strip()
                             if full_out:
-                                self.ui.write_log(f"Brahma Echo: {full_out}")
+                                self.ui.write_log(f"Voice Echo: {full_out}")
                             out_buf = []
 
                             if full_in and len(full_in) > 5:
@@ -3101,7 +3101,7 @@ class BrahmaLive:
                     if response.tool_call:
                         fn_responses = []
                         for fc in response.tool_call.function_calls:
-                            print(f"[BRAHMA ECHO] 📞 {fc.name}")
+                            print(f"[VOICE ECHO] 📞 {fc.name}")
                             fr = await self._execute_tool(fc)
                             fn_responses.append(fr)
                         await self.session.send_tool_response(
@@ -3109,12 +3109,12 @@ class BrahmaLive:
                         )
 
         except Exception as e:
-            print(f"[BRAHMA ECHO] ❌ Recv: {e}")
+            print(f"[VOICE ECHO] ❌ Recv: {e}")
             traceback.print_exc()
             raise
 
     async def _play_audio(self):
-        print("[BRAHMA ECHO] 🔊 Play started")
+        print("[VOICE ECHO] 🔊 Play started")
         loop = asyncio.get_event_loop()
 
         stream = sd.RawOutputStream(
@@ -3130,7 +3130,7 @@ class BrahmaLive:
                 self.set_speaking(True)
                 await asyncio.to_thread(stream.write, chunk)
         except Exception as e:
-            print(f"[BRAHMA ECHO] ❌ Play: {e}")
+            print(f"[VOICE ECHO] ❌ Play: {e}")
             raise
         finally:
             self.set_speaking(False)
@@ -3179,7 +3179,7 @@ class BrahmaLive:
 
         while True:
             try:
-                print("[BRAHMA ECHO] 🔌 Connecting...")
+                print("[VOICE ECHO] 🔌 Connecting...")
                 self.ui.set_state("THINKING")
                 config = self._build_config()
 
@@ -3192,14 +3192,14 @@ class BrahmaLive:
                         self.audio_in_queue = asyncio.Queue()
                         self.out_queue      = asyncio.Queue()  # Fix: removed maxsize=10 to prevent dropping packets
                         
-                        print("[BRAHMA ECHO] ✅ Connected.")
+                        print("[VOICE ECHO] ✅ Connected.")
                         try:
                             self.ui.boot_set_step_status("Connect AI backend", "done")
                             self.ui.boot_set_progress(75, "AI backend connected")
                         except Exception:
                             pass
                         self.ui.set_state("LISTENING")
-                        self.ui.write_log("SYS: Brahma Echo online.")
+                        self.ui.write_log("SYS: Voice Echo online.")
 
                         tg.create_task(self._send_realtime())
                         tg.create_task(self._listen_audio())
@@ -3224,7 +3224,7 @@ class BrahmaLive:
                         pass
                     
             except Exception as e:
-                print(f"[BRAHMA ECHO] ⚠️ {e}")
+                print(f"[VOICE ECHO] ⚠️ {e}")
                 traceback.print_exc()
                 if _is_gemini_limit_error(e):
                     self._use_openrouter_first = True
@@ -3232,7 +3232,7 @@ class BrahmaLive:
                 self._loop = None
             self.set_speaking(False)
             self.ui.set_state("LISTENING")
-            print("[BRAHMA ECHO] 🔄 Reconnecting in 5s...")
+            print("[VOICE ECHO] 🔄 Reconnecting in 5s...")
             await asyncio.sleep(5)
 
 def main():
@@ -3245,13 +3245,13 @@ def main():
     except Exception as exc:
         _startup_log(f"GitHub update skipped: {exc}")
     _ensure_desktop_shortcut()
-    ui = BrahmaUI(str(BASE_DIR / "assets" / "Brahma_Lite_Logo.png"), show_immediately=True)
+    ui = VoiceUI(str(BASE_DIR / "assets" / "Voice_Lite_Logo.png"), show_immediately=True)
     dashboard = None
     dashboard_enabled = DashboardServer is not None and not _is_port_in_use(8000)
     if DashboardServer is not None and not dashboard_enabled:
         _startup_log("dashboard disabled: port 8000 already in use")
         try:
-            ui.write_log("SYS: Mobile Connect is already running in another Brahma Echo instance.")
+            ui.write_log("SYS: Mobile Connect is already running in another Voice Echo instance.")
         except Exception:
             pass
     if dashboard_enabled:
@@ -3272,46 +3272,46 @@ def main():
         threading.Thread(target=_start_dashboard_server, daemon=True).start()
         _startup_log("dashboard thread spawned")
 
-    brahma_connect = None
-    brahma_connect_enabled = False
-    if get_brahma_connect_service is not None:
+    voice_connect = None
+    voice_connect_enabled = False
+    if get_voice_connect_service is not None:
         try:
-            brahma_connect = get_brahma_connect_service(BASE_DIR)
-            brahma_connect_enabled = bool(brahma_connect.gateway.config.enabled)
+            voice_connect = get_voice_connect_service(BASE_DIR)
+            voice_connect_enabled = bool(voice_connect.gateway.config.enabled)
         except Exception as exc:
-            _startup_log(f"brahma connect init failed: {exc}")
+            _startup_log(f"voice connect init failed: {exc}")
             try:
-                ui.write_log(f"ERR: Brahma Connect failed to initialize: {exc}")
+                ui.write_log(f"ERR: Voice Connect failed to initialize: {exc}")
             except Exception:
                 pass
-            brahma_connect = None
+            voice_connect = None
     try:
-        if brahma_connect is not None and hasattr(ui, "set_brahma_connect_service"):
-            ui.set_brahma_connect_service(brahma_connect)
+        if voice_connect is not None and hasattr(ui, "set_voice_connect_service"):
+            ui.set_voice_connect_service(voice_connect)
     except Exception:
         pass
-    if brahma_connect is not None and brahma_connect_enabled:
-        connect_port = int(getattr(brahma_connect.gateway.config, "port", 8765))
+    if voice_connect is not None and voice_connect_enabled:
+        connect_port = int(getattr(voice_connect.gateway.config, "port", 8765))
         if _is_port_in_use(connect_port):
-            _startup_log(f"brahma connect disabled: port {connect_port} already in use")
+            _startup_log(f"voice connect disabled: port {connect_port} already in use")
             try:
-                ui.write_log(f"SYS: Brahma Connect is already running on port {connect_port}.")
+                ui.write_log(f"SYS: Voice Connect is already running on port {connect_port}.")
             except Exception:
                 pass
         else:
-            def _start_brahma_connect_server():
+            def _start_voice_connect_server():
                 try:
-                    _startup_log("brahma connect thread started")
-                    brahma_connect.start_background()
-                    _startup_log("brahma connect thread spawned")
+                    _startup_log("voice connect thread started")
+                    voice_connect.start_background()
+                    _startup_log("voice connect thread spawned")
                 except Exception as exc:
-                    _startup_log(f"brahma connect thread error: {exc}")
+                    _startup_log(f"voice connect thread error: {exc}")
                     try:
-                        ui.write_log(f"ERR: Brahma Connect server failed: {exc}")
+                        ui.write_log(f"ERR: Voice Connect server failed: {exc}")
                     except Exception:
                         pass
 
-            threading.Thread(target=_start_brahma_connect_server, daemon=True).start()
+            threading.Thread(target=_start_voice_connect_server, daemon=True).start()
 
 
 
@@ -3329,7 +3329,7 @@ def main():
         _startup_log("runner waiting api key")
         ui.wait_for_api_key()
         _startup_log("runner api key ready")
-        brahma_echo = BrahmaLive(
+        voice_echo = VoiceLive(
             ui,
             dashboard=dashboard,
             dashboard_started=dashboard is not None,
@@ -3337,11 +3337,11 @@ def main():
         )
         try:
             if plugin_manager is not None:
-                brahma_echo.plugin_manager = plugin_manager
-                plugin_manager.register_brahma(brahma_echo)
+                voice_echo.plugin_manager = plugin_manager
+                plugin_manager.register_voice(voice_echo)
                 # allow plugins to run a startup hook
                 try:
-                    plugin_manager.dispatch("on_startup", brahma_echo)
+                    plugin_manager.dispatch("on_startup", voice_echo)
                 except Exception:
                     pass
         except Exception:
@@ -3355,16 +3355,16 @@ def main():
                 if is_auto:
                     return _ig_gemini_reply(username, text)
                 else:
-                    brahma_echo._ig_reply_mode = True
-                    brahma_echo._ig_pending_thread = {
+                    voice_echo._ig_reply_mode = True
+                    voice_echo._ig_pending_thread = {
                         "thread_id": thread_id,
                         "username": username,
                         "message": text
                     }
                     msg = f"You have a new Instagram message from {username}. What should I reply, or should I take over the chat?"
                     ui.write_log(f"📱 Insta ({username}): {text}")
-                    ui.write_log(f"Brahma Echo: {msg}")
-                    brahma_echo.speak(msg)
+                    ui.write_log(f"Voice Echo: {msg}")
+                    voice_echo.speak(msg)
                     return None
                 
             set_ig_prompt_callback(_ig_handler)
@@ -3385,15 +3385,15 @@ def main():
                         text = (curr_clip or "").strip()
                         if text and len(text) > 3:
                             reply = _clipboard_gemini_reply(text[:1000])
-                            ui.write_log(f"Brahma Echo (Clipboard): {reply}")
-                            brahma_echo.speak(reply)
+                            ui.write_log(f"Voice Echo (Clipboard): {reply}")
+                            voice_echo.speak(reply)
                 except Exception:
                     pass
 
         threading.Thread(target=_clipboard_monitor, daemon=True, name="clipboard-monitor").start()
 
         try:
-            asyncio.run(brahma_echo.run())
+            asyncio.run(voice_echo.run())
         except KeyboardInterrupt:
             print("\n🔴 Shutting down...")
 

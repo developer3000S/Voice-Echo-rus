@@ -358,7 +358,7 @@ class MeetingAssistant:
                 spoken = self._last_speech
 
                 prompt = f"""
-You are Brahma AI - Lite running in meeting mode on a Windows desktop.
+You are Voice AI - Lite running in meeting mode on a Windows desktop.
 The screen belongs to a live Zoom, Microsoft Teams, WhatsApp call, or similar meeting.
 
 Tasks:

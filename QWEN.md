@@ -1,19 +1,19 @@
-# QWEN.md - Project Overview for Brahma Echo
+# QWEN.md - Project Overview for Voice Echo
 
 Last Updated: September 8, 2026
 
-This file provides a comprehensive overview of the Brahma Echo project structure and key components. It's intended to serve as instructional context for future interactions.
+This file provides a comprehensive overview of the Voice Echo project structure and key components. It's intended to serve as instructional context for future interactions.
 
 ## Project Overview
 
-Brahma Echo is an open-source Windows desktop AI assistant that combines voice and text control with automated workflows, screen-aware intelligence, and rich content generation. Designed for advanced desktop productivity, Brahma Echo delivers voice-first command and desktop automation, application control, browser workflows, file handling, contextual screen inspection, adaptive task execution, presentation/document/report generation, and remote control via Discord and Brahma Connect.
+Voice Echo is an open-source Windows desktop AI assistant that combines voice and text control with automated workflows, screen-aware intelligence, and rich content generation. Designed for advanced desktop productivity, Voice Echo delivers voice-first command and desktop automation, application control, browser workflows, file handling, contextual screen inspection, adaptive task execution, presentation/document/report generation, and remote control via Discord and Voice Connect.
 
 ## Key Features
 
 ### Intelligent Assistant
 
 - Unified voice and typed command handling
-- Wake-word listening ("Brahma Echo") and responsive assistant activation
+- Wake-word listening ("Voice Echo") and responsive assistant activation
 - Dynamic screen inspection for context-aware answers
 - **Unified Gemini Native Voice** for all system alerts and daily briefings
 - **True Interruption (Barge-in)** with dynamic noise-gating
@@ -44,7 +44,7 @@ Brahma Echo is an open-source Windows desktop AI assistant that combines voice a
 - Discord bridge for remote commands and collaboration
 - OpenRouter fallback for uninterrupted AI access
 - Configurable voice, UI, startup, and notification settings
-- Brahma Connect for device discovery and command routing
+- Voice Connect for device discovery and command routing
 
 ## Tech Stack
 
@@ -70,7 +70,7 @@ Brahma Echo is an open-source Windows desktop AI assistant that combines voice a
 ## Project Structure
 
 ```
-Brahma-Echo-rus/
+Voice-Echo-rus/
 ├── main.py                  # App startup, AI orchestration, command routing (3433 lines)
 ├── ui.py                    # Qt desktop interface (12933 lines)
 ├── smart_home_page_new.py   # Smart home dashboard page
@@ -82,7 +82,7 @@ Brahma-Echo-rus/
 ├── gesture_utils.py         # Gesture detection for camera
 ├── workspace_store.py       # Workspace/memory persistence
 ├── bootstrap.ps1            # Windows admin bootstrap installer
-├── start_brahma.bat/.vbs    # Launch shortcuts
+├── start_voice.bat/.vbs    # Launch shortcuts
 ├── requirements.txt         # Python dependencies
 ├── actions/                 # Modular automation tools (~35 modules)
 │   ├── attention_monitor.py # Wake-word, screen awareness, proactive engine
@@ -114,17 +114,17 @@ Brahma-Echo-rus/
 │   ├── executor.py
 │   ├── planner.py
 │   └── task_queue.py
-├── brahma_connect/          # Local network device discovery & control
+├── voice_connect/          # Local network device discovery & control
 │   ├── agents/
 │   ├── gateway/
 │   ├── service.py
 │   └── README.md
-├── brahma-connect-android/  # Android companion app
+├── voice-connect-android/  # Android companion app
 ├── config/                  # Settings & credentials (gitignored)
 │   ├── api_keys.json
 │   ├── app_settings.json
-│   ├── brahma_connect.json
-│   ├── brahma_connect/
+│   ├── voice_connect.json
+│   ├── voice_connect/
 │   ├── models/
 │   └── create_desktop_shortcut.ps1
 ├── core/                    # Core infrastructure
@@ -137,7 +137,7 @@ Brahma-Echo-rus/
 ├── extra/                   # Experimental/utility scripts
 ├── memory/                  # Memory manager (short/long-term)
 │   └── memory_manager.py
-├── plugins/                 # Plugin extensions (hooks: on_brahma_created, on_startup, on_text_command)
+├── plugins/                 # Plugin extensions (hooks: on_voice_created, on_startup, on_text_command)
 ├── smart_home/              # Smart home service & providers
 │   ├── service.py
 │   ├── smart_device_manager.py
@@ -145,8 +145,8 @@ Brahma-Echo-rus/
 │   └── providers/
 ├── tests/                   # Integration tests
 │   ├── conftest.py
-│   ├── test_brahma_connect.py
-│   ├── test_brahma_connect_actions.py
+│   ├── test_voice_connect.py
+│   ├── test_voice_connect_actions.py
 │   ├── test_gesture_utils.py
 │   └── test_screen_processor.py
 ├── homescreen background/   # Next.js homescreen web app
@@ -159,7 +159,7 @@ Brahma-Echo-rus/
 
 ## Core Architecture
 
-### BrahmaLive (main.py:1449)
+### VoiceLive (main.py:1449)
 
 The central orchestration class. Handles:
 - Voice input via `sounddevice` (16kHz send, 24kHz receive)
@@ -173,9 +173,9 @@ The central orchestration class. Handles:
 - Instagram DM monitoring and reply flow
 - Attention monitoring (calls, messages)
 - Smart home command dispatch
-- Brahma Connect device commands
+- Voice Connect device commands
 
-### BrahmaUI (ui.py:10713 / 12205)
+### VoiceUI (ui.py:10713 / 12205)
 
 The Qt main window with:
 - Glassmorphic dark theme (gold `#ffb300` accent, dynamically recolorable)
@@ -213,9 +213,9 @@ OpenRouter API client with:
 ### Plugin System
 
 `plugin_manager.py` loads `.py` files from `plugins/` and dispatches hooks:
-- `on_brahma_created(brahma)` — when assistant instance initializes
-- `on_startup(brahma)` — after startup when plugins registered
-- `on_text_command(text, source, brahma=None)` — each incoming text command; return `True` to indicate handled
+- `on_voice_created(voice)` — when assistant instance initializes
+- `on_startup(voice)` — after startup when plugins registered
+- `on_text_command(text, source, voice=None)` — each incoming text command; return `True` to indicate handled
 
 ### Memory System
 
@@ -228,7 +228,7 @@ OpenRouter API client with:
 python main.py
 
 # Clean startup (Windows)
-start_brahma.vbs
+start_voice.vbs
 
 # Bootstrap installer (admin, installs Python + Node + venv + deps)
 bootstrap.ps1
@@ -255,7 +255,7 @@ python setup.py
 |---|---|
 | `config/api_keys.json` | Gemini and OpenRouter API keys |
 | `config/app_settings.json` | Voice, UI, startup, automation preferences |
-| `config/brahma_connect.json` | Device pairing, gateway, discovery settings |
+| `config/voice_connect.json` | Device pairing, gateway, discovery settings |
 | `config/discord_bot.json` | Discord bridge credentials (gitignored) |
 | `core/prompt.txt` | System prompt template loaded at startup |
 | `core/identity.py` | Dynamic identity injection (assistant name, owner, role, mode) |
@@ -263,14 +263,14 @@ python setup.py
 ## Known Characteristics
 
 - **Large files**: `main.py` (3.4K lines) and `ui.py` (12.9K lines) are intentionally consolidated; refactoring into smaller modules is out of scope unless explicitly requested
-- **Windows dependency**: `start_brahma.vbs`, `bootstrap.ps1`, and some `ui.py` paths assume Windows; Linux/macOS support is limited
+- **Windows dependency**: `start_voice.vbs`, `bootstrap.ps1`, and some `ui.py` paths assume Windows; Linux/macOS support is limited
 - **Gemini API key required**: Primary AI provider; OpenRouter is fallback-only without Gemini
 - **Playwright browsers**: Must run `playwright install` after `pip install -r requirements.txt`
 
 ## Community & Support
 
 - Discord: https://discord.gg/gEYmJKKtq3
-- GitHub: https://github.com/titechprabhasolutions/Brahma-AI---Lite.git
+- GitHub: https://github.com/titechprabhasolutions/Voice-AI---Lite.git
 
 ## License
 
@@ -280,4 +280,4 @@ Custom source-available license. See `LICENSE` for details.
 
 Suryaansh Tiwari
 
-> Preserve attribution and keep credentials secure when building on top of Brahma Echo.
+> Preserve attribution and keep credentials secure when building on top of Voice Echo.

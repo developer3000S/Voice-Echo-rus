@@ -1,7 +1,7 @@
 import os
 import re
 
-file_path = r"d:\TiTech Prabha Solution\Brahma Echo\Brahma Echo\Brahma Echo-AI---Lite-main\Brahma Echo-AI---Lite-main\ui.py"
+file_path = r"d:\TiTech Prabha Solution\Voice Echo\Voice Echo\Voice Echo-AI---Lite-main\Voice Echo-AI---Lite-main\ui.py"
 with open(file_path, "r", encoding="utf-8") as f:
     text = f.read()
 
@@ -103,7 +103,7 @@ new_setup_overlay = """class SetupOverlay(QWidget):
         page = QWidget()
         lay = QVBoxLayout(page)
         lay.setContentsMargins(0, 0, 0, 0)
-        lay.addWidget(self._header("BRAHMA ECHO", "First Time Setup\\nConnect your preferred AI provider to begin."))
+        lay.addWidget(self._header("VOICE ECHO", "First Time Setup\\nConnect your preferred AI provider to begin."))
         lay.addStretch()
         
         info = QLabel("Estimated time\\n20 seconds")
@@ -287,7 +287,7 @@ new_setup_overlay = """class SetupOverlay(QWidget):
             "████████████  Verifying Gemini",
             "████████████  Initializing Memory",
             "████████████  Starting Voice Engine",
-            "████████████  Launching Brahma Echo"
+            "████████████  Launching Voice Echo"
         ]
         self._boot_step += 1
         if self._boot_step < len(steps):
@@ -301,7 +301,7 @@ new_setup_overlay = """class SetupOverlay(QWidget):
 pattern_setup = r"class SetupOverlay\(QWidget\):.*?def _submit\(self\):.*?self\.done\.emit\(key, or_key, self\._sel_os\)"
 text = re.sub(pattern_setup, new_setup_overlay, text, flags=re.DOTALL)
 
-# Update _show_setup in BrahmaUI to make overlay full screen
+# Update _show_setup in VoiceUI to make overlay full screen
 new_show_setup = """    def _show_setup(self, defaults: dict | None = None):
         if self._overlay:
             self._overlay.hide()

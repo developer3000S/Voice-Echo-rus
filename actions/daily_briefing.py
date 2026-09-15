@@ -1,6 +1,6 @@
 # actions/daily_briefing.py
 """
-Daily Briefing Action for Brahma AI.
+Daily Briefing Action for Voice AI.
 
 Compiles a comprehensive, natural daily briefing including:
 - Personalized greeting & current time
@@ -161,7 +161,7 @@ def daily_briefing(
     if player:
         try:
             player.show_daily_briefing(text)
-            player.write_log(f"Brahma Echo: {text}")
+            player.write_log(f"Voice Echo: {text}")
         except Exception:
             pass
 

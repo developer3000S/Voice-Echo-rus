@@ -91,5 +91,5 @@ def run_developer_mode_request(parameters: dict[str, Any], speak=None) -> str:
         return website_builder(params, player=None)
 
     params.setdefault("language", params.get("language") or "python")
-    params.setdefault("project_name", params.get("project_name") or "brahma_project")
+    params.setdefault("project_name", params.get("project_name") or "voice_project")
     return dev_agent(params, player=None, speak=speak)

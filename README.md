@@ -1,7 +1,7 @@
 <div align="center">
-  <img src="assets/Brahma_Lite_Logo.png" alt="Brahma Echo" width="260" />
+  <img src="assets/Voice_Lite_Logo.png" alt="Voice Echo" width="260" />
 
-  <h1>Brahma Echo</h1>
+  <h1>Voice Echo</h1>
 
   <p><strong>Open-source desktop AI assistant for Windows, macOS, and Linux</strong></p>
   <p>Voice-first automation · contextual desktop intelligence · productivity workflows</p>
@@ -23,15 +23,15 @@
 
 ## Overview
 
-Brahma Echo is a premium desktop assistant for Windows, macOS, and Linux that combines voice and text control with automated workflows, screen-aware intelligence, and rich content generation.
+Voice Echo is a premium desktop assistant for Windows, macOS, and Linux that combines voice and text control with automated workflows, screen-aware intelligence, and rich content generation.
 
-Designed for advanced desktop productivity, Brahma Echo delivers:
+Designed for advanced desktop productivity, Voice Echo delivers:
 
 - Voice-first command and desktop automation
 - Application control, browser workflows, and file handling
 - Contextual screen inspection and adaptive task execution
 - Presentation, document, and report generation
-- Remote control via Discord and Brahma Connect
+- Remote control via Discord and Voice Connect
 
 ## Quick Highlights
 
@@ -45,12 +45,12 @@ Designed for advanced desktop productivity, Brahma Echo delivers:
 
 ## Key Benefits
 
-- Wake-word support for “Brahma Echo” and responsive assistant activation
+- Wake-word support for “Voice Echo” and responsive assistant activation
 - Gemini 2.5 Flash-powered AI with OpenRouter fallback resilience
 - Polished Qt interface with live status displays and workflow cards
 - Modular action architecture for clean extensibility and automation
 - Secure local configuration with file-based credential storage
-- Device pairing and remote routing through Brahma Connect
+- Device pairing and remote routing through Voice Connect
 
 ## Features
 
@@ -88,7 +88,7 @@ Designed for advanced desktop productivity, Brahma Echo delivers:
 - Discord bridge for remote commands and collaboration
 - OpenRouter fallback for uninterrupted AI access
 - Configurable voice, UI, startup, and notification settings
-- Brahma Connect for device discovery and command routing
+- Voice Connect for device discovery and command routing
 
 ## Getting Started
 
@@ -105,8 +105,8 @@ Designed for advanced desktop productivity, Brahma Echo delivers:
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/titechprabhasolutions/Brahma-AI---Lite.git
-cd "Brahma AI - Lite"
+git clone https://github.com/titechprabhasolutions/Voice-AI---Lite.git
+cd "Voice AI - Lite"
 ```
 
 ### 2. Create and activate a virtual environment
@@ -161,7 +161,7 @@ Create `config/api_keys.json` with your keys:
 
 If you want Discord remote control, populate `config/discord_bot.json` with your bot credentials and connection settings.
 
-### 6. Launch Brahma Echo
+### 6. Launch Voice Echo
 
 ```bash
 python main.py
@@ -176,7 +176,7 @@ python main.py
 For a cleaner startup experience on Windows:
 
 ```powershell
-start_brahma.vbs
+start_voice.vbs
 ```
 
 ## Configuration
@@ -185,7 +185,7 @@ Core configuration files:
 
 - `config/api_keys.json` — Gemini and OpenRouter credentials
 - `config/app_settings.json` — voice, UI, startup, and automation preferences
-- `config/brahma_connect.json` — device pairing, gateway, and discovery settings
+- `config/voice_connect.json` — device pairing, gateway, and discovery settings
 - `config/discord_bot.json` — Discord bridge configuration
 
 ## Project Structure
@@ -193,20 +193,20 @@ Core configuration files:
 - `main.py` — application startup, AI orchestration, and command routing
 - `ui.py` — Qt-based desktop interface and live assistant controls
 - `actions/` — modular automation, document, and assistant tools
-- `brahma_connect/` — local gateway, pairing, and remote routing
+- `voice_connect/` — local gateway, pairing, and remote routing
 - `config/` — local settings, credentials, and runtime configuration
 - `plugins/` — optional plugin extensions
 - `tests/` — integration and validation tests
 
 ## Plugin System
 
-Extend Brahma Echo with custom Python plugins by adding files to `plugins/`.
+Extend Voice Echo with custom Python plugins by adding files to `plugins/`.
 
 Supported hooks:
 
-- `on_brahma_created(brahma)` — called when the assistant instance is initialized
-- `on_startup(brahma)` — called after startup when plugins are registered
-- `on_text_command(text, source, brahma=None)` — called for each incoming text command; return `True` to indicate the command was handled
+- `on_voice_created(voice)` — called when the assistant instance is initialized
+- `on_startup(voice)` — called after startup when plugins are registered
+- `on_text_command(text, source, voice=None)` — called for each incoming text command; return `True` to indicate the command was handled
 
 ## Best Practices
 
@@ -227,4 +227,4 @@ This project is published under a custom source-available license. See `LICENSE`
 
 - Suryaansh Tiwari
 
-> Preserve attribution and keep credentials secure when building on top of Brahma Echo.
+> Preserve attribution and keep credentials secure when building on top of Voice Echo.

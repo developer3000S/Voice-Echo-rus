@@ -22,7 +22,7 @@ class ErrorDecision(Enum):
     ABORT       = "abort"    
 
 
-ERROR_ANALYST_PROMPT = """You are the error recovery module of Brahma AI - Lite AI assistant.
+ERROR_ANALYST_PROMPT = """You are the error recovery module of Voice AI - Lite AI assistant.
 
 A task step has failed. Analyze the error and decide what to do.
 

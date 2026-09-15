@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Brahma Echo launcher for macOS / Linux.
+# Voice Echo launcher for macOS / Linux.
 # Creates .venv on first run, installs deps, then launches main.py.
 set -euo pipefail
 

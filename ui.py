@@ -44,7 +44,7 @@ except Exception:
 from discord_bot import DiscordBotService
 from gesture_utils import estimate_gesture_state, GestureTracker
 from smart_home import SmartHomeService
-from smart_home_page_new import BrahmaHomePage, _DeviceTile
+from smart_home_page_new import VoiceHomePage, _DeviceTile
 from workspace_store import store as workspace_store
 from core.identity import identity
 
@@ -58,8 +58,8 @@ CONFIG_DIR = BASE_DIR / "config"
 API_FILE   = CONFIG_DIR / "api_keys.json"
 APP_SETTINGS_FILE = CONFIG_DIR / "app_settings.json"
 DISCORD_SETTINGS_FILE = CONFIG_DIR / "discord_bot.json"
-LOGO_FILE  = BASE_DIR / "assets" / "Brahma_Lite_Logo.png"
-LOGO_ICO   = BASE_DIR / "assets" / "Brahma_Lite_Logo.ico"
+LOGO_FILE  = BASE_DIR / "assets" / "Voice_Lite_Logo.png"
+LOGO_ICO   = BASE_DIR / "assets" / "Voice_Lite_Logo.ico"
 BACKGROUND_IMAGE_FILE = BASE_DIR / "assets" / "background.png"
 MODEL_DOWNLOAD_URL = "https://storage.googleapis.com/mediapipe-assets/hand_landmarker.task"
 
@@ -242,7 +242,7 @@ class BackgroundWidget(QWidget):
         if self._web_view:
             try:
                 st = (state or "IDLE").strip()
-                self._web_view.page().runJavaScript(f"if(window.setBrahmaState) window.setBrahmaState('{st}');")
+                self._web_view.page().runJavaScript(f"if(window.setVoiceState) window.setVoiceState('{st}');")
             except Exception:
                 pass
 
@@ -320,7 +320,7 @@ class RemoteKeyOverlay(QWidget):
         title.setStyleSheet("color: #ffffff; background: transparent; border: none;")
         lay.addWidget(title)
 
-        subtitle = QLabel("Scan the QR code with your phone to remotely control Brahma Echo.")
+        subtitle = QLabel("Scan the QR code with your phone to remotely control Voice Echo.")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         subtitle.setWordWrap(True)
         subtitle.setFont(QFont("Segoe UI", 9))
@@ -476,7 +476,7 @@ class RemoteKeyOverlay(QWidget):
         self._qr_label.setText("OK")
         self._qr_label.setFont(QFont("Segoe UI", 34, QFont.Weight.Black))
         self._qr_label.setStyleSheet("color: #37ff5f; background: #041006; border-radius: 12px;")
-        self._timer_lbl.setText("Phone connected. Brahma Echo remote is ready.")
+        self._timer_lbl.setText("Phone connected. Voice Echo remote is ready.")
 
     def _refresh_key(self):
         if not self._on_new_key:
@@ -1975,7 +1975,7 @@ class TaskCard(QFrame):
         self._command_lbl.setStyleSheet(f"color: {C.WHITE}; background: transparent;")
         lay.addWidget(self._command_lbl)
 
-        self._plan_lbl = QLabel("Plan: Brahma Echo will generate a task plan after you send a command.")
+        self._plan_lbl = QLabel("Plan: Voice Echo will generate a task plan after you send a command.")
         self._plan_lbl.setWordWrap(True)
         self._plan_lbl.setFont(QFont("Segoe UI", 9))
         self._plan_lbl.setStyleSheet(f"color: {C.TEXT_MED}; background: transparent;")
@@ -2027,7 +2027,7 @@ class TaskCard(QFrame):
         self._title.setText(title)
         self._status_lbl.setText(desc)
         self._output_lbl.setText(desc)
-        self._plan_lbl.setText("Plan: Brahma Echo will generate a task plan after you send a command.")
+        self._plan_lbl.setText("Plan: Voice Echo will generate a task plan after you send a command.")
         self._command_lbl.setText("Command: waiting for input")
         self._pct.setText(f"{percent}%")
         self._bar.setValue(max(0, min(100, percent)))
@@ -2096,7 +2096,7 @@ class TaskCard(QFrame):
         self._workspace_locked = False
         self._title.setText("Ready")
         self._command_lbl.setText("Command: waiting for input")
-        self._plan_lbl.setText("Plan: Brahma Echo will generate a task plan after you send a command.")
+        self._plan_lbl.setText("Plan: Voice Echo will generate a task plan after you send a command.")
         self._status_lbl.setText("Status: Idle")
         self._output_lbl.setText("Output: Ready to work.")
         self._pct.setText("0%")
@@ -2339,7 +2339,7 @@ class ChatBubble(QFrame):
         if role == "assistant":
             avatar = _framed_logo(24, 24, bg="rgba(12,14,20,245)", border="rgba(255,179,0,0.50)", radius=12, inset=4)
             head.addWidget(avatar)
-            name_lbl = QLabel(name or "Brahma Echo")
+            name_lbl = QLabel(name or "Voice Echo")
             name_lbl.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
             name_lbl.setStyleSheet("color: #ffffff; background: transparent;")
             head.addWidget(name_lbl)
@@ -2523,7 +2523,7 @@ class ConversationFeed(QScrollArea):
         lay = QVBoxLayout(frame)
         lay.setContentsMargins(14, 12, 14, 12)
         lay.setSpacing(10)
-        title = QLabel("Try asking Brahma Echo")
+        title = QLabel("Try asking Voice Echo")
         title.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
         title.setStyleSheet("color: #ffffff; background: transparent;")
         subtitle = QLabel("Create a presentation, analyze a screen, build a website, organize files, or run browser automation.")
@@ -2633,10 +2633,10 @@ class ConversationFeed(QScrollArea):
             attachments = msg.get("attachments") or []
             name = {
                 "user": "You",
-                "assistant": "Brahma Echo",
+                "assistant": "Voice Echo",
                 "system": "System",
                 "file": "Files",
-            }.get(role, "Brahma Echo")
+            }.get(role, "Voice Echo")
             self.add_message(role, name, content, stamp, attachments=attachments, animate=False)
         self._sync_empty_state()
         QTimer.singleShot(0, self.scroll_to_bottom)
@@ -2828,7 +2828,7 @@ class WorkspaceSidebar(QWidget):
         self._title.setStyleSheet("color: #FFFFFF; background: transparent; letter-spacing: 1px;")
         header.addWidget(self._title)
         header.addStretch()
-        self._close_btn = QPushButton("BRAHMA ECHO")
+        self._close_btn = QPushButton("VOICE ECHO")
         self._close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._close_btn.setFixedHeight(30)
         self._close_btn.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
@@ -3257,7 +3257,7 @@ class WorkspaceSidebar(QWidget):
         if not raw:
             return
         low = raw.lower()
-        if low.startswith(("you:", "brahma echo:")):
+        if low.startswith(("you:", "voice echo:")):
             return
         if low.startswith("sys:"):
             self.record_chat_event({"role": "system", "text": raw.split(":", 1)[1].strip(), "source": "local"})
@@ -3280,7 +3280,7 @@ class WorkspaceSidebar(QWidget):
         elif role == "assistant":
             convo_id = self._store.record_chat("assistant", text, conversation_id=convo_id, attachments=attachments)
             self._active_conversation_id = convo_id
-            self._feed.add_message("assistant", "Brahma Echo", text, _fmt_time_stamp(stamp), attachments=attachments, animate=True)
+            self._feed.add_message("assistant", "Voice Echo", text, _fmt_time_stamp(stamp), attachments=attachments, animate=True)
             self._hide_memory_banner()
         elif role == "system":
             convo_id = self._store.record_chat("system", text, conversation_id=convo_id, attachments=attachments)
@@ -3496,7 +3496,7 @@ class InlineChatWorkspace(QFrame):
 
         footer = QHBoxLayout()
         footer.setContentsMargins(4, 4, 4, 4)
-        self._footer_status = QLabel("Brahma Echo is listening...")
+        self._footer_status = QLabel("Voice Echo is listening...")
         self._footer_status.setFont(QFont("Segoe UI", 9))
         self._footer_status.setStyleSheet("color: rgba(255, 255, 255, 0.70); background: transparent;")
         footer.addWidget(self._footer_status)
@@ -3621,7 +3621,7 @@ class InlineChatWorkspace(QFrame):
             self._show_memories(self._store.search_memories(text))
         elif role == "assistant":
             self._store.record_chat("assistant", text, conversation_id=convo_id, attachments=attachments)
-            self._feed.add_message("assistant", "Brahma Echo", text, stamp, attachments=attachments)
+            self._feed.add_message("assistant", "Voice Echo", text, stamp, attachments=attachments)
             self._hide_memories()
         elif role == "system":
             self._store.record_chat("system", text, conversation_id=convo_id, attachments=attachments)
@@ -3636,7 +3636,7 @@ class InlineChatWorkspace(QFrame):
         if not raw:
             return
         low = raw.lower()
-        if low.startswith(("you:", "brahma echo:")):
+        if low.startswith(("you:", "voice echo:")):
             return
         if low.startswith("sys:"):
             self.record_chat_event({"role": "system", "text": raw.split(":", 1)[1].strip()})
@@ -3733,7 +3733,7 @@ class LauncherControlPanel(QDialog):
         lay.setContentsMargins(18, 16, 18, 16)
         lay.setSpacing(10)
 
-        title = QLabel("BRAHMA ECHO CONTROL")
+        title = QLabel("VOICE ECHO CONTROL")
         title.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
         title.setStyleSheet("color: #FFFFFF; background: transparent; letter-spacing: 1px;")
         lay.addWidget(title)
@@ -3775,8 +3775,8 @@ class LauncherControlPanel(QDialog):
         self._startup_btn = mk_btn("Show Workspace On Startup", checkable=True, checked=bool(startup_workspace))
         self._show_icon_btn = mk_btn("Show Floating Icon")
         self._hide_icon_btn = mk_btn("Hide Floating Icon")
-        self._restart_btn = mk_btn("Restart Brahma Echo")
-        self._quit_btn = mk_btn("Quit Brahma Echo")
+        self._restart_btn = mk_btn("Restart Voice Echo")
+        self._quit_btn = mk_btn("Quit Voice Echo")
         self._open_app_btn = mk_btn("Open App")
         self._open_dev_btn = mk_btn("Open Developer Mode")
 
@@ -3819,7 +3819,7 @@ class LauncherControlPanel(QDialog):
         flay = QVBoxLayout(frame)
         flay.setContentsMargins(18, 16, 18, 16)
         flay.setSpacing(10)
-        lbl = QLabel("Hide Brahma Echo icon?")
+        lbl = QLabel("Hide Voice Echo icon?")
         lbl.setStyleSheet("color: #FFFFFF; background: transparent; font: 700 11pt 'Segoe UI';")
         sub = QLabel("You can restore it from the system tray.")
         sub.setStyleSheet("color: rgba(255,255,255,0.65); background: transparent;")
@@ -3995,10 +3995,10 @@ class LogWidget(QScrollArea):
         tl = raw.lower()
         if tl.startswith("you:"):
             return "user", "You", raw[4:].strip()
-        if tl.startswith("brahma echo:"):
-            return "assistant", "Brahma Echo", raw[len("Brahma Echo:"):].strip()
-        if tl.startswith("brahma echo:"):
-            return "assistant", "Brahma Echo", raw[len("Brahma Echo:"):].strip()
+        if tl.startswith("voice echo:"):
+            return "assistant", "Voice Echo", raw[len("Voice Echo:"):].strip()
+        if tl.startswith("voice echo:"):
+            return "assistant", "Voice Echo", raw[len("Voice Echo:"):].strip()
         if tl.startswith("file:"):
             return "file", "File", raw[5:].strip()
         if tl.startswith("err:"):
@@ -4103,7 +4103,7 @@ class FileDropZone(QWidget):
 
     def _browse(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, "Select a file for Brahma Echo", str(Path.home()),
+            self, "Select a file for Voice Echo", str(Path.home()),
             "All Files (*.*);;"
             "Images (*.jpg *.jpeg *.png *.gif *.webp *.bmp *.svg);;"
             "Documents (*.pdf *.docx *.txt *.md *.pptx);;"
@@ -4419,8 +4419,8 @@ class SetupOverlay(QWidget):
         self._stack.addWidget(page)
 
     def _save_identity_and_next(self):
-        identity.set_assistant_name(self._inp_ast.text().strip() or "Brahma")
-        identity.set_application_name(self._inp_app.text().strip() or "Brahma Echo")
+        identity.set_assistant_name(self._inp_ast.text().strip() or "Voice")
+        identity.set_application_name(self._inp_app.text().strip() or "Voice Echo")
         self._stack.setCurrentIndex(2)
 
     # ── STAGE 1.2: Owner Profile ────────────────────────────────
@@ -4793,10 +4793,10 @@ class SetupOverlay(QWidget):
         intro_lay.setSpacing(12)
 
         self._intro_lines = []
-        for txt in ["Identity confirmed.", "Hello.", "I'm Brahma Echo.", "Ready whenever you are."]:
+        for txt in ["Identity confirmed.", "Hello.", "I'm Voice Echo.", "Ready whenever you are."]:
             lbl = QLabel(txt)
             lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            if txt == "I'm Brahma Echo.":
+            if txt == "I'm Voice Echo.":
                 lbl.setFont(QFont("Segoe UI", 24, QFont.Weight.Bold))
                 lbl.setStyleSheet("color: #ffb300; background: transparent; border: none;")
             else:
@@ -4808,7 +4808,7 @@ class SetupOverlay(QWidget):
 
         intro_lay.addSpacing(20)
 
-        self._launch_btn = QPushButton("Launch Brahma Echo →")
+        self._launch_btn = QPushButton("Launch Voice Echo →")
         self._launch_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._launch_btn.setFixedSize(220, 48)
         self._launch_btn.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
@@ -5155,7 +5155,7 @@ class SetupOverlay(QWidget):
         self._show_intro_final()
 
     def _show_intro_final(self):
-        """Show the Brahma Echo intro sequence."""
+        """Show the Voice Echo intro sequence."""
         page = self._stack.widget(6)
         lay = page.layout()
         self._intro_widget.setParent(None)
@@ -5319,7 +5319,7 @@ class CommandBar(QWidget):
         lay.setContentsMargins(6, 4, 6, 4)
         lay.setSpacing(6)
 
-        # Brahma Echo mini logo
+        # Voice Echo mini logo
         logo_frame = QFrame()
         logo_frame.setFixedSize(32, 32)
         logo_frame.setStyleSheet("""
@@ -5331,7 +5331,7 @@ class CommandBar(QWidget):
         """)
         logo_lay = QVBoxLayout(logo_frame)
         logo_lay.setContentsMargins(0, 0, 0, 0)
-        logo_lbl = QLabel("\u092C\u094D\u0930")  # ब्र (short Hindi)
+        logo_lbl = QLabel("\u0935\u0949")  # वॉ (short Hindi)
         logo_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         logo_lbl.setFont(QFont("Nirmala UI", 9, QFont.Weight.Bold))
         logo_lbl.setStyleSheet("color: #ffb300; background: transparent; border: none;")
@@ -5340,7 +5340,7 @@ class CommandBar(QWidget):
 
         # Input field
         self._input = QLineEdit()
-        self._input.setPlaceholderText("Tell Brahma Echo what to do...")
+        self._input.setPlaceholderText("Tell Voice Echo what to do...")
         self._input.setFont(QFont("Segoe UI", 9))
         self._input.setFixedHeight(32)
         self._input.setStyleSheet(f"""
@@ -5514,7 +5514,7 @@ class DeveloperModeDialog(QDialog):
         title.setStyleSheet(f"color: {C.PRI};")
         root.addWidget(title)
 
-        desc = QLabel("Pick a workspace folder Brahma Echo should use when building websites or other workspace-based tasks.")
+        desc = QLabel("Pick a workspace folder Voice Echo should use when building websites or other workspace-based tasks.")
         desc.setWordWrap(True)
         desc.setStyleSheet(f"color: {C.TEXT_DIM};")
         root.addWidget(desc)
@@ -6201,7 +6201,7 @@ class BootSequenceOverlay(QWidget):
                     painter.setFont(font1)
                     
                     # Manual vertical layout for text
-                    painter.drawText(QRectF(-ring_rad, -60, ring_rad*2, 60), Qt.AlignmentFlag.AlignCenter, "BRAHMA")
+                    painter.drawText(QRectF(-ring_rad, -60, ring_rad*2, 60), Qt.AlignmentFlag.AlignCenter, "VOICE")
                     
                     painter.setPen(QColor(255, 200, 87, alpha))
                     font2 = QFont("Segoe UI", 16, QFont.Weight.Medium)
@@ -6509,7 +6509,7 @@ class MeetingOverlay(QWidget):
         self._speech.setStyleSheet(f"color: {C.WHITE}; background: transparent;")
         lay.addWidget(self._speech)
 
-        self._answer = QLabel("Brahma Echo will show the live answer here.")
+        self._answer = QLabel("Voice Echo will show the live answer here.")
         self._answer.setWordWrap(True)
         self._answer.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
         self._answer.setStyleSheet(f"color: {C.WHITE}; background: transparent;")
@@ -6703,11 +6703,11 @@ class FloatingLauncher(QWidget):
                 painter.setBrush(QBrush(QColor(chead.red(), chead.green(), chead.blue(), min(255, head_alpha))))
                 painter.drawEllipse(QPointF(hx, hy), head_size, head_size)
 
-        # ── 6. Hindi Brahma Echo text "ब्रह्मा इको" ──
+        # ── 6. Hindi Voice Echo text "वॉइस इको" ──
         text_alpha = int((210 + breath * 45) * hover_boost)
         painter.setPen(QPen(QColor(ar, ag, ab, min(255, text_alpha))))
         painter.setFont(QFont("Nirmala UI", 11, QFont.Weight.Bold))
-        painter.drawText(QRectF(cx - 22, cy - 10, 44, 20), Qt.AlignmentFlag.AlignCenter, "\u092C\u094D\u0930\u0939\u094D\u092E\u093E")
+        painter.drawText(QRectF(cx - 22, cy - 10, 44, 20), Qt.AlignmentFlag.AlignCenter, "\u0935\u0949\u0907\u0938")
 
         painter.end()
 
@@ -6751,7 +6751,7 @@ class FloatingLauncher(QWidget):
         }.get(self._state, "Ready")
 
     def _apply_state_style(self):
-        self.setToolTip(f"Brahma Echo\n{self._status_line}")
+        self.setToolTip(f"Voice Echo\n{self._status_line}")
         self.update()
 
     def _show_menu(self, global_pos):
@@ -6934,7 +6934,7 @@ class MainWindow(QMainWindow):
         self.setWindowFlag(Qt.WindowType.Tool, False)
         self.setWindowFlag(Qt.WindowType.Window, True)
         self.setWindowIcon(self._make_window_icon())
-        self.setWindowTitle("Brahma Echo")
+        self.setWindowTitle("Voice Echo")
         self.setMinimumSize(_MIN_W, _MIN_H)
         self.resize(_DEFAULT_W, _DEFAULT_H)
 
@@ -7273,10 +7273,10 @@ class MainWindow(QMainWindow):
                 winreg.KEY_READ | winreg.KEY_WRITE,
             ) as key:
                 try:
-                    value, _ = winreg.QueryValueEx(key, "Brahma Echo")
+                    value, _ = winreg.QueryValueEx(key, "Voice Echo")
                     run_value = _startup_run_value()
                     if value != run_value:
-                        winreg.SetValueEx(key, "Brahma Echo", 0, winreg.REG_SZ, run_value)
+                        winreg.SetValueEx(key, "Voice Echo", 0, winreg.REG_SZ, run_value)
                     return bool(value)
                 except FileNotFoundError:
                     return False
@@ -7290,10 +7290,10 @@ class MainWindow(QMainWindow):
         try:
             with winreg.CreateKey(winreg.HKEY_CURRENT_USER, _startup_registry_key()) as key:
                 if enabled:
-                    winreg.SetValueEx(key, "Brahma Echo", 0, winreg.REG_SZ, run_value)
+                    winreg.SetValueEx(key, "Voice Echo", 0, winreg.REG_SZ, run_value)
                 else:
                     try:
-                        winreg.DeleteValue(key, "Brahma Echo")
+                        winreg.DeleteValue(key, "Voice Echo")
                     except FileNotFoundError:
                         pass
             return True
@@ -7399,8 +7399,8 @@ class MainWindow(QMainWindow):
             except Exception:
                 pass
 
-    def set_brahma_connect_service(self, service):
-        self._brahma_connect = service
+    def set_voice_connect_service(self, service):
+        self._voice_connect = service
         if hasattr(self, "_devices_page"):
             self._devices_page.set_service(service)
             if service is not None:
@@ -7527,11 +7527,11 @@ class MainWindow(QMainWindow):
             l.setStyleSheet(f"color: {color}; background: transparent;")
             return l
 
-        lay.addWidget(_badge("BRAHMA ECHO", C.PRI_DIM))
+        lay.addWidget(_badge("VOICE ECHO", C.PRI_DIM))
         lay.addStretch()
 
         mid = QVBoxLayout(); mid.setSpacing(1)
-        title = QLabel("BRAHMA ECHO")
+        title = QLabel("VOICE ECHO")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title.setFont(QFont("Courier New", 17, QFont.Weight.Bold))
         title.setStyleSheet(f"color: {C.PRI}; background: transparent;")
@@ -7576,7 +7576,7 @@ class MainWindow(QMainWindow):
         if hasattr(self, "_core_sub_lbl") and self._core_sub_lbl is not None:
             self._core_sub_lbl.setText("Ready to assist.")
         if hasattr(self, "_core_status_lbl") and self._core_status_lbl is not None:
-            self._core_status_lbl.setText("Brahma Echo is ready. Gemini 2.5 Flash · OpenRouter · Voice Connected · Memory Enabled")
+            self._core_status_lbl.setText("Voice Echo is ready. Gemini 2.5 Flash · OpenRouter · Voice Connected · Memory Enabled")
         if hasattr(self, "_cpu_lbl") and self._cpu_lbl is not None:
             self._cpu_lbl.setText(f"CPU {int(psutil.cpu_percent(interval=None))}%")
         if hasattr(self, "_ram_lbl") and self._ram_lbl is not None:
@@ -7764,7 +7764,7 @@ class MainWindow(QMainWindow):
 
         lay.addWidget(_fl("[F4] Mute  Â·  [F11] Fullscreen"))
         lay.addStretch()
-        lay.addWidget(_fl("Suryaansh Tiwari  Â·  Brahma Echo  Â·  Open Source"))
+        lay.addWidget(_fl("Suryaansh Tiwari  Â·  Voice Echo  Â·  Open Source"))
         lay.addStretch()
         lay.addWidget(_fl("Â© STARK INDUSTRIES", C.PRI_DIM))
         return w
@@ -7789,7 +7789,7 @@ class MainWindow(QMainWindow):
 
     def _browse_attachment(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, "Attach a file to Brahma Echo", str(Path.home()),
+            self, "Attach a file to Voice Echo", str(Path.home()),
             "All Files (*.*);;"
             "Images (*.jpg *.jpeg *.png *.gif *.webp *.bmp *.svg);;"
             "Documents (*.pdf *.docx *.txt *.md *.pptx);;"
@@ -7887,7 +7887,7 @@ class MainWindow(QMainWindow):
                     self.on_chat_event({"role": "user", "text": user_msg, "source": source})
                 except Exception:
                     pass
-        if hasattr(self, "_result_card") and low.startswith("brahma echo:"):
+        if hasattr(self, "_result_card") and low.startswith("voice echo:"):
             reply = raw.split(":", 1)[1].strip()
             self._result_card.set_body(reply[:80] + ("…" if len(reply) > 80 else ""))
             self._result_card.hide()
@@ -8009,7 +8009,7 @@ class MainWindow(QMainWindow):
     def notify_phone_connected(self):
         if self._remote_overlay is not None:
             self._remote_overlay.mark_connected()
-        self._log_sig.emit("SYS: Phone connected to Brahma Echo remote.")
+        self._log_sig.emit("SYS: Phone connected to Voice Echo remote.")
 
     def changeEvent(self, event):
         super().changeEvent(event)
@@ -8046,13 +8046,13 @@ class MainWindow(QMainWindow):
             )
         if hasattr(self, "_task_card"):
             if state == "THINKING":
-                self._task_card.set_task("Working on it...", "Brahma Echo is processing your request.", 72)
+                self._task_card.set_task("Working on it...", "Voice Echo is processing your request.", 72)
             elif state == "SPEAKING":
-                self._task_card.set_task("Responding...", "Brahma Echo is speaking now.", 100)
+                self._task_card.set_task("Responding...", "Voice Echo is speaking now.", 100)
             elif state == "MUTED":
                 self._task_card.set_task("Microphone muted", "Voice input is paused.", 0)
             else:
-                self._task_card.set_task("Ready", "Brahma Echo is idle and ready.", 0)
+                self._task_card.set_task("Ready", "Voice Echo is idle and ready.", 0)
         if hasattr(self, "_result_card"):
             if state == "THINKING":
                 self._result_card.set_body("Action pending")
@@ -8303,7 +8303,7 @@ class MainWindow(QMainWindow):
             if hasattr(self, '_floating_gesture_card'):
                 self._floating_gesture_card.show()
             self._apply_state("LISTENING")
-            self._log.append_log(f"SYS: Initialised. OS={os_name.upper()}. Brahma Echo online.")
+            self._log.append_log(f"SYS: Initialised. OS={os_name.upper()}. Voice Echo online.")
         except Exception as e:
             self._log.append_log(f"ERR: setup failed: {e}")
             traceback.print_exc()
@@ -8457,7 +8457,7 @@ class MainWindow(QMainWindow):
         brand_lay.addWidget(_framed_logo(62, 44, bg="rgba(9,10,14,245)", border=C.BORDER_B, radius=10, inset=8))
         brand_text = QVBoxLayout()
         brand_text.setSpacing(2)
-        title = QLabel("<span style='color:#ffb300;'>BRAHMA ECHO</span><br><span style='color:#ffffff;'>LITE</span>")
+        title = QLabel("<span style='color:#ffb300;'>VOICE ECHO</span><br><span style='color:#ffffff;'>LITE</span>")
         title.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
         title.setStyleSheet("background: transparent;")
         sub = QLabel("Your AI Assistant")
@@ -8470,7 +8470,7 @@ class MainWindow(QMainWindow):
 
         lay.addWidget(section("Workspace"))
         self._nav_items["dashboard"] = NavItem("Dashboard", active=True, letter="[]")
-        self._nav_items["home"] = NavItem("Brahma Echo Home", active=False, letter="H")
+        self._nav_items["home"] = NavItem("Voice Echo Home", active=False, letter="H")
         self._nav_items["devices"] = NavItem("Devices", active=False, letter="D")
         self._nav_items["settings"] = NavItem("System & Connect", letter="S")
         self._nav_items["dashboard"].clicked.connect(lambda: activate("dashboard"))
@@ -8610,8 +8610,8 @@ class MainWindow(QMainWindow):
         cmd_lay.addLayout(self._build_command_row())
         stage.addWidget(self._command_panel)
 
-        self._home_page = BrahmaHomePage()
-        self._devices_page = BrahmaConnectDevicesPage(self)
+        self._home_page = VoiceHomePage()
+        self._devices_page = VoiceConnectDevicesPage(self)
         self._center_stack = QStackedWidget()
         self._center_stack.setStyleSheet("background: transparent; border: none;")
         self._center_stack.addWidget(w)
@@ -8717,7 +8717,7 @@ class MainWindow(QMainWindow):
         row.setSpacing(12)
 
         self._input = QLineEdit()
-        self._input.setPlaceholderText("Ask Brahma Echo anything...")
+        self._input.setPlaceholderText("Ask Voice Echo anything...")
         self._input.setFont(QFont("Segoe UI", 10))
         self._input.setFixedHeight(50)
         self._input.setStyleSheet(f"""
@@ -8881,7 +8881,7 @@ class SystemConnectivitySidebar(QFrame):
         self._quick_actions = QVBoxLayout()
         self._quick_actions.setSpacing(10)
         lay.addLayout(self._quick_actions)
-        self._mk_quick_action("Γå╗ Restart Brahma Echo", QStyle.StandardPixmap.SP_BrowserReload, self._restart)
+        self._mk_quick_action("Γå╗ Restart Voice Echo", QStyle.StandardPixmap.SP_BrowserReload, self._restart)
         self._mk_quick_action("Γƒ│ Reload Configuration", QStyle.StandardPixmap.SP_BrowserReload, self._reload)
         self._mk_quick_action("≡ƒôü Open Data Folder", QStyle.StandardPixmap.SP_DirOpenIcon, self._open_data_folder)
         self._mk_quick_action("≡ƒôä View Logs", QStyle.StandardPixmap.SP_FileDialogDetailedView, self._view_logs)
@@ -8990,7 +8990,7 @@ class SettingsHubPage(QWidget):
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         lay.addWidget(title)
 
-        subtitle = QLabel("Select a section below to configure your Brahma Echo environment.")
+        subtitle = QLabel("Select a section below to configure your Voice Echo environment.")
         subtitle.setFont(QFont("Segoe UI", 12))
         subtitle.setStyleSheet(f"color: {C.TEXT_DIM};")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -9001,7 +9001,7 @@ class SettingsHubPage(QWidget):
         cards_lay.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         cards_data = [
-            ("Brahma Echo Home", "Configure smart home integrations", "🏠", 1),
+            ("Voice Echo Home", "Configure smart home integrations", "🏠", 1),
             ("Devices", "Manage and control connected hardware", "🔌", 2),
             ("System & Connect", "Configure providers and api preferences", "⚙️", 3)
         ]
@@ -9272,7 +9272,7 @@ class SystemConnectivityPage(QWidget):
 
 
         # Instagram Connect
-        ig_card = self._card("Instagram Connect", "Connect your personal Instagram account to allow Brahma Echo to manage your DMs.")
+        ig_card = self._card("Instagram Connect", "Connect your personal Instagram account to allow Voice Echo to manage your DMs.")
         ig_lay = ig_card.layout()
 
         ig_user_row = QHBoxLayout()
@@ -9324,14 +9324,14 @@ class SystemConnectivityPage(QWidget):
         ast_row = QHBoxLayout()
         ast_row.addWidget(QLabel("Assistant Name"))
         self._set_ast_name = QLineEdit(identity.get_assistant_name())
-        self._set_ast_name.textChanged.connect(lambda t: identity.set_assistant_name(t.strip() or "Brahma"))
+        self._set_ast_name.textChanged.connect(lambda t: identity.set_assistant_name(t.strip() or "Voice"))
         ast_row.addWidget(self._set_ast_name)
         ilay.addLayout(ast_row)
         
         app_row = QHBoxLayout()
         app_row.addWidget(QLabel("Application Name"))
         self._set_app_name = QLineEdit(identity.get_application_name())
-        self._set_app_name.textChanged.connect(lambda t: identity.set_application_name(t.strip() or "Brahma Echo"))
+        self._set_app_name.textChanged.connect(lambda t: identity.set_application_name(t.strip() or "Voice Echo"))
         app_row.addWidget(self._set_app_name)
         ilay.addLayout(app_row)
 
@@ -9427,7 +9427,7 @@ class SystemConnectivityPage(QWidget):
         lay.addWidget(card)
 
         # Mobile connect
-        mobile = self._card("Mobile Connect", "Connect your phone and control Brahma Echo remotely.")
+        mobile = self._card("Mobile Connect", "Connect your phone and control Voice Echo remotely.")
         ml = mobile.layout()
         self._mobile_status = QLabel("Connection Status: Ready")
         self._mobile_phone = QLabel("Phone Name: Not connected")
@@ -9466,9 +9466,9 @@ class SystemConnectivityPage(QWidget):
         lay.addWidget(attention)
 
         # Startup
-        startup = self._card("Startup", "Use Brahma Echo with Windows startup preferences.")
+        startup = self._card("Startup", "Use Voice Echo with Windows startup preferences.")
         sl = startup.layout()
-        self._startup_launch_btn = self._mk_toggle("Launch Brahma Echo when Windows starts", bool(self._load_app_settings().get("show_workspace_on_startup", False)), self._toggle_startup_from_page)
+        self._startup_launch_btn = self._mk_toggle("Launch Voice Echo when Windows starts", bool(self._load_app_settings().get("show_workspace_on_startup", False)), self._toggle_startup_from_page)
         self._startup_minimized_btn = self._mk_toggle("Launch Minimized", bool(self._load_app_settings().get("launch_minimized", False)), self._toggle_launch_minimized)
         self._startup_updates_btn = self._mk_toggle("Check for updates on startup", bool(self._load_app_settings().get("check_updates_on_startup", True)), self._toggle_update_check)
         sl.addWidget(self._startup_launch_btn)
@@ -9477,7 +9477,7 @@ class SystemConnectivityPage(QWidget):
         lay.addWidget(startup)
 
         # Shortcuts & Pinning
-        shortcuts = self._card("Shortcuts & Pinning", "Create shortcuts and pin Brahma Echo to your Windows system.")
+        shortcuts = self._card("Shortcuts & Pinning", "Create shortcuts and pin Voice Echo to your Windows system.")
         shl = shortcuts.layout()
         
         btn_row = QHBoxLayout()
@@ -9494,7 +9494,7 @@ class SystemConnectivityPage(QWidget):
         lay.addWidget(shortcuts)
 
         # App Theme
-        theme_card = self._card("App Theme", "Select the primary color theme for Brahma Echo.")
+        theme_card = self._card("App Theme", "Select the primary color theme for Voice Echo.")
         tl = theme_card.layout()
         theme_row = QHBoxLayout()
         theme_row.addWidget(QLabel("Primary Color:"))
@@ -9543,7 +9543,7 @@ class SystemConnectivityPage(QWidget):
         lay.addWidget(anim)
 
         # Discord bot
-        discord = self._card("Discord Bot", "Mirror Brahma Echo between the app and your server.")
+        discord = self._card("Discord Bot", "Mirror Voice Echo between the app and your server.")
         dl = discord.layout()
         self._discord_defaults = self._load_discord_settings()
         self._discord_status = QLabel("Bot Status: Offline")
@@ -9578,7 +9578,7 @@ class SystemConnectivityPage(QWidget):
         dl.addWidget(self._discord_msg)
         lay.addWidget(discord)
 
-        about = self._card("About Brahma Echo", "Brahma Echo information only.")
+        about = self._card("About Voice Echo", "Voice Echo information only.")
         ab = about.layout()
         about_grid = QGridLayout()
         about_grid.setHorizontalSpacing(22)
@@ -9794,7 +9794,7 @@ class SystemConnectivityPage(QWidget):
         box = self._card("Quick Actions", "")
         lay = box.layout()
         actions = [
-            ("Restart Brahma Echo", QStyle.StandardPixmap.SP_BrowserReload, self._restart_app),
+            ("Restart Voice Echo", QStyle.StandardPixmap.SP_BrowserReload, self._restart_app),
             ("Reload Configuration", QStyle.StandardPixmap.SP_BrowserReload, self._reload_config),
             ("Open Data Folder", QStyle.StandardPixmap.SP_DirOpenIcon, self._open_data_folder),
             ("View Logs", QStyle.StandardPixmap.SP_FileDialogDetailedView, self._view_logs),
@@ -9977,7 +9977,7 @@ class SystemConnectivityPage(QWidget):
             self._ctrl()._win._start_discord_bot()
             self._ctrl()._win._stop_discord_bot()
             self._discord_status.setText("Bot Status: Test sent")
-            self._discord_msg.setText("Connected as Brahma Echo#9649" if self._discord_token.text().strip() else "Bot Offline")
+            self._discord_msg.setText("Connected as Voice Echo#9649" if self._discord_token.text().strip() else "Bot Offline")
 
     def _restart_discord_from_page(self):
         if self._ctrl() and hasattr(self._ctrl(), "_win"):
@@ -10077,7 +10077,7 @@ class SystemConnectivityPage(QWidget):
         token = (discord.get("bot_token") or "").strip()
         if enabled and token:
             self._discord_status.setText("Bot Status: Online")
-            self._discord_msg.setText("Connected as Brahma Echo#9649")
+            self._discord_msg.setText("Connected as Voice Echo#9649")
         elif token:
             self._discord_status.setText("Bot Status: Offline")
             self._discord_msg.setText("Bot Offline")
@@ -10135,12 +10135,12 @@ class SystemConnectivityPage(QWidget):
                 desktop_dir = Path(os.path.expanduser("~")) / "Desktop"
                 
             desktop_dir.mkdir(parents=True, exist_ok=True)
-            shortcut_path = desktop_dir / "Brahma Echo - Premium.lnk"
+            shortcut_path = desktop_dir / "Voice Echo - Premium.lnk"
             
             # Base variables
             base_dir = Path(os.path.abspath("."))
             script_path = base_dir / "main.py"
-            icon_path = base_dir / "assets" / "Brahma_Lite_Logo.ico"
+            icon_path = base_dir / "assets" / "Voice_Lite_Logo.ico"
             
             python_exe = sys.executable
             if not python_exe:
@@ -10165,7 +10165,7 @@ class SystemConnectivityPage(QWidget):
                 f"$Shortcut.Arguments = '{_ps_escape(shortcut_args)}'",
                 f"$Shortcut.WorkingDirectory = '{_ps_escape(str(base_dir))}'",
                 "$Shortcut.WindowStyle = 7",
-                "$Shortcut.Description = 'Launch Brahma Echo - Premium'",
+                "$Shortcut.Description = 'Launch Voice Echo - Premium'",
                 f"if ('{_ps_escape(icon_value)}') {{ $Shortcut.IconLocation = '{_ps_escape(icon_value)},0' }}",
                 "$Shortcut.Save()",
             ])
@@ -10225,9 +10225,9 @@ class SystemConnectivityPage(QWidget):
             )
             
             if res.returncode == 0:
-                return True, "Brahma Echo has been pinned to your Taskbar!"
+                return True, "Voice Echo has been pinned to your Taskbar!"
             else:
-                return False, "Windows restricts programmatic taskbar pinning. Please right-click the 'Brahma Echo - Premium.lnk' shortcut on your Desktop and select 'Pin to taskbar', or drag it directly onto your taskbar."
+                return False, "Windows restricts programmatic taskbar pinning. Please right-click the 'Voice Echo - Premium.lnk' shortcut on your Desktop and select 'Pin to taskbar', or drag it directly onto your taskbar."
         except Exception as e:
             return False, f"Error pinning to taskbar: {e}"
 
@@ -10311,7 +10311,7 @@ class SmartDevicesSection(QFrame):
                 background: rgba(255, 179, 0,0.16);
             }}
         """)
-        self._open_home_btn.clicked.connect(self._open_brahma_home)
+        self._open_home_btn.clicked.connect(self._open_voice_home)
         header.addWidget(self._open_home_btn)
         root.addLayout(header)
 
@@ -10329,7 +10329,7 @@ class SmartDevicesSection(QFrame):
         empty_desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
         empty_desc.setFont(QFont("Segoe UI", 8))
         empty_desc.setStyleSheet(f"color: {C.TEXT_DIM};")
-        empty_btn = QPushButton("Open Brahma Echo Home")
+        empty_btn = QPushButton("Open Voice Echo Home")
         empty_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         empty_btn.setFixedWidth(160)
         empty_btn.setStyleSheet(f"""
@@ -10344,7 +10344,7 @@ class SmartDevicesSection(QFrame):
                 background: rgba(255, 179, 0,0.18);
             }}
         """)
-        empty_btn.clicked.connect(self._open_brahma_home)
+        empty_btn.clicked.connect(self._open_voice_home)
         empty_lay.addStretch(1)
         empty_lay.addWidget(empty_title)
         empty_lay.addWidget(empty_desc)
@@ -10455,7 +10455,7 @@ class SmartDevicesSection(QFrame):
     def _controller_bridge(self):
         return self._controller
 
-    def _open_brahma_home(self):
+    def _open_voice_home(self):
         bridge = self._controller_bridge()
         if bridge and hasattr(bridge, "_set_page"):
             bridge._set_page("home")
@@ -10746,12 +10746,12 @@ class _RootShim:
         pass
 
 
-class BrahmaUI:
+class VoiceUI:
     def __init__(self, face_path: str, size=None, *, show_immediately: bool = True):
         self._app = QApplication.instance() or QApplication(sys.argv)
         self._app.setStyle("Fusion")
         self._app.setQuitOnLastWindowClosed(False)
-        self._app.setApplicationDisplayName("Brahma Echo")
+        self._app.setApplicationDisplayName("Voice Echo")
         self._app.setWindowIcon(self._make_app_icon())
         try:
             current_store = workspace_store()
@@ -10793,7 +10793,7 @@ class BrahmaUI:
         self._win.minimized.connect(self._on_minimized)
         self._win._state_sig.connect(self._sync_launcher_state)
         self._tray = QSystemTrayIcon(self._make_app_icon(), self._app)
-        self._tray.setToolTip("Brahma Echo")
+        self._tray.setToolTip("Voice Echo")
         self._tray.activated.connect(self._on_tray_activated)
         self._tray.setContextMenu(self._build_tray_menu())
         self._tray.show()
@@ -10826,8 +10826,8 @@ class BrahmaUI:
     def _make_app_icon(self) -> QIcon:
         return _logo_icon()
 
-    def set_brahma_connect_service(self, service):
-        self._win.set_brahma_connect_service(service)
+    def set_voice_connect_service(self, service):
+        self._win.set_voice_connect_service(service)
 
 
     
@@ -11594,7 +11594,7 @@ class _ConnectDeviceCard(QFrame):
         super().mouseReleaseEvent(event)
 
 
-class BrahmaConnectDevicesPage(QFrame):
+class VoiceConnectDevicesPage(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._service = None
@@ -11605,9 +11605,9 @@ class BrahmaConnectDevicesPage(QFrame):
         self._selected_device_id: str | None = None
         self._onboarding_known_device_ids: set[str] = set()
 
-        self.setObjectName("BrahmaConnectDevicesPage")
+        self.setObjectName("VoiceConnectDevicesPage")
         self.setStyleSheet(f"""
-            QFrame#BrahmaConnectDevicesPage {{
+            QFrame#VoiceConnectDevicesPage {{
                 background: transparent;
                 border: none;
             }}
@@ -11627,7 +11627,7 @@ class BrahmaConnectDevicesPage(QFrame):
         self._title = QLabel("DEVICES")
         self._title.setFont(QFont("Segoe UI", 18, QFont.Weight.Black))
         self._title.setStyleSheet("color: #ffffff; letter-spacing: 2px;")
-        self._subtitle = QLabel("Everything connected to Brahma.")
+        self._subtitle = QLabel("Everything connected to Voice.")
         self._subtitle.setFont(QFont("Segoe UI", 9))
         self._subtitle.setStyleSheet("color: rgba(255,255,255,0.62);")
         title_box.addWidget(self._title)
@@ -11981,7 +11981,7 @@ class BrahmaConnectDevicesPage(QFrame):
         self._onboarding_pulse = 0
 
     def _service_obj(self):
-        return self._service or getattr(self.parentWidget(), "_brahma_connect", None)
+        return self._service or getattr(self.parentWidget(), "_voice_connect", None)
 
     def set_service(self, service):
         self._service = service
@@ -12008,7 +12008,7 @@ class BrahmaConnectDevicesPage(QFrame):
             import io
             import qrcode
 
-            self._onboarding_offer = dict(service.create_pairing_offer(device_name="Brahma Connect", platform="gateway"))
+            self._onboarding_offer = dict(service.create_pairing_offer(device_name="Voice Connect", platform="gateway"))
             code = str(self._onboarding_offer.get("pairing_code") or "------")
             self._onb_code_lbl.setText(code)
             self._onb_status_lbl.setText("WAITING FOR CONNECTION")
@@ -12238,12 +12238,12 @@ class _RootShim:
         pass
 
 
-class BrahmaUI:
+class VoiceUI:
     def __init__(self, face_path: str, size=None, *, show_immediately: bool = True):
         self._app = QApplication.instance() or QApplication(sys.argv)
         self._app.setStyle("Fusion")
         self._app.setQuitOnLastWindowClosed(False)
-        self._app.setApplicationDisplayName("Brahma Echo")
+        self._app.setApplicationDisplayName("Voice Echo")
         self._app.setWindowIcon(self._make_app_icon())
         try:
             current_store = workspace_store()
@@ -12292,7 +12292,7 @@ class BrahmaUI:
         self._win.minimized.connect(self._on_minimized)
         self._win._state_sig.connect(self._sync_launcher_state)
         self._tray = QSystemTrayIcon(self._make_app_icon(), self._app)
-        self._tray.setToolTip("Brahma Echo")
+        self._tray.setToolTip("Voice Echo")
         self._tray.activated.connect(self._on_tray_activated)
         self._tray.setContextMenu(self._build_tray_menu())
         self._tray.show()
@@ -12325,8 +12325,8 @@ class BrahmaUI:
     def _make_app_icon(self) -> QIcon:
         return _logo_icon()
 
-    def set_brahma_connect_service(self, service):
-        self._win.set_brahma_connect_service(service)
+    def set_voice_connect_service(self, service):
+        self._win.set_voice_connect_service(service)
 
 
     

@@ -90,7 +90,7 @@ Write-Host "Installing Playwright browsers..." -ForegroundColor Cyan
 Start-Process -FilePath $VenvPython -ArgumentList "-m playwright install" -Wait -NoNewWindow
 
 # 7. Launch App
-Write-Host "Starting Brahma AI..." -ForegroundColor Green
+Write-Host "Starting Voice AI..." -ForegroundColor Green
 if (Test-Path $VenvPythonW) {
     Start-Process -FilePath $VenvPythonW -ArgumentList "main.py --startup" -WorkingDirectory $WorkingDir
 } else {

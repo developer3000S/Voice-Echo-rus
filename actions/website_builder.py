@@ -370,8 +370,8 @@ def _fallback_spec(parameters: dict[str, Any]) -> dict[str, Any]:
         "A polished modern website.",
     )
     site_name = _sanitize_text(
-        str(parameters.get("site_name") or parameters.get("title") or "Brahma Project"),
-        "Brahma Project",
+        str(parameters.get("site_name") or parameters.get("title") or "Voice Project"),
+        "Voice Project",
     )
     calc_request = _is_calculator_request(f"{site_name} {brief}")
     layout_mode = _choose_layout_mode(f"{site_name} {brief}")
@@ -392,7 +392,7 @@ def _fallback_spec(parameters: dict[str, Any]) -> dict[str, Any]:
             "title": site_name,
             "layout_mode": layout_mode,
             "hero": {
-                "eyebrow": "Built with Brahma",
+                "eyebrow": "Built with Voice",
                 "title": site_name,
                 "subtitle": "A fresh build composed from your brief.",
                 "primary_cta": "Open Preview",
@@ -404,7 +404,7 @@ def _fallback_spec(parameters: dict[str, Any]) -> dict[str, Any]:
 
     if project_type == "app":
         pages[0]["hero"] = {
-            "eyebrow": "Built with Brahma",
+            "eyebrow": "Built with Voice",
             "title": site_name,
             "subtitle": "A dashboard-like experience with live workspace panels.",
             "primary_cta": "Open Workspace",
@@ -440,8 +440,8 @@ def _generate_spec(parameters: dict[str, Any]) -> dict[str, Any]:
         "",
     )
     site_name = _sanitize_text(
-        str(parameters.get("site_name") or parameters.get("title") or "Brahma Project"),
-        "Brahma Project",
+        str(parameters.get("site_name") or parameters.get("title") or "Voice Project"),
+        "Voice Project",
     )
     if not brief:
         return _fallback_spec(parameters)
@@ -828,7 +828,7 @@ h1 { margin: 0 0 10px; font-size: clamp(2.5rem, 6vw, 4.8rem); line-height: .95; 
 }
 """
         js = """
-const STORAGE_KEY = 'brahma.groceries.items';
+const STORAGE_KEY = 'voice.groceries.items';
 const input = document.getElementById('itemInput');
 const addButton = document.getElementById('addItemBtn');
 const list = document.getElementById('groceryList');
@@ -1240,7 +1240,7 @@ def _generate_code_bundle(parameters: dict[str, Any]) -> dict[str, Any]:
 You are a senior frontend engineer. Create a fresh website from scratch and return only file outputs.
 
 Hard rules:
-- Do not mention Brahma, Codex, or any assistant branding in the site content.
+- Do not mention Voice, Codex, or any assistant branding in the site content.
 - Do not use a starter template or placeholder filler.
 - Make the site feel specific to the brief.
 - Use semantic HTML, responsive CSS, and working JavaScript.
@@ -1403,7 +1403,7 @@ def _normalize_page(page: dict[str, Any], site_name: str, brief: str, idx: int) 
     if not normalized_sections:
         normalized_sections = _fallback_spec({"site_name": site_name, "description": brief})["pages"][0]["sections"]
     hero_data = {
-        "eyebrow": _sanitize_text(str(hero.get("eyebrow") or ("Built with Brahma" if idx == 0 else "Project Page")), "Built with Brahma"),
+        "eyebrow": _sanitize_text(str(hero.get("eyebrow") or ("Built with Voice" if idx == 0 else "Project Page")), "Built with Voice"),
         "title": _sanitize_text(str(hero.get("title") or title), title),
         "subtitle": _sanitize_text(str(hero.get("subtitle") or brief), brief),
         "primary_cta": _sanitize_text(str(hero.get("primary_cta") or "Get Started"), "Get Started"),
@@ -1525,7 +1525,7 @@ def _render_workspace(section: dict[str, Any]) -> str:
     return f"""
       <div class="workspace-shell">
         <aside class="workspace-sidebar">
-          <div class="sidebar-brand">Brahma Workspace</div>
+          <div class="sidebar-brand">Voice Workspace</div>
           <div class="sidebar-note">{_html(section.get("subtitle") or "Dashboard-style layout with live panels.")}</div>
         </aside>
         <div class="workspace-main">
@@ -1776,7 +1776,7 @@ def _render_page_html(spec: dict[str, Any], page: dict[str, Any], pages: list[di
       <span class="brand-mark"></span>
       <div>
         <strong>{_html(spec.get("site_name") or "Website")}</strong>
-        <span>{_html(tagline or "Generated with Brahma")}</span>
+        <span>{_html(tagline or "Generated with Voice")}</span>
       </div>
     </div>
     <button class="nav-toggle" type="button" aria-label="Toggle navigation">Menu</button>
@@ -1824,7 +1824,7 @@ def _render_page_html(spec: dict[str, Any], page: dict[str, Any], pages: list[di
   <footer class="footer reveal">
     <div>
       <strong>{_html(spec.get("site_name") or "Website")}</strong>
-      <p>{_html(tagline or "Generated with Brahma")}</p>
+      <p>{_html(tagline or "Generated with Voice")}</p>
     </div>
     <a class="btn btn-secondary" href="#top">Back to top</a>
   </footer>
@@ -1855,7 +1855,7 @@ def _render_page_html(spec: dict[str, Any], page: dict[str, Any], pages: list[di
       <span class="brand-mark"></span>
       <div>
         <strong>{_html(spec.get("site_name") or "Website")}</strong>
-        <span>{_html(tagline or "Generated with Brahma")}</span>
+        <span>{_html(tagline or "Generated with Voice")}</span>
       </div>
     </div>
     <button class="nav-toggle" type="button" aria-label="Toggle navigation">Menu</button>
@@ -1865,7 +1865,7 @@ def _render_page_html(spec: dict[str, Any], page: dict[str, Any], pages: list[di
   <main class="layout-{_html(layout_mode)}">
     <section class="hero hero--{_html(layout_mode)} reveal">
       <div class="hero-copy">
-        <p class="eyebrow">{_html(hero.get("eyebrow") or "Built with Brahma")}</p>
+        <p class="eyebrow">{_html(hero.get("eyebrow") or "Built with Voice")}</p>
         <h1>{_html(hero.get("title") or title)}</h1>
         <p class="lead">{_html(hero.get("subtitle") or tagline)}</p>
         <div class="hero-actions">
@@ -1896,7 +1896,7 @@ def _render_page_html(spec: dict[str, Any], page: dict[str, Any], pages: list[di
   <footer class="footer reveal">
     <div>
       <strong>{_html(spec.get("site_name") or "Website")}</strong>
-      <p>{_html(tagline or "Generated with Brahma")}</p>
+      <p>{_html(tagline or "Generated with Voice")}</p>
     </div>
     <a class="btn btn-secondary" href="#top">Back to top</a>
   </footer>
@@ -2904,7 +2904,7 @@ def _render_readme(spec: dict[str, Any], port: int) -> str:
     page_names = "\n".join(f"- `{page.get('slug')}.html`" if page.get("slug") != "index" else "- `index.html`" for page in spec.get("pages", []))
     return f"""# {spec.get("site_name") or "Website"}
 
-Generated by Brahma AI.
+Generated by Voice AI.
 
 ## Open
 - Source files: VS Code

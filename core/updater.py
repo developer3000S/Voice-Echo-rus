@@ -9,7 +9,7 @@ from PyQt6.QtCore import QObject, pyqtSignal
 class UpdateChecker(QObject):
     update_available_sig = pyqtSignal(str)
 
-    def __init__(self, repo_owner="titechprabhasolutions", repo_name="Brahma---personal", branch="main"):
+    def __init__(self, repo_owner="titechprabhasolutions", repo_name="Voice---personal", branch="main"):
         super().__init__()
         self.repo_owner = repo_owner
         self.repo_name = repo_name

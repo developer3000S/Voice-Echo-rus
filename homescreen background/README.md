@@ -1,4 +1,4 @@
-# Brahma Orb UI
+# Voice Orb UI
 
 An interactive holographic orb interface built with **Next.js**, **Three.js**, and **MediaPipe** hand tracking.
 
@@ -41,7 +41,7 @@ Click **GESTURES OFF** (or press `G`) and allow camera access, then:
 
 - **`lib/orbScene.ts`** builds the Three.js scene, visual effects, and camera controls.
 - **`lib/handTracker.ts`** runs MediaPipe HandLandmarker on the webcam feed.
-- **`components/BrahmaOrb.tsx`** connects the scene, the tracker, and user input.
+- **`components/VoiceOrb.tsx`** connects the scene, the tracker, and user input.
 
 ## License
 

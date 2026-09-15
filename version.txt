@@ -15,12 +15,12 @@ VSVersionInfo(
       StringTable(
         '040904B0',
         [StringStruct('CompanyName', 'Suryaansh Tiwari'),
-        StringStruct('FileDescription', 'Brahma Echo AI Assistant'),
+        StringStruct('FileDescription', 'Voice Echo AI Assistant'),
         StringStruct('FileVersion', '1.0.0'),
-        StringStruct('InternalName', 'BrahmaEcho'),
+        StringStruct('InternalName', 'VoiceEcho'),
         StringStruct('LegalCopyright', '© Suryaansh Tiwari. All rights reserved.'),
-        StringStruct('OriginalFilename', 'BrahmaEcho.exe'),
-        StringStruct('ProductName', 'Brahma Echo'),
+        StringStruct('OriginalFilename', 'VoiceEcho.exe'),
+        StringStruct('ProductName', 'Voice Echo'),
         StringStruct('ProductVersion', '1.0.0')])
       ]), 
     VarFileInfo([VarStruct('Translation', [1033, 1200])])
