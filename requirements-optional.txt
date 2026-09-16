@@ -1,0 +1,8 @@
+# Optional extras that are installed best-effort (a failure here does not
+# block startup). mediapipe powers the gesture camera and push-up tracking
+# only; every call site degrades gracefully when it is missing.
+#
+# mediapipe ships no wheels for every interpreter (e.g. none for Python 3.14
+# on macOS Intel), so it must not live in requirements.txt where its absence
+# aborts the whole install before the core packages are reached.
+mediapipe

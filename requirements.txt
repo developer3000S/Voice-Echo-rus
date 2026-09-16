@@ -12,7 +12,6 @@ pyperclip
 pygetwindow
 opencv-python
 numpy
-mediapipe
 mss
 psutil
 comtypes; sys_platform == "win32"

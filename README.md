@@ -129,8 +129,16 @@ source .venv/bin/activate
 
 ```bash
 pip install -r requirements.txt
+pip install -r requirements-optional.txt   # optional: gesture camera (mediapipe)
 playwright install
 ```
+
+> `mediapipe` (used only for the gesture camera and push-up tracking) publishes
+> wheels for a narrower range of interpreters than the rest of the stack. It
+> lives in `requirements-optional.txt` so a missing wheel never aborts the
+> install — the app starts and the gesture camera simply stays disabled.
+> On Python 3.14 (e.g. macOS Intel) mediapipe has no wheel; use Python 3.11 or
+> 3.12 if you need gestures.
 
 ### 4. Configure API credentials
 
