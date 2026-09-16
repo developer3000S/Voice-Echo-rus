@@ -386,6 +386,24 @@ def _is_gemini_limit_error(exc: Exception) -> bool:
     ))
 
 
+def _is_network_unreachable(exc: Exception) -> bool:
+    """Return True for network errors that won't recover by retrying (DNS/proxy/host misconfiguration)."""
+    msg = str(exc).lower()
+    return any(token in msg for token in (
+        "no route to host",
+        "net unreachable",
+        "host unreachable",
+        "connection refused",
+        "name or service not known",
+        "nodename nor servname",
+        "temporary failure in name resolution",
+        "eai_again",
+        "eai_nodata",
+        "errno 113",
+        "errno 101",
+    ))
+
+
 def _looks_like_screen_request(text: str) -> bool:
     t = (text or "").lower()
     if not t:
@@ -2540,7 +2558,7 @@ class VoiceLive:
                     reply = _gemini_text_reply(request_text)
                 except Exception as e:
                     print(f"[VOICE ECHO] ⚠️ Gemini fallback failed: {e}")
-                    if _is_gemini_limit_error(e):
+                    if _is_gemini_limit_error(e) or _is_network_unreachable(e):
                         self._use_openrouter_first = True
 
             if not reply:
@@ -3178,6 +3196,7 @@ class VoiceLive:
         )
 
         while True:
+            fatal_hint = False
             try:
                 print("[VOICE ECHO] 🔌 Connecting...")
                 self.ui.set_state("THINKING")
@@ -3222,16 +3241,26 @@ class VoiceLive:
                         await connect_cm.__aexit__(None, None, None)
                     except Exception:
                         pass
-                    
             except Exception as e:
                 print(f"[VOICE ECHO] ⚠️ {e}")
                 traceback.print_exc()
+                fatal_hint = _is_network_unreachable(e)
                 if _is_gemini_limit_error(e):
                     self._use_openrouter_first = True
                 self.session = None
                 self._loop = None
             self.set_speaking(False)
             self.ui.set_state("LISTENING")
+            if fatal_hint:
+                self.ui.write_log(
+                    "ERR: Cannot reach the Gemini endpoint. This is a host/network "
+                    "misconfiguration (see /etc/hosts or proxy), not a transient glitch."
+                )
+                print(
+                    "[VOICE ECHO] 🚫 Gemini host unreachable — retrying will not help "
+                    "until DNS/hosts/proxy is fixed. See /etc/hosts and proxy settings."
+                )
+                _startup_log(f"gemini connect unreachable: {e}")
             print("[VOICE ECHO] 🔄 Reconnecting in 5s...")
             await asyncio.sleep(5)
 
