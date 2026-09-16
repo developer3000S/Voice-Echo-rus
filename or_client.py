@@ -6,7 +6,9 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-import requests
+import httpx
+
+from proxy_manager import get_httpx_client
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("openrouter_client")
@@ -129,13 +131,12 @@ class OpenRouterClient:
 
         for attempt in range(1, MAX_RETRIES_PER_MODEL + 1):
             try:
-                resp = requests.post(
+                resp = get_httpx_client().post(
                     API_URL,
                     headers=self._headers,
                     json=payload,
                     timeout=REQUEST_TIMEOUT,
                 )
-
                 if resp.status_code == 401:
                     raise PermissionError(
                         f"[OpenRouter] Authentication failed for model {model}. "
@@ -166,7 +167,7 @@ class OpenRouterClient:
                     f"(attempt {attempt}/{MAX_RETRIES_PER_MODEL})"
                 )
 
-            except requests.exceptions.Timeout:
+            except httpx.TimeoutException:
                 logger.warning(
                     f"[OpenRouter] {model} → Timeout "
                     f"(attempt {attempt}/{MAX_RETRIES_PER_MODEL})"

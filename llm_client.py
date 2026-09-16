@@ -1,9 +1,12 @@
 import json
 import logging
-import requests
+import os
 from pathlib import Path
 from typing import Optional
+
+import httpx
 from or_client import client as openrouter_client
+from proxy_manager import get_httpx_client
 
 logger = logging.getLogger("llm_client")
 
@@ -44,11 +47,10 @@ class UnifiedAIClient:
 
         endpoint = f"{self._local_url}/chat/completions"
         try:
-            resp = requests.post(
+            resp = get_httpx_client().post(
                 endpoint,
                 headers={"Content-Type": "application/json"},
                 json=payload,
-                timeout=120
             )
             if resp.status_code == 200:
                 data = resp.json()

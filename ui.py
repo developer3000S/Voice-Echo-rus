@@ -42,6 +42,7 @@ except Exception:
     WEB_ENGINE_AVAILABLE = False
 
 from discord_bot import DiscordBotService
+from proxy_manager import get_proxy_url, set_proxy_url
 from gesture_utils import estimate_gesture_state, GestureTracker
 from smart_home import SmartHomeService
 from smart_home_page_new import VoiceHomePage, _DeviceTile
@@ -656,6 +657,7 @@ def _default_app_settings() -> dict:
         "attention_call_prompts": True,
         "developer_mode_enabled": False,
         "developer_mode_workspace": "",
+        "proxy_url": "",
     }
 
 
@@ -9421,7 +9423,29 @@ class SystemConnectivityPage(QWidget):
         self._default_provider.currentTextChanged.connect(lambda t: self._local_ai_widget.setVisible(t == "Local"))
         
         lay1.addWidget(self._local_ai_widget)
-        
+
+        # Network Proxy
+        proxy_card = self._card("Network Proxy", "Route all external HTTP/HTTPS/WebSocket connections through this proxy.")
+        proxy_lay = QVBoxLayout(proxy_card)
+        proxy_row = QHBoxLayout()
+        proxy_row.addWidget(QLabel("Proxy URL"))
+        self._proxy_url_input = QLineEdit()
+        self._proxy_url_input.setEchoMode(QLineEdit.EchoMode.Password)
+        self._proxy_url_input.setPlaceholderText("http://user:pass@host:port")
+        self._proxy_url_input.setText(self._load_app_settings().get("proxy_url", ""))
+        self._proxy_url_input.textChanged.connect(self._sync_proxy_url)
+        proxy_row.addWidget(self._proxy_url_input, 1)
+        proxy_lay.addLayout(proxy_row)
+        self._proxy_status = QLabel("Proxy is not configured")
+        self._proxy_status.setStyleSheet(f"color: {C.TEXT_DIM};")
+        proxy_lay.addWidget(self._proxy_status)
+        proxy_btns = QHBoxLayout()
+        self._proxy_save_btn = QPushButton("Save & Restart")
+        self._proxy_save_btn.clicked.connect(self._save_proxy_and_restart)
+        proxy_btns.addWidget(self._proxy_save_btn)
+        proxy_lay.addLayout(proxy_btns)
+        lay.addWidget(proxy_card)
+
         self._auto_switch_btn = self._mk_toggle("Automatically switch if a provider fails", bool(self._load_app_settings().get("auto_provider_switch", True)), self._toggle_auto_provider_switch)
         lay1.addWidget(self._auto_switch_btn)
         lay.addWidget(card)

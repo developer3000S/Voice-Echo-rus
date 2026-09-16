@@ -19,10 +19,13 @@ try:
 except Exception:
     pass
 
+import os
 import sounddevice as sd
 from google import genai
 from google.genai import types
 from ui import VoiceUI
+from proxy_manager import get_httpx_client, set_proxy_url as _set_proxy
+from proxy_manager import get_proxy_url
 from memory.memory_manager import (
     load_memory, update_memory, format_memory_for_prompt,
     should_extract_memory, extract_memory
@@ -264,10 +267,7 @@ def _extract_gemini_text(response) -> str:
 
 
 def _gemini_text_reply(prompt: str) -> str:
-    client = genai.Client(
-        api_key=_get_api_key(),
-        http_options={"api_version": "v1beta"},
-    )
+    client = _get_gemini_client()
     system_prompt = (
         "You are Voice Echo, a concise, helpful desktop assistant. "
         "Reply naturally and briefly. Do not mention internal implementation details."
@@ -3192,7 +3192,7 @@ class VoiceLive:
 
         client = genai.Client(
             api_key=_get_api_key(),
-            http_options={"api_version": "v1beta"}
+            http_options={"api_version": "v1beta", "httpx_client": get_httpx_client()}
         )
 
         while True:
