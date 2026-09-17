@@ -5,6 +5,9 @@ import json
 import re
 import time
 from pathlib import Path
+from types import SimpleNamespace
+
+from llm_client import client as llm
 
 
 def get_base_dir():
@@ -24,21 +27,11 @@ def _projects_dir() -> Path:
 
 PROJECTS_DIR     = _projects_dir()
 MAX_FIX_ATTEMPTS = 5
-MODEL_PLANNER    = "gemini-flash-latest"
-MODEL_WRITER     = "gemini-flash-latest"
 
-def _get_api_key() -> str:
-    with open(API_CONFIG_PATH, "r", encoding="utf-8") as f:
-        return json.load(f)["gemini_api_key"]
-
-
-def _get_model(model_name: str):
-    from google import genai
-    _c = genai.Client(api_key=_get_api_key())
-
+def _get_model(model_name: str = ""):
     class _W:
         def generate_content(self, contents):
-            return _c.models.generate_content(model=model_name, contents=contents)
+            return SimpleNamespace(text=llm.chat(str(contents)))
 
     return _W()
 
@@ -110,7 +103,7 @@ class RateLimitError(Exception):
 
 
 def _plan_project(description: str, language: str) -> dict:
-    model = _get_model(MODEL_PLANNER)
+    model = _get_model()
 
     prompt = f"""You are a senior software architect. Create a minimal, complete file plan for this project.
 
@@ -166,7 +159,7 @@ def _write_file(
     project_dir: Path,
     already_written: dict[str, str],
 ) -> str:
-    model = _get_model(MODEL_WRITER)
+    model = _get_model()
 
     file_path = file_info["path"]
     file_desc = file_info.get("description", "")
@@ -388,7 +381,7 @@ def _fix_files(
     entry_point: str,
 ) -> dict[str, str]:
 
-    model = _get_model(MODEL_PLANNER)
+    model = _get_model()
 
     error_file, error_line = _parse_traceback(error_output, list(file_codes.keys()))
     error_type = _classify_error(error_output)

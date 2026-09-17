@@ -15,6 +15,8 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+from llm_client import client as llm
+
 PROJECT_NAME = "Voice AI - Lite"
 DEFAULT_OUTPUT_DIR = Path.home() / "Downloads"
 
@@ -56,18 +58,6 @@ def _open_file(path: Path) -> None:
             subprocess.Popen(["xdg-open", str(path)])
     except Exception:
         pass
-
-
-def _get_api_key() -> str:
-    config_path = Path(__file__).resolve().parent.parent / "config" / "api_keys.json"
-    with open(config_path, "r", encoding="utf-8") as f:
-        return json.load(f)["gemini_api_key"]
-
-
-def _gemini_client():
-    from google import genai
-
-    return genai.Client(api_key=_get_api_key())
 
 
 def _import_docx():
@@ -411,14 +401,20 @@ def word_document(parameters: dict, player=None, speak=None) -> str:
             text = _extract_doc_text(doc)
             if not text.strip():
                 return "The document appears to be empty."
-            client = _gemini_client()
             prompt = (
                 "Summarize this Word document concisely and clearly:\n\n"
                 if action == "summarize"
                 else "Analyze this Word document thoroughly:\n\n"
             )
-            response = client.models.generate_content(model="gemini-2.5-flash", contents=prompt + text[:40000])
-            result = response.text.strip()
+            result = llm.chat(
+                prompt + text[:40000],
+                system=(
+                    "You are a document analysis assistant. Be concise and accurate."
+                    if action == "summarize"
+                    else "You are a thorough document analyst."
+                ),
+                temperature=0.3,
+            ).strip()
             if len(result) > 600 and params.get("save", True):
                 out = _resolve_output_path(output_path_str, title=source_path.stem, ext=".txt", fallback_name=source_path.stem)
                 out = out.with_suffix(".txt")

@@ -16,6 +16,7 @@ Supported types:
   pptx    → summarize, extract_text, to_pdf
 """
 
+import base64
 import os
 import re
 import json
@@ -24,45 +25,54 @@ import subprocess
 import tempfile
 from pathlib import Path
 from datetime import datetime
-
-from google import genai
-from google.genai import types as _genai_types
+from types import SimpleNamespace
 
 
-class _GeminiModel:
-    MODEL = "gemini-2.5-flash"
-
-    def __init__(self, client):
-        self._client = client
+class _LocalModel:
+    def __init__(self):
+        pass
 
     def generate_content(self, contents, **kwargs):
-        return self._client.models.generate_content(
-            model=self.MODEL, contents=self._normalize(contents), **(kwargs or {})
-        )
+        from llm_client import client as llm
+        kwargs = kwargs or {}
+        system = kwargs.get("system_instruction")
+        temperature = kwargs.get("temperature", 0.7)
+        max_tokens = kwargs.get("max_tokens", 4096)
 
-    @staticmethod
-    def _normalize(contents):
-        if not isinstance(contents, list):
-            return contents
-        out = []
-        for item in contents:
-            if isinstance(item, dict) and item.get("mime_type") and "data" in item:
-                out.append(_genai_types.Part.from_bytes(
-                    data=item["data"], mime_type=item["mime_type"]
-                ))
-            else:
-                out.append(item)
-        return out
+        prompt = contents
+        image_part = None
+        if isinstance(contents, list):
+            text_parts = []
+            for item in contents:
+                if isinstance(item, dict) and item.get("mime_type") and "data" in item:
+                    image_part = (base64.b64encode(item["data"]).decode("utf-8"), item["mime_type"])
+                elif hasattr(item, "save"):
+                    import io
+                    buf = io.BytesIO()
+                    item.save(buf, format="JPEG")
+                    image_part = (base64.b64encode(buf.getvalue()).decode("utf-8"), "image/jpeg")
+                else:
+                    text_parts.append(str(item))
+            prompt = " ".join(text_parts)
+
+        if image_part:
+            text = llm.vision(
+                prompt or "Analyze this image.",
+                image_part[0],
+                image_part[1],
+                max_tokens=kwargs.get("max_tokens", 1024),
+            )
+            return SimpleNamespace(text=text)
+
+        if system:
+            text = llm.chat(prompt, system=system, temperature=temperature, max_tokens=max_tokens)
+        else:
+            text = llm.chat(prompt, temperature=temperature, max_tokens=max_tokens)
+        return SimpleNamespace(text=text)
 
 
-def _get_api_key() -> str:
-    config_path = Path(__file__).resolve().parent.parent / "config" / "api_keys.json"
-    with open(config_path, "r", encoding="utf-8") as f:
-        return json.load(f)["gemini_api_key"]
-
-
-def _gemini_client():
-    return _GeminiModel(genai.Client(api_key=_get_api_key()))
+def _local_client():
+    return _LocalModel()
 
 
 def _detect_type(path: Path) -> str:
@@ -113,7 +123,7 @@ def _process_image(path: Path, action: str, params: dict, speak=None) -> str:
 
     if action in ("describe", "ocr", "analyze", "read", "extract_text"):
         try:
-            model  = _gemini_client()
+            model  = _local_client()
             img    = Image.open(path)
             prompt = {
                 "describe": "Describe this image in detail.",
@@ -233,7 +243,7 @@ def _process_pdf(path: Path, action: str, params: dict, speak=None) -> str:
             "reformat":       f"Reformat this text cleanly with proper structure:\n\n{text}",
         }
         try:
-            model    = _gemini_client()
+            model    = _local_client()
             response = model.generate_content(prompt_map.get(action, f"Analyze:\n\n{text}"))
             result   = response.text.strip()
             if len(result) > 600 and params.get("save", True):
@@ -323,7 +333,7 @@ def _process_text_doc(path: Path, file_type: str, action: str,
         instruction = action
 
     try:
-        model    = _gemini_client()
+        model    = _local_client()
         response = model.generate_content(prompt_map[action])
         result   = response.text.strip()
         if len(result) > 600 and params.get("save", True):
@@ -370,7 +380,7 @@ def _process_data(path: Path, file_type: str, action: str,
                    f"Rows: {len(df)}\nPreview:\n{preview}\n\n"
                    f"Give insights, patterns, and notable findings.")
         try:
-            model    = _gemini_client()
+            model    = _local_client()
             response = model.generate_content(prompt)
             return response.text.strip()
         except Exception as e:
@@ -424,7 +434,7 @@ def _process_data(path: Path, file_type: str, action: str,
 
     preview = df.head(30).to_string()
     try:
-        model    = _gemini_client()
+        model    = _local_client()
         response = model.generate_content(
             f"Task: {action}\nDataset ({len(df)} rows, cols: {list(df.columns)}):\n{preview}"
         )
@@ -455,7 +465,7 @@ def _process_json(path: Path, action: str, params: dict, speak=None) -> str:
         if params.get("instruction"):
             prompt = f"{params['instruction']}\n\nJSON data:\n{preview}"
         try:
-            model    = _gemini_client()
+            model    = _local_client()
             response = model.generate_content(prompt)
             return response.text.strip()
         except Exception as e:
@@ -519,7 +529,7 @@ def _process_code(path: Path, action: str, params: dict, speak=None) -> str:
         prompt = prompt_map[action]
 
     try:
-        model    = _gemini_client()
+        model    = _local_client()
         response = model.generate_content(prompt)
         result   = response.text.strip()
 
@@ -553,7 +563,7 @@ def _process_audio(path: Path, action: str, params: dict, speak=None) -> str:
 
     if action == "transcribe":
         try:
-            model   = _gemini_client()
+            model   = _local_client()
             content = path.read_bytes()
             mime    = {
                 "mp3": "audio/mp3", "wav": "audio/wav",
@@ -790,7 +800,7 @@ def _process_pptx(path: Path, action: str, params: dict, speak=None) -> str:
             out.write_text(text, encoding="utf-8")
             return f"Text extracted. Saved: {out.name}"
         try:
-            model    = _gemini_client()
+            model    = _local_client()
             prompt   = f"{'Summarize' if action == 'summarize' else 'Analyze'} this presentation:\n{text[:30000]}"
             response = model.generate_content(prompt)
             return response.text.strip()
@@ -823,7 +833,7 @@ def file_processor(parameters: dict, player=None, speak=None) -> str:
     if file_type == "unknown":
         try:
             content = path.read_text(encoding="utf-8", errors="ignore")[:10000]
-            model   = _gemini_client()
+            model   = _local_client()
             prompt  = f"File: {path.name}\nContent preview:\n{content}\n\nTask: {action or instruction or 'Describe what this file contains and what can be done with it.'}"
             response = model.generate_content(prompt)
             return response.text.strip()

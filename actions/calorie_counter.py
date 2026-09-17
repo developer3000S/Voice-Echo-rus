@@ -3,7 +3,7 @@ JARVIS plugin — Calorie Counter (webcam vision).
 
 Hold food up to the camera and ask "how many calories is this?" —
 JARVIS switches the HUD to the live camera with an animated scan bar,
-photographs the food, analyzes it with Gemini, speaks a short summary
+photographs the food, analyzes it with the local model, speaks a short summary
 in your language and shows the full nutrition breakdown in the
 content panel.
 
@@ -12,6 +12,7 @@ _cam_frame_sig, present since Mark LI). If they're ever missing the
 plugin still works — just without the camera view.
 """
 
+import base64
 import json
 import threading
 import time
@@ -45,7 +46,6 @@ PLUGIN = {
     },
 }
 
-_MODEL             = "gemini-flash-latest"
 _LIVE_SCAN_SECONDS = 1.8     # live preview before the photo is taken
 _FPS               = 25
 _ANIM_MAX_SECONDS  = 25      # animator safety stop
@@ -110,11 +110,10 @@ def _emit_frame(frame_sig, frame: np.ndarray) -> None:
         frame_sig.emit(buf.tobytes())
 
 
-# ── Gemini ───────────────────────────────────────────────────────────────────
+# ── Nutrition analysis ────────────────────────────────────────────────────────
 
 def _analyze(photo: np.ndarray, query: str, api_key: str) -> dict:
-    from google import genai
-    from google.genai import types as gtypes
+    from llm_client import client as llm
 
     # match screen_processor's upload size: max 1280 wide
     h, w = photo.shape[:2]
@@ -141,15 +140,15 @@ def _analyze(photo: np.ndarray, query: str, api_key: str) -> dict:
         " If no food is visible, politely say so instead."
     )
 
-    client = genai.Client(api_key=api_key)
-    resp = client.models.generate_content(
-        model=_MODEL,
-        contents=[
-            gtypes.Part.from_bytes(data=jpg.tobytes(), mime_type="image/jpeg"),
-            prompt,
-        ],
+    jpg_b64 = base64.b64encode(jpg.tobytes()).decode("utf-8")
+    text = llm.vision(
+        prompt,
+        jpg_b64,
+        "image/jpeg",
+        system="You are a nutrition analysis engine. Return ONLY valid JSON.",
+        max_tokens=2048,
     )
-    text = (resp.text or "").strip()
+    text = (text or "").strip()
 
     # tolerate accidental fences / prose around the JSON
     if "{" in text and "}" in text:
@@ -161,10 +160,6 @@ def _analyze(photo: np.ndarray, query: str, api_key: str) -> dict:
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
     query = (parameters.get("query") or "").strip() or "How many calories is this food?"
-
-    api_key = _config().get("gemini_api_key")
-    if not api_key:
-        return "I can't run the nutrition scan — no API key is configured."
 
     def _log(msg: str) -> None:
         if player:
@@ -216,7 +211,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
             stream_sig.emit(False)
         return "I couldn't capture a picture of the food, sorry."
 
-    # Phase 2 — freeze frame, keep the scan bar sweeping while Gemini analyzes
+    # Phase 2 — freeze frame, keep the scan bar sweeping while the model analyzes
     if frame_sig:
         def _animate():
             a0 = time.time()
@@ -228,7 +223,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
         animator.start()
 
     try:
-        data = _analyze(photo, query, api_key)
+        data = _analyze(photo, query, "")
     except Exception as e:
         return f"The nutrition analysis failed: {e}"
     finally:

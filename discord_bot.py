@@ -30,9 +30,7 @@ def _load_discord_module():
 
 discord = _load_discord_module()
 
-from google import genai
-
-from llm_client import client as openrouter_client
+from llm_client import client as ai_client
 
 
 logger = logging.getLogger("voice echo.discord")

@@ -1,11 +1,11 @@
 #computer_settings.py
-import json
-import re
 import sys
 import time
 import subprocess
 import platform
 from pathlib import Path
+
+from llm_client import client as llm
 
 try:
     import pyautogui
@@ -33,11 +33,6 @@ def _get_base_dir() -> Path:
     if getattr(sys, "frozen", False):
         return Path(sys.executable).parent
     return Path(__file__).resolve().parent.parent
-
-def _get_api_key() -> str:
-    path = _get_base_dir() / "config" / "api_keys.json"
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)["gemini_api_key"]
 
 def _get_macos_wifi_interface() -> str:
     try:
@@ -597,9 +592,6 @@ _DANGEROUS_ACTIONS = {"restart", "shutdown"}
 
 def _detect_action(description: str) -> dict:
 
-    from google import genai as _genai
-    _client = _genai.Client(api_key=_get_api_key())
-
     available = ", ".join(sorted(ACTION_MAP.keys())) + \
                 ", volume_set, type_text, press_key, reload_n"
 
@@ -622,9 +614,7 @@ Rules:
 - Return ONLY the JSON, no explanation, no markdown."""
 
     try:
-        resp = _client.models.generate_content(model="gemini-flash-lite-latest", contents=prompt)
-        text = re.sub(r"```(?:json)?", "", resp.text).strip().rstrip("`").strip()
-        return json.loads(text)
+        return llm.chat_json(prompt, system="You are an intent detector for a computer control assistant.", max_tokens=512)
     except Exception as e:
         print(f"[Settings] Intent detection failed: {e}")
         return {"action": description.lower().replace(" ", "_"), "value": None}

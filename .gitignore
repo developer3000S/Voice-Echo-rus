@@ -26,8 +26,8 @@ config/certs/
 memory/long_term.json
 
 # Downloaded offline voice models (fetch via download_voice_models.py)
-config/models/piper/
-config/models/sherpa-ru/
+config/models/minicpm5-2b/MiniCPM5-2B-Q4_K_M.ggufpiper/
+config/models/minicpm5-2b/MiniCPM5-2B-Q4_K_M.ggufsherpa-ru/
 
 # Local test/debug artifacts
 _run.out.txt
@@ -70,3 +70,6 @@ search_results.txt
 homescreen background/node_modules/
 homescreen background/.next/
 homescreen background/out/
+
+models/
+models/*

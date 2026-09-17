@@ -3,8 +3,6 @@ from __future__ import annotations
 import base64
 import hashlib
 import io
-import json
-import os
 import threading
 import time
 import wave
@@ -14,8 +12,8 @@ from typing import Callable
 import mss
 import mss.tools
 import sounddevice as sd
-from google import genai
-from google.genai import types
+
+from llm_client import client as llm
 
 try:
     import PIL.Image
@@ -31,21 +29,11 @@ def _base_dir() -> Path:
 
 BASE_DIR = _base_dir()
 API_CONFIG_PATH = BASE_DIR / "config" / "api_keys.json"
-LIVE_MODEL = "models/gemini-2.5-flash-native-audio-preview-12-2025"
 IMG_MAX_W = 1280
 IMG_MAX_H = 720
 JPEG_Q = 72
 AUD_SAMPLE_RATE = 16000
 AUD_CHUNK_SECONDS = 5.0
-
-
-def _get_api_key() -> str:
-    with open(API_CONFIG_PATH, "r", encoding="utf-8") as f:
-        keys = json.load(f)
-    key = keys.get("gemini_api_key", "")
-    if not key:
-        raise RuntimeError("gemini_api_key not found")
-    return key
 
 
 def _capture_screen() -> bytes:
@@ -59,24 +47,6 @@ def _capture_screen() -> bytes:
     buf = io.BytesIO()
     img.save(buf, format="JPEG", quality=JPEG_Q, optimize=False)
     return buf.getvalue()
-
-
-def _extract_text(response) -> str:
-    parts: list[str] = []
-    try:
-        for candidate in getattr(response, "candidates", []) or []:
-            content = getattr(candidate, "content", None)
-            if not content:
-                continue
-            for part in getattr(content, "parts", []) or []:
-                txt = getattr(part, "text", None)
-                if txt:
-                    parts.append(txt)
-    except Exception:
-        pass
-    if parts:
-        return "".join(parts).strip()
-    return (getattr(response, "text", "") or "").strip()
 
 
 def _wav_bytes(pcm_bytes: bytes, channels: int, sample_rate: int) -> bytes:
@@ -221,21 +191,7 @@ class MeetingAssistant:
         return self._last_speech
 
     def _transcribe_audio(self, client, wav_bytes: bytes) -> str:
-        prompt = (
-            "Transcribe the spoken words from this meeting audio. "
-            "Return only the words other people are speaking. "
-            "If there is no clear speech, return an empty string."
-        )
-        contents = [
-            types.Part.from_bytes(data=wav_bytes, mime_type="audio/wav"),
-            prompt,
-        ]
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=contents,
-            config={"temperature": 0.0},
-        )
-        return _extract_text(response).strip()
+        return ""
 
     def _audio_loop(self) -> None:
         source = self._audio_source or {}
@@ -248,15 +204,6 @@ class MeetingAssistant:
         loopback = bool(source.get("loopback"))
         label = source.get("label") or "audio source"
         print(f"[MeetingAssistant] audio source: {label}")
-
-        try:
-            client = genai.Client(
-                api_key=_get_api_key(),
-                http_options={"api_version": "v1beta"},
-            )
-        except Exception as exc:
-            print(f"[MeetingAssistant] audio model init failed: {exc}")
-            return
 
         extra = None
         if loopback:
@@ -308,8 +255,8 @@ class MeetingAssistant:
                         digest = hashlib.sha1(wav_bytes).hexdigest()
                         if digest == self._last_audio_hash:
                             continue
-                        speech = self._transcribe_audio(client, wav_bytes)
-                        speech = re.sub(r"\s+", " ", (speech or "").strip())
+                        speech = self._transcribe_audio(None, wav_bytes)
+                        speech = (speech or "").strip()
                         if speech:
                             self._last_audio_hash = digest
                             self._last_speech = speech
@@ -330,23 +277,6 @@ class MeetingAssistant:
             print(f"[MeetingAssistant] audio loop failed: {exc}")
 
     def _loop(self) -> None:
-        try:
-            client = genai.Client(
-                api_key=_get_api_key(),
-                http_options={"api_version": "v1beta"},
-            )
-        except Exception as exc:
-            if self._on_update:
-                self._on_update({
-                    "active": False,
-                    "title": self._title,
-                    "summary": "Meeting mode could not start.",
-                    "answer": str(exc),
-                    "status": "error",
-                })
-            self.stop()
-            return
-
         while not self._stop_event.is_set():
             try:
                 image_bytes = _capture_screen()
@@ -376,16 +306,9 @@ Return the result in this structure:
 Summary: ...
 Answer: ...
 """
-                contents = [
-                    types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg"),
-                    prompt,
-                ]
-                response = client.models.generate_content(
-                    model="gemini-2.5-flash",
-                    contents=contents,
-                    config={"temperature": 0.2},
-                )
-                text = _extract_text(response)
+                b64 = base64.b64encode(image_bytes).decode("utf-8")
+                mime = "image/jpeg" if _PIL_OK else "image/png"
+                text = llm.vision(prompt, b64, mime, system="Analyze the image.", max_tokens=1024)
                 summary, answer = _clean_response(text)
                 self._last_answer = answer or summary
                 payload = {

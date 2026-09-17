@@ -217,35 +217,13 @@ class WorkspaceStore:
             
         def _do_summary():
             try:
-                from google import genai
-                base_dir = Path(__file__).resolve().parent
-                key_path = base_dir / "config" / "api_keys.json"
-                with open(key_path, "r", encoding="utf-8") as f:
-                    api_key = json.load(f)["gemini_api_key"]
-                
-                client = genai.Client(api_key=api_key, http_options={"api_version": "v1beta"})
+                from llm_client import client as llm
                 prompt = (
                     "Summarize the following user conversation into 1-2 short, conversational sentences "
                     "that describe what the user was doing or asking about. Phrase it as 'Yesterday you were...'\n\n"
                     f"Conversation:\n{full_text}"
                 )
-                response = client.models.generate_content(
-                    model="gemini-2.5-flash",
-                    contents=prompt,
-                    config={"temperature": 0.5},
-                )
-                
-                text_parts = []
-                for candidate in getattr(response, "candidates", []) or []:
-                    content = getattr(candidate, "content", None)
-                    if not content: continue
-                    for part in getattr(content, "parts", []) or []:
-                        pt = getattr(part, "text", None)
-                        if pt: text_parts.append(pt)
-                summary = "".join(text_parts).strip()
-                if not summary:
-                    summary = (getattr(response, "text", "") or "").strip()
-                
+                summary = (llm.chat(prompt, temperature=0.5, max_tokens=256) or "").strip()
                 if summary:
                     self._set_state("last_session_summary", summary)
             except Exception as e:

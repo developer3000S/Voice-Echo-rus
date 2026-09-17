@@ -1,5 +1,4 @@
 sounddevice
-google-genai
 pillow
 requests
 python-kasa

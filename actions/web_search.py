@@ -4,39 +4,18 @@ import sys
 import warnings
 from pathlib import Path
 
-def _get_base_dir() -> Path:
-    if getattr(sys, "frozen", False):
-        return Path(sys.executable).parent
-    return Path(__file__).resolve().parent.parent
+from llm_client import client as llm
 
 
-BASE_DIR        = _get_base_dir()
-API_CONFIG_PATH = BASE_DIR / "config" / "api_keys.json"
-
-
-def _get_api_key() -> str:
-    with open(API_CONFIG_PATH, "r", encoding="utf-8") as f:
-        return json.load(f)["gemini_api_key"]
-
-
-def _gemini_search(query: str) -> str:
-    from google import genai
-
-    client   = genai.Client(api_key=_get_api_key())
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=query,
-        config={"tools": [{"google_search": {}}]},
+def _local_search(query: str) -> str:
+    text = llm.chat(
+        query,
+        system="You are a helpful online research assistant. Give specific facts and data.",
+        temperature=0.3,
     )
-
-    text = ""
-    for part in response.candidates[0].content.parts:
-        if hasattr(part, "text") and part.text:
-            text += part.text
-
     text = text.strip()
     if not text:
-        raise ValueError("Gemini returned an empty response.")
+        raise ValueError("The local model returned an empty response.")
     return text
 
 
@@ -81,9 +60,9 @@ def _compare(items: list[str], aspect: str) -> str:
         "Give specific facts and data."
     )
     try:
-        return _gemini_search(query)
+        return _local_search(query)
     except Exception as e:
-        print(f"[WebSearch] ⚠️ Gemini compare failed: {e} — falling back to DDG")
+        print(f"[WebSearch] ⚠️ LLM compare failed: {e} — falling back to DDG")
 
     # DDG fallback: fetch results per item and merge
     all_results: dict[str, list] = {}
@@ -126,10 +105,10 @@ def web_search(
     if mode == "compare":
         try:
             result = _compare(items or ([query] if query else []), aspect)
-            print("[WebSearch] Gemini compare OK.")
+            print("[WebSearch] LLM compare OK.")
             return result
         except Exception as e:
-            print(f"[WebSearch] Gemini compare failed ({e}) - trying DDG...")
+            print(f"[WebSearch] LLM compare failed ({e}) - trying DDG...")
             all_results: dict[str, list] = {}
             for item in items or ([query] if query else []):
                 try:
@@ -151,20 +130,20 @@ def web_search(
             result = _format_ddg(query, results)
             print(f"[WebSearch] DDG OK: {len(results)} result(s).")
             return result
-        print("[WebSearch] DDG returned no results, trying Gemini...")
+        print("[WebSearch] DDG returned no results, trying local AI...")
     except Exception as e:
-        print(f"[WebSearch] DDG search failed ({e}) - trying Gemini...")
+        print(f"[WebSearch] DDG search failed ({e}) - trying local AI...")
         try:
-            result = _gemini_search(query)
-            print("[WebSearch] Gemini search OK.")
+            result = _local_search(query)
+            print("[WebSearch] LLM search OK.")
             return result
-        except Exception as gemini_error:
-            print(f"[WebSearch] Gemini search failed ({gemini_error})")
-            return f"Search failed, sir: {gemini_error}"
+        except Exception as llm_error:
+            print(f"[WebSearch] LLM search failed ({llm_error})")
+            return f"Search failed, sir: {llm_error}"
 
     try:
-        result = _gemini_search(query)
-        print("[WebSearch] Gemini search OK.")
+        result = _local_search(query)
+        print("[WebSearch] LLM search OK.")
         return result
     except Exception:
         return _format_ddg(query, results)

@@ -12,7 +12,10 @@ import threading
 import urllib.request
 import webbrowser
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
+
+from llm_client import client as llm
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -45,11 +48,6 @@ def _load_json(path: Path, fallback: dict[str, Any] | None = None) -> dict[str, 
     except Exception:
         pass
     return dict(fallback or {})
-
-
-def _get_api_key() -> str:
-    data = _load_json(API_CONFIG_PATH)
-    return str(data.get("gemini_api_key", "")).strip()
 
 
 def _safe_slug(text: str, default: str = "website") -> str:
@@ -344,13 +342,17 @@ def _build_section_plan(site_name: str, brief: str, project_type: str, layout_mo
     ]
 
 
-def _gemini_client():
-    from google import genai
+def _llm_client():
+    class _Models:
+        def generate_content(self, contents, **kwargs):
+            config = kwargs.get("config") or {}
+            text = llm.chat(str(contents), temperature=float(config.get("temperature", 0.7)))
+            return SimpleNamespace(text=text)
 
-    api_key = _get_api_key()
-    if not api_key:
-        raise RuntimeError("gemini_api_key is missing in config/api_keys.json")
-    return genai.Client(api_key=api_key)
+    class _Client:
+        models = _Models()
+
+    return _Client()
 
 
 def _normalize_theme(theme: dict[str, Any] | None, accent: str | None = None) -> dict[str, str]:
@@ -523,9 +525,8 @@ Brief: {brief}
 
     def _worker() -> None:
         try:
-            client = _gemini_client()
+            client = _llm_client()
             response = client.models.generate_content(
-                model="gemini-2.5-flash",
                 contents=prompt,
                 config={"temperature": 0.7},
             )
@@ -1282,9 +1283,8 @@ Kind: {kind}
 
     def _worker() -> None:
         try:
-            client = _gemini_client()
+            client = _llm_client()
             response = client.models.generate_content(
-                model="gemini-2.5-flash",
                 contents=prompt,
                 config={"temperature": 0.7},
             )
@@ -3024,8 +3024,6 @@ def _wait_for_port(port: int, timeout: float = 10.0) -> bool:
 
 def website_builder(parameters: dict[str, Any], player=None) -> str:
     params = parameters or {}
-    if not _get_api_key():
-        return "Gemini API key is missing."
 
     try:
         project_dir = _resolve_project_dir(params)

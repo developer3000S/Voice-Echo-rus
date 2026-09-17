@@ -1,17 +1,10 @@
-import asyncio
 import base64
 import io
 import json
-import re
-import os
 import sys
-import time
-import threading
 import cv2
 import mss
 import mss.tools
-import sounddevice as sd
-import numpy as np
 from pathlib import Path
 
 try:
@@ -20,8 +13,7 @@ try:
 except ImportError:
     _PIL_OK = False
 
-from google import genai
-from google.genai import types
+from llm_client import client as llm
 
 def get_base_dir():
     if getattr(sys, "frozen", False):
@@ -30,11 +22,6 @@ def get_base_dir():
 
 BASE_DIR        = get_base_dir()
 API_CONFIG_PATH = BASE_DIR / "config" / "api_keys.json"
-
-LIVE_MODEL          = "models/gemini-2.5-flash-native-audio-preview-12-2025"
-CHANNELS            = 1
-RECEIVE_SAMPLE_RATE = 24000
-CHUNK_SIZE          = 1024
 
 IMG_MAX_W = 640
 IMG_MAX_H = 360
@@ -49,18 +36,6 @@ SYSTEM_PROMPT = (
     "Address the user as 'sir' for a tone of respect. "
     "Ask if the user needs any further help with their problem."
 )
-
-
-def _get_api_key() -> str:
-    try:
-        with open(API_CONFIG_PATH, "r", encoding="utf-8") as f:
-            keys = json.load(f)
-        key = keys.get("gemini_api_key", "")
-        if not key:
-            raise ValueError("gemini_api_key not found")
-        return key
-    except Exception as e:
-        raise RuntimeError(f"Could not load API key: {e}")
 
 
 def _get_camera_index() -> int:
@@ -166,196 +141,6 @@ def _capture_camera() -> bytes:
     return buf.tobytes()
 
 
-class _LiveSession:
-
-    def __init__(self):
-        self._loop:      asyncio.AbstractEventLoop | None = None
-        self._thread:    threading.Thread | None          = None
-        self._session                                     = None
-        self._out_queue: asyncio.Queue | None             = None
-        self._audio_in:  asyncio.Queue | None             = None
-        self._ready:     threading.Event                  = threading.Event()
-        self._player                                      = None
-        self._send_lock: asyncio.Lock | None              = None
-
-    def start(self, player=None):
-        if self._thread and self._thread.is_alive():
-            return
-        self._player = player
-        self._thread = threading.Thread(
-            target=self._run_loop, daemon=True, name="VisionSessionThread"
-        )
-        self._thread.start()
-        ok = self._ready.wait(timeout=20)
-        if not ok:
-            raise RuntimeError("Vision session did not start within 20s.")
-        print("[ScreenProcess] [OK] Vision session ready (no mic)")
-
-    def _run_loop(self):
-        self._loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self._loop)
-        self._loop.run_until_complete(self._main())
-
-    async def _main(self):
-        self._out_queue = asyncio.Queue(maxsize=30)
-        self._audio_in  = asyncio.Queue()
-        self._send_lock = asyncio.Lock()
-
-        client = genai.Client(
-            api_key=_get_api_key(),
-            http_options={"api_version": "v1beta"}
-        )
-
-        config = types.LiveConnectConfig(
-            response_modalities=["AUDIO"],
-            output_audio_transcription={},
-            system_instruction=SYSTEM_PROMPT,
-            speech_config=types.SpeechConfig(
-                voice_config=types.VoiceConfig(
-                    prebuilt_voice_config=types.PrebuiltVoiceConfig(
-                        voice_name="Charon"
-                    )
-                )
-            ),
-        )
-
-        while True:
-            try:
-                print("[ScreenProcess] [CONNECT] Vision session connecting...")
-                async with client.aio.live.connect(model=LIVE_MODEL, config=config) as session:
-                    self._session = session
-                    self._ready.set()
-                    print("[ScreenProcess] [OK] Vision session connected")
-                    async with asyncio.TaskGroup() as tg:
-                        tg.create_task(self._send_loop())
-                        tg.create_task(self._recv_loop())
-                        tg.create_task(self._play_loop())
-            except Exception as e:
-                print(f"[ScreenProcess] [WARN] Disconnected: {e} — reconnecting...")
-                self._session = None
-                self._ready.clear()
-                await asyncio.sleep(2)
-                print("[ScreenProcess] [WARN] Reconnect attempt will retry")
-
-    async def _send_loop(self):
-        while True:
-            item = await self._out_queue.get()
-            if self._session:
-                image_bytes, mime_type, user_text = item
-                try:
-                    b64 = base64.b64encode(image_bytes).decode("utf-8")
-                    await self._session.send_client_content(
-                        turns={
-                            "parts": [
-                                {"inline_data": {"mime_type": mime_type, "data": b64}},
-                                {"text": user_text}
-                            ]
-                        },
-                        turn_complete=True
-                    )
-                    print("[ScreenProcess] [OK] Image sent")
-                except Exception as e:
-                    print(f"[ScreenProcess] [WARN] Send error: {e}")
-                    if self._player and hasattr(self._player, "set_scanning"):
-                        self._player.set_scanning(False, "")
-                        if hasattr(self._player, "write_log"):
-                            self._player.write_log("System Event: Не удалось передать экран ИИ. Проверьте подключение к интернету или ключ API.")
-            else:
-                print("[ScreenProcess] [WARN] Session not ready, discarding message")
-                if self._player and hasattr(self._player, "set_scanning"):
-                    self._player.set_scanning(False, "")
-                    if hasattr(self._player, "write_log"):
-                        self._player.write_log("System Event: Модуль ИИ-зрения сейчас офлайн. Возможно, он переподключается.")
-
-    async def _recv_loop(self):
-        transcript_buf: list[str] = []
-        try:
-            async for response in self._session.receive():
-                if response.data:
-                    await self._audio_in.put(response.data)
-                sc = response.server_content
-                if not sc:
-                    continue
-
-                if sc.output_transcription and sc.output_transcription.text:
-                    chunk = sc.output_transcription.text.strip()
-                    if chunk:
-                        transcript_buf.append(chunk)
-
-                if sc.turn_complete:
-                    if transcript_buf and self._player:
-                        full = re.sub(r'\s+', ' ', " ".join(transcript_buf)).strip()
-                        if full:
-                            self._player.write_log(f"Voice AI: {full}")
-                            print(f"[ScreenProcess] [MSG] {full}")
-                            if hasattr(self._player, "set_scanning"):
-                                self._player.set_scanning(False, "")
-                    transcript_buf = []
-        except Exception as e:
-            print(f"[ScreenProcess] [ERR] Recv error: {e}")
-            transcript_buf = []
-            if self._player and hasattr(self._player, "set_scanning"):
-                self._player.set_scanning(False, "")
-            await asyncio.sleep(0.3)
-
-    async def _play_loop(self):
-        stream = sd.RawOutputStream(
-            samplerate=RECEIVE_SAMPLE_RATE,
-            channels=CHANNELS,
-            dtype="int16",
-            blocksize=CHUNK_SIZE,
-        )
-        stream.start()
-        try:
-            while True:
-                chunk = await self._audio_in.get()
-                await asyncio.to_thread(stream.write, chunk)
-        except Exception as e:
-            print(f"[ScreenProcess] [ERR] Play error: {e}")
-            raise
-        finally:
-            stream.stop()
-            stream.close()
-
-    def analyze(self, image_bytes: bytes, mime_type: str, user_text: str):
-        import time
-        # Wait for the background thread to initialize the event loop
-        for _ in range(50):
-            if self._loop:
-                break
-            time.sleep(0.1)
-            
-        if not self._loop:
-            print("[ScreenProcess] [ERR] Failed to start async loop")
-            return
-        if not self._out_queue:
-            print("[ScreenProcess] [ERR] Out queue is not initialized")
-            return
-        print(f"[ScreenProcess] enqueueing payload: {len(image_bytes)} bytes, mime={mime_type}, text={user_text[:40]}")
-        asyncio.run_coroutine_threadsafe(
-            self._out_queue.put((image_bytes, mime_type, user_text)),
-            self._loop
-        )
-
-    def is_ready(self) -> bool:
-        return self._session is not None
-
-
-_live       = _LiveSession()
-_started    = False
-_start_lock = threading.Lock()
-
-
-def _ensure_started(player=None):
-    global _started
-    with _start_lock:
-        if not _started:
-            _live.start(player=player)
-            _started = True
-        elif player is not None:
-            _live._player = player
-
-
 def screen_process(
     parameters:     dict,
     response:       str | None = None,
@@ -389,14 +174,6 @@ def screen_process(
             player.set_scanning(False, "")
         return False
 
-    try:
-        _ensure_started(player=player)
-    except Exception as e:
-        import traceback; traceback.print_exc()
-        msg = f"[ScreenProcess] [ERR] Vision initialization failed: {e}"
-        print(msg)
-        return _screen_failure("Vision module failed to initialize. Check your internet connection and API key.")
-
     if player and hasattr(player, "set_scanning") and angle != "camera":
         player.set_scanning(True, "SCANNING SCREEN")
 
@@ -422,43 +199,32 @@ def screen_process(
         print("[ScreenProcess] [ERR] No image bytes available for analysis.")
         return _screen_failure("Screen capture returned empty data. Try again or restart the app.")
 
-    if not _live.is_ready():
-        print("[ScreenProcess] [ERR] Vision module is not ready to send image.")
-        return _screen_failure("Vision module is offline. It may still be reconnecting.")
-
-    # Prevent getting stuck if screen capture fails and returns None
-    if not image_bytes:
-        print("[ScreenProcess] [ERR] Failed to capture image bytes.")
-        if player and hasattr(player, "set_scanning") and angle != "camera":
-            player.set_scanning(False, "")
-            if hasattr(player, "write_log"):
-                player.write_log("System Event: Не удалось захватить экран (Windows graphics function failed). Проверьте настройки отображения.")
-        return False
-
     print(f"[ScreenProcess] [PKG] {len(image_bytes)} bytes → sending")
-    _live.analyze(image_bytes, mime_type, user_text)
+    try:
+        b64 = base64.b64encode(image_bytes).decode("utf-8")
+        text = llm.vision(user_text, b64, mime_type, system=SYSTEM_PROMPT, max_tokens=300)
+    except Exception as e:
+        import traceback; traceback.print_exc()
+        print(f"[ScreenProcess] [ERR] Vision analysis failed: {e}")
+        return _screen_failure("Модуль зрения недоступен: локальной vision-модели нет.")
+
+    if player and hasattr(player, "write_log"):
+        player.write_log(f"Voice AI: {text}")
+    if player and hasattr(player, "set_scanning") and angle != "camera":
+        player.set_scanning(False, "")
+    print(f"[ScreenProcess] [MSG] {text}")
     return True
 
 
 def warmup_session(player=None):
-    try:
-        _ensure_started(player=player)
-    except Exception as e:
-        print(f"[ScreenProcess] [WARN] Warmup error: {e}")
+    return None
 
 
 if __name__ == "__main__":
-    print("[TEST] screen_processor.py v8 — image-only session")
+    print("[TEST] screen_processor.py — local vision")
     print("=" * 50)
     mode    = input("screen / camera (default: screen): ").strip().lower() or "screen"
     request = input("Question (Enter for default): ").strip() or "What do you see? Be brief."
 
-    t0 = time.perf_counter()
-    warmup_session()
-    print(f"Session ready — {time.perf_counter()-t0:.2f}s\n")
-
-    t1     = time.perf_counter()
     result = screen_process({"angle": mode, "text": request}, player=None)
-    print(f"Sent — {time.perf_counter()-t1:.3f}s | audio incoming...")
-    time.sleep(8)
     print(f"\n{'[OK]' if result else '[ERR]'}")
