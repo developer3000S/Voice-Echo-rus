@@ -10,6 +10,7 @@
     <a href="#overview"><img src="https://img.shields.io/badge/experience-open%20source-blue?style=for-the-badge" alt="Open Source" /></a>
     <a href="#getting-started"><img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey?style=for-the-badge" alt="Platforms" /></a>
     <a href="#features"><img src="https://img.shields.io/badge/tech-Gemini%20%2B%20OpenRouter-green?style=for-the-badge" alt="Gemini + OpenRouter" /></a>
+    <a href="#offline-voice"><img src="https://img.shields.io/badge/voice-offline%20%28Vosk%20%2B%20Piper%29-orange?style=for-the-badge" alt="Offline Voice" /></a>
   </p>
 
   <p>
@@ -32,6 +33,7 @@ Designed for advanced desktop productivity, Voice Echo delivers:
 - Contextual screen inspection and adaptive task execution
 - Presentation, document, and report generation
 - Remote control via Discord and Voice Connect
+- Fully offline voice (speech-to-text and text-to-speech) with no Google dependency
 
 ## Quick Highlights
 
@@ -39,6 +41,7 @@ Designed for advanced desktop productivity, Voice Echo delivers:
 |---|---|
 | Voice-first assistant | Speak commands naturally and stay hands-free |
 | Gemini + OpenRouter | Fast responses with resilient fallback support |
+| Offline local voice | STT (Vosk/sherpa) and TTS (Piper) run 100% on-device |
 | Screen-aware context | Ask about visible windows and on-screen content |
 | Document automation | Create presentations, docs, spreadsheets, and PDFs |
 | Plugin-ready | Extend features with lightweight Python plugins |
@@ -47,6 +50,7 @@ Designed for advanced desktop productivity, Voice Echo delivers:
 
 - Wake-word support for “Voice Echo” and responsive assistant activation
 - Gemini 2.5 Flash-powered AI with OpenRouter fallback resilience
+- **Fully offline voice engine** (Vosk/sherpa STT + Piper TTS) that requires no cloud services
 - Polished Qt interface with live status displays and workflow cards
 - Modular action architecture for clean extensibility and automation
 - Secure local configuration with file-based credential storage
@@ -59,6 +63,7 @@ Designed for advanced desktop productivity, Voice Echo delivers:
 - Unified voice and typed command handling
 - Wake-word listening and responsive assistant activation
 - Dynamic screen inspection for context-aware answers
+- **Offline local voice** (speech-to-text and text-to-speech) with no Google dependency
 - **Unified Gemini Native Voice** for all system alerts and daily briefings
 - **True Interruption (Barge-in)** with dynamic noise-gating
 - **Proactive Engine** for spontaneous, context-aware interaction when idle
@@ -89,6 +94,37 @@ Designed for advanced desktop productivity, Voice Echo delivers:
 - OpenRouter fallback for uninterrupted AI access
 - Configurable voice, UI, startup, and notification settings
 - Voice Connect for device discovery and command routing
+
+## Offline Voice
+
+By default Voice Echo uses a **fully offline voice engine** — no Google/Gemini
+endpoint is contacted for speech. This avoids “Gemini unreachable” errors on
+networks where Google services are blocked or unavailable.
+
+- **Speech-to-text:** sherpa-onnx streaming Zipformer, the engine behind the modern Vosk streaming models (`sherpa-onnx-streaming-zipformer-small-ru-vosk`). Real-time recognition from the microphone with silence/endpoint detection and wake-word support.
+- **Text-to-speech:** Piper with the Russian neural voice `ru_RU-irina-medium`.
+
+Models are stored under `config/models/`:
+
+```
+config/models/piper/      Piper TTS voice (ru_RU-irina-medium.onnx + .json)
+config/models/sherpa-ru/  Vosk/sherpa STT model (encoder/decoder/joiner, tokens, bpe)
+```
+
+Download them with:
+
+```bash
+.venv/bin/python download_voice_models.py
+```
+
+The feature is managed from **Settings → System & Connectivity → Local Voice
+Engine** (`local_voice_engine` in `config/app_settings.json`, enabled by
+default). Toggle it off to return to the cloud Gemini Native Voice path; a
+restart is required either way.
+
+**Requirements:** `sherpa-onnx` and `piper-tts` are part of
+`requirements.txt`. If a model file or package is missing the app falls back
+gracefully to its previous online behaviour instead of crashing.
 
 ## Getting Started
 
@@ -131,6 +167,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 pip install -r requirements-optional.txt   # optional: gesture camera (mediapipe)
 playwright install
+python download_voice_models.py            # offline voice models (Piper + Vosk/sherpa)
 ```
 
 > `mediapipe` (used only for the gesture camera and push-up tracking) publishes
@@ -195,10 +232,13 @@ Core configuration files:
 - `config/app_settings.json` — voice, UI, startup, and automation preferences
 - `config/voice_connect.json` — device pairing, gateway, and discovery settings
 - `config/discord_bot.json` — Discord bridge configuration
+- `config/models/` — offline voice models (Piper TTS + Vosk/sherpa STT)
 
 ## Project Structure
 
 - `main.py` — application startup, AI orchestration, and command routing
+- `local_voice.py` — offline STT/TTS engine (Vosk/sherpa + Piper) and voice loop
+- `download_voice_models.py` — fetches the offline voice model files into `config/models/`
 - `ui.py` — Qt-based desktop interface and live assistant controls
 - `actions/` — modular automation, document, and assistant tools
 - `voice_connect/` — local gateway, pairing, and remote routing

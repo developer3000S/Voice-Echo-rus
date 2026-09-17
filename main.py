@@ -61,6 +61,13 @@ from actions.web_search        import web_search as web_search_action
 from actions.computer_control  import computer_control
 from actions.game_updater      import game_updater
 from actions.attention_monitor import AttentionMonitor, speak_native, stop_native_speech, handle_call_action, read_event_preview, set_speech_sink
+
+try:
+    from local_voice import LocalTTS, LocalVoiceEngine, voice_setting_enabled
+except Exception:
+    LocalTTS = None
+    LocalVoiceEngine = None
+    voice_setting_enabled = lambda: False
 # from actions.daily_briefing import compile_daily_briefing
 from llm_client import client as openrouter_client
 from workspace_store import store as workspace_store
@@ -1476,6 +1483,25 @@ class VoiceLive:
         self._is_speaking   = False
         self._speaking_lock = threading.Lock()
         self._use_openrouter_first = False
+        self._local_voice_enabled = False
+        self._local_tts = LocalTTS() if LocalTTS is not None else None
+        self._local_engine = None
+        try:
+            if LocalVoiceEngine is not None and voice_setting_enabled():
+                stt_ok = False
+                try:
+                    from local_voice import LocalSTT
+                    stt_ok = LocalSTT().available
+                except Exception:
+                    stt_ok = False
+                tts_ok = bool(self._local_tts is not None and self._local_tts.available)
+                self._local_voice_enabled = stt_ok or tts_ok
+        except Exception:
+            self._local_voice_enabled = False
+        if self._local_voice_enabled:
+            # Local mode: never prefer Google for the chat brain either
+            # (Gemini text generation falls back to OpenRouter automatically).
+            self._use_openrouter_first = True
         self._pending_attention: dict | None = None
         self._pending_reply_event: dict | None = None
         self._reply_mode = False
@@ -2607,7 +2633,20 @@ class VoiceLive:
         text = (text or "").strip()
         if not text:
             return
-        
+
+        if self._local_voice_enabled and self._local_tts is not None and self._local_tts.available:
+            # Local offline TTS (Piper).
+            def _speak_thread():
+                try:
+                    self.set_speaking(True)
+                    self._local_tts.speak(text)
+                except Exception as e:
+                    print(f"[LocalVoice] speak failed: {e}")
+                finally:
+                    self.set_speaking(False)
+            threading.Thread(target=_speak_thread, daemon=True).start()
+            return
+
         if self.session and self._loop:
             # Route text through Gemini Live API for a unified native voice
             import asyncio
@@ -3189,6 +3228,53 @@ class VoiceLive:
             self.ui.boot_set_progress(36, "Initializing AI client")
         except Exception:
             pass
+
+        if self._local_voice_enabled:
+            # Fully offline voice loop: local STT (Vosk/sherpa) + local TTS (Piper).
+            # No Google/Gemini endpoint is contacted for speech.
+            try:
+                self.ui.boot_set_step_status("Connect AI backend", "done")
+                self.ui.boot_set_progress(70, "Offline voice engine loading")
+            except Exception:
+                pass
+            self.ui.set_state("LISTENING")
+            self.ui.write_log("SYS: Voice Echo online (offline voice — Vosk/Piper).")
+
+            def _local_submit(text):
+                try:
+                    self.ui.submit_external_command(text, source="local")
+                except Exception:
+                    try:
+                        self._on_text_command(text, source="local")
+                    except Exception:
+                        pass
+
+            self._local_engine = LocalVoiceEngine(
+                submit=_local_submit,
+                muted=lambda: bool(getattr(self.ui, "muted", False)),
+                wakeword=_wakeword_detected,
+                on_wakeword=lambda: self.ui.set_muted_state(False, wakeword=True),
+                speaking=lambda: self._is_speaking,
+            )
+            if self._local_engine.stt_available:
+                self._local_engine.start()
+                try:
+                    self.ui.boot_set_step_status("Initialize audio", "done")
+                    self.ui.boot_set_progress(92, "Offline STT + Piper online")
+                except Exception:
+                    pass
+            else:
+                self.ui.write_log(
+                    "ERR: Local speech model files not found under config/models. "
+                    "Run the model downloader or install the models before enabling local voice."
+                )
+            try:
+                self.ui.boot_set_step_status("Finalize startup", "done")
+                self.ui.boot_set_progress(100, "Startup complete")
+            except Exception:
+                pass
+            while True:
+                await asyncio.sleep(3600)
 
         client = genai.Client(
             api_key=_get_api_key(),

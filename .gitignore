@@ -25,6 +25,10 @@ config/.desktop_shortcut_created
 config/certs/
 memory/long_term.json
 
+# Downloaded offline voice models (fetch via download_voice_models.py)
+config/models/piper/
+config/models/sherpa-ru/
+
 # Local test/debug artifacts
 _run.out.txt
 _run.err.txt

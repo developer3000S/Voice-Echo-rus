@@ -655,6 +655,7 @@ def _default_app_settings() -> dict:
         "auto_provider_switch": True,
         "attention_message_prompts": True,
         "attention_call_prompts": True,
+        "local_voice_engine": True,
         "developer_mode_enabled": False,
         "developer_mode_workspace": "",
         "proxy_url": "",
@@ -9424,9 +9425,23 @@ class SystemConnectivityPage(QWidget):
         
         lay1.addWidget(self._local_ai_widget)
 
+        # Local offline voice (STT + TTS, no Google)
+        local_voice_card = self._card(
+            "Local Voice Engine",
+            "Offline speech-to-text (Vosk/sherpa) and text-to-speech (Piper). No Google involved.",
+        )
+        lvl = local_voice_card.layout()
+        self._local_voice_btn = self._mk_toggle(
+            "Use offline voice (Vosk + Piper)",
+            bool(self._load_app_settings().get("local_voice_engine", True)),
+            self._toggle_local_voice,
+        )
+        lvl.addWidget(self._local_voice_btn)
+        lay.addWidget(local_voice_card)
+
         # Network Proxy
         proxy_card = self._card("Network Proxy", "Route all external HTTP/HTTPS/WebSocket connections through this proxy.")
-        proxy_lay = QVBoxLayout(proxy_card)
+        proxy_lay = proxy_card.layout()
         proxy_row = QHBoxLayout()
         proxy_row.addWidget(QLabel("Proxy URL"))
         self._proxy_url_input = QLineEdit()
@@ -9955,6 +9970,39 @@ class SystemConnectivityPage(QWidget):
         if self._ctrl() and hasattr(self._ctrl(), "write_log"):
             self._ctrl().write_log(f"SYS: Auto provider switch {'enabled' if checked else 'disabled'}.")
 
+    def _toggle_local_voice(self, checked: bool):
+        self._set_setting("local_voice_engine", bool(checked))
+        if self._ctrl() and hasattr(self._ctrl(), "write_log"):
+            self._ctrl().write_log(
+                "SYS: Local voice engine "
+                + ("enabled (Vosk + Piper, offline). Restart to apply." if checked else "disabled. Restart to apply.")
+            )
+
+    def _sync_proxy_url(self, text: str):
+        try:
+            set_proxy_url(text or "")
+        except Exception:
+            pass
+        if text and text.strip():
+            self._proxy_status.setText("Proxy will be applied on restart")
+            self._proxy_status.setStyleSheet(f"color: {C.PRI};")
+        else:
+            self._proxy_status.setText("Proxy is not configured")
+            self._proxy_status.setStyleSheet(f"color: {C.TEXT_DIM};")
+
+    def _save_proxy_and_restart(self):
+        try:
+            set_proxy_url(self._proxy_url_input.text())
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to save proxy configuration: {e}")
+            return
+        if self._ctrl() and hasattr(self._ctrl(), "write_log"):
+            self._ctrl().write_log("SYS: Proxy configuration saved, restarting...")
+        if self._ctrl() and hasattr(self._ctrl(), "_restart_app"):
+            self._ctrl()._restart_app()
+        else:
+            self._restart_app()
+
     def _toggle_attention_message_prompts(self, checked: bool):
         self._set_setting("attention_message_prompts", bool(checked))
         if self._ctrl() and hasattr(self._ctrl(), "write_log"):
@@ -10054,6 +10102,7 @@ class SystemConnectivityPage(QWidget):
         for widget in (
             getattr(self, "_default_provider", None),
             getattr(self, "_auto_switch_btn", None),
+            getattr(self, "_local_voice_btn", None),
             getattr(self, "_attention_message_btn", None),
             getattr(self, "_attention_call_btn", None),
             getattr(self, "_startup_launch_btn", None),
@@ -10073,6 +10122,8 @@ class SystemConnectivityPage(QWidget):
             self._or_key.setText(self._provider_key_preview(api.get("openrouter_api_key", "")))
             self._default_provider.setCurrentText("Google Gemini" if app.get("default_ai_provider", "Gemini") == "Gemini" else "OpenRouter")
             self._auto_switch_btn.setChecked(bool(app.get("auto_provider_switch", True)))
+            if getattr(self, "_local_voice_btn", None) is not None:
+                self._local_voice_btn.setChecked(bool(app.get("local_voice_engine", True)))
             self._attention_message_btn.setChecked(bool(app.get("attention_message_prompts", True)))
             self._attention_call_btn.setChecked(bool(app.get("attention_call_prompts", True)))
             self._startup_launch_btn.setChecked(bool(app.get("show_workspace_on_startup", False)))
@@ -10085,6 +10136,7 @@ class SystemConnectivityPage(QWidget):
             for widget in (
                 getattr(self, "_default_provider", None),
                 getattr(self, "_auto_switch_btn", None),
+                getattr(self, "_local_voice_btn", None),
                 getattr(self, "_attention_message_btn", None),
                 getattr(self, "_attention_call_btn", None),
                 getattr(self, "_startup_launch_btn", None),

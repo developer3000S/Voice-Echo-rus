@@ -15,6 +15,7 @@ Voice Echo is an open-source Windows desktop AI assistant that combines voice an
 - Unified voice and typed command handling
 - Wake-word listening ("Voice Echo") and responsive assistant activation
 - Dynamic screen inspection for context-aware answers
+- **Offline local voice** (Vosk/sherpa STT + Piper TTS, no Google dependency)
 - **Unified Gemini Native Voice** for all system alerts and daily briefings
 - **True Interruption (Barge-in)** with dynamic noise-gating
 - **Proactive Engine** for spontaneous, context-aware interaction when idle
@@ -57,7 +58,8 @@ Voice Echo is an open-source Windows desktop AI assistant that combines voice an
 | Local AI | Ollama/LM Studio via OpenAI-compatible API |
 | Browser Automation | Playwright |
 | Smart Home | TP-Link Kasa, Philips Hue, LG ThinQ, Daikin, Tuya, Nest, SmartThings, Atomberg |
-| Voice | sounddevice + PyAudio |
+| Voice (online) | sounddevice + PyAudio, Gemini Live Audio |
+| Voice (offline) | Vosk/sherpa-onnx (STT) + Piper (TTS) via `local_voice.py` |
 | Clipboard | pyperclip |
 | Screen Capture | mss + OpenCV + MediaPipe |
 | Desktop Control | pyautogui, pygetwindow, psutil, comtypes, pycaw |
@@ -73,6 +75,8 @@ Voice Echo is an open-source Windows desktop AI assistant that combines voice an
 Voice-Echo-rus/
 ├── main.py                  # App startup, AI orchestration, command routing (3433 lines)
 ├── ui.py                    # Qt desktop interface (12933 lines)
+├── local_voice.py           # Offline STT/TTS engine (Vosk/sherpa + Piper) and voice loop
+├── download_voice_models.py # Fetches offline models into config/models/
 ├── smart_home_page_new.py   # Smart home dashboard page
 ├── discord_bot.py           # Discord bridge service
 ├── llm_client.py            # Unified AI client (Local/OpenRouter)
@@ -164,6 +168,7 @@ Voice-Echo-rus/
 The central orchestration class. Handles:
 - Voice input via `sounddevice` (16kHz send, 24kHz receive)
 - Gemini Native Voice LLM with OpenRouter fallback
+- **Offline voice loop**: when `local_voice_engine` is enabled in settings, skips the Gemini Live connect loop entirely and runs `LocalVoiceEngine` (sherpa/Vosk STT → command router) with Piper TTS for all spoken replies
 - Command routing to tool handlers
 - Memory extraction and context building
 - Task plan generation per request type
@@ -174,6 +179,13 @@ The central orchestration class. Handles:
 - Attention monitoring (calls, messages)
 - Smart home command dispatch
 - Voice Connect device commands
+
+### LocalVoiceEngine (local_voice.py)
+
+Offline, Google-independent voice path (default on):
+- `LocalSTT` — sherpa-onnx streaming Zipformer (`sherpa-onnx-streaming-zipformer-small-ru-vosk`), VAD with silence/endpoint detection, wake-word gating
+- `LocalTTS` — Piper neural Russian voice (`ru_RU-irina-medium`), int16 → sounddevice playback with echo guarding (no transcription while TTS talks)
+- Submits recognized phrases through `ui.submit_external_command(text, "local")` on a background thread
 
 ### VoiceUI (ui.py:10713 / 12205)
 
@@ -242,6 +254,7 @@ python setup.py
 - **Monolithic architecture**: Main logic lives in `main.py` and `ui.py` (large files, intentionally consolidated)
 - **Tool-first design**: Always call the appropriate tool rather than simulate results
 - **Gemini fallback chain**: Gemini Native Audio → Gemini text → OpenRouter → local AI
+- **Offline voice default**: with `local_voice_engine: true` in `config/app_settings.json` the voice loop is fully local (Vosk/sherpa + Piper) and Gemini is never contacted for speech
 - **JSON config**: All settings stored in `config/*.json` (gitignored for secrets)
 - **No committed secrets**: `config/api_keys.json` and `config/discord_bot.json` are in `.gitignore`
 - **Virtual environment**: Required for all development and runtime (`.venv/` in `.gitignore`)
@@ -257,6 +270,7 @@ python setup.py
 | `config/app_settings.json` | Voice, UI, startup, automation preferences |
 | `config/voice_connect.json` | Device pairing, gateway, discovery settings |
 | `config/discord_bot.json` | Discord bridge credentials (gitignored) |
+| `config/models/` | Offline voice models (Piper + Vosk/sherpa, gitignored) |
 | `core/prompt.txt` | System prompt template loaded at startup |
 | `core/identity.py` | Dynamic identity injection (assistant name, owner, role, mode) |
 

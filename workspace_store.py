@@ -10,8 +10,6 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-import google.generativeai as genai
-
 
 def _base_dir() -> Path:
     return Path(__file__).resolve().parent
