@@ -8,6 +8,7 @@ import os
 import platform
 import random
 import re
+import subprocess
 import sys
 import threading
 import time
@@ -11258,7 +11259,7 @@ class VoiceUI:
                 kwargs["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0)
             subprocess.Popen(args, **kwargs)
         except Exception as exc:
-            self._win.write_log(f"ERR: Restart failed: {exc}")
+            self.write_log(f"ERR: Restart failed: {exc}")
         self._app.quit()
 
     def _toggle_workspace_on_startup(self, enabled: bool):
@@ -12758,7 +12759,7 @@ class VoiceUI:
                 kwargs["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0)
             subprocess.Popen(args, **kwargs)
         except Exception as exc:
-            self._win.write_log(f"ERR: Restart failed: {exc}")
+            self.write_log(f"ERR: Restart failed: {exc}")
         self._app.quit()
 
     def _toggle_workspace_on_startup(self, enabled: bool):

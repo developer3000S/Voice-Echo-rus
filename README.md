@@ -189,6 +189,8 @@ python download_voice_models.py            # offline voice models (Piper + Vosk/
 2. Включите доступ к Gemini API для вашего проекта.
 3. Добавьте сгенерированный ключ в `gemini_api_key`.
 
+> Voice Echo работает на актуальном SDK `google.genai`. Устаревший пакет `google.generativeai` больше не используется и не устанавливается.
+
 #### Ключ API OpenRouter
 
 1. Зарегистрируйтесь на https://openrouter.ai.

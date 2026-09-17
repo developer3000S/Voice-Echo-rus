@@ -72,7 +72,7 @@ def _panel_style(border_alpha: int = 34) -> str:
 def _soft_button_style() -> str:
     return (
         f"QPushButton {{ background: rgba(255,255,255,0.03); color: {TEXT}; "
-        "border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 0 12px; }}"
+        "border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 0 12px; }"
         f"QPushButton:hover {{ border: 1px solid {ACCENT}; background: rgba(255, 179, 0,0.08); }}"
     )
 

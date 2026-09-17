@@ -65,10 +65,9 @@ def _get_api_key() -> str:
 
 
 def _gemini_client():
-    import google.generativeai as genai
+    from google import genai
 
-    genai.configure(api_key=_get_api_key())
-    return genai.GenerativeModel("gemini-2.5-flash")
+    return genai.Client(api_key=_get_api_key())
 
 
 def _import_docx():
@@ -412,13 +411,13 @@ def word_document(parameters: dict, player=None, speak=None) -> str:
             text = _extract_doc_text(doc)
             if not text.strip():
                 return "The document appears to be empty."
-            model = _gemini_client()
+            client = _gemini_client()
             prompt = (
                 "Summarize this Word document concisely and clearly:\n\n"
                 if action == "summarize"
                 else "Analyze this Word document thoroughly:\n\n"
             )
-            response = model.generate_content(prompt + text[:40000])
+            response = client.models.generate_content(model="gemini-2.5-flash", contents=prompt + text[:40000])
             result = response.text.strip()
             if len(result) > 600 and params.get("save", True):
                 out = _resolve_output_path(output_path_str, title=source_path.stem, ext=".txt", fallback_name=source_path.stem)
