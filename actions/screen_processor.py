@@ -259,13 +259,13 @@ class _LiveSession:
                     if self._player and hasattr(self._player, "set_scanning"):
                         self._player.set_scanning(False, "")
                         if hasattr(self._player, "write_log"):
-                            self._player.write_log("System Event: Failed to transmit screen to AI. Please check your internet connection or API key.")
+                            self._player.write_log("System Event: Не удалось передать экран ИИ. Проверьте подключение к интернету или ключ API.")
             else:
                 print("[ScreenProcess] [WARN] Session not ready, discarding message")
                 if self._player and hasattr(self._player, "set_scanning"):
                     self._player.set_scanning(False, "")
                     if hasattr(self._player, "write_log"):
-                        self._player.write_log("System Event: The AI Vision module is currently offline. It might be reconnecting.")
+                        self._player.write_log("System Event: Модуль ИИ-зрения сейчас офлайн. Возможно, он переподключается.")
 
     async def _recv_loop(self):
         transcript_buf: list[str] = []
@@ -432,7 +432,7 @@ def screen_process(
         if player and hasattr(player, "set_scanning") and angle != "camera":
             player.set_scanning(False, "")
             if hasattr(player, "write_log"):
-                player.write_log("System Event: Failed to capture screen (Windows graphics function failed). Please check your display settings.")
+                player.write_log("System Event: Не удалось захватить экран (Windows graphics function failed). Проверьте настройки отображения.")
         return False
 
     print(f"[ScreenProcess] [PKG] {len(image_bytes)} bytes → sending")

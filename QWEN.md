@@ -1,75 +1,75 @@
-# QWEN.md - Project Overview for Voice Echo
+# QWEN.md - Обзор проекта Voice Echo
 
-Last Updated: September 8, 2026
+Последнее обновление: 8 сентября 2026 г.
 
-This file provides a comprehensive overview of the Voice Echo project structure and key components. It's intended to serve as instructional context for future interactions.
+Этот файл предоставляет обзор структуры и ключевых компонентов проекта Voice Echo. Он предназначен для использования в качестве инструкционного контекста для будущих взаимодействий.
 
-## Project Overview
+## Обзор проекта
 
-Voice Echo is an open-source Windows desktop AI assistant that combines voice and text control with automated workflows, screen-aware intelligence, and rich content generation. Designed for advanced desktop productivity, Voice Echo delivers voice-first command and desktop automation, application control, browser workflows, file handling, contextual screen inspection, adaptive task execution, presentation/document/report generation, and remote control via Discord and Voice Connect.
+Voice Echo — это open-source настольный ИИ-ассистент для Windows, сочетающий голосовое и текстовое управление с автоматизированными рабочими процессами, осведомлённостью о содержимом экрана и генерацией разнообразного контента. Разработанный для продвинутой продуктивности на рабочем столе, Voice Echo предоставляет голосовое управление и автоматизацию рабочего стола, управление приложениями, браузерные рабочие процессы, работу с файлами, контекстный осмотр экрана, адаптивное выполнение задач, генерацию презентаций/документов/отчётов и дистанционное управление через Discord и Voice Connect.
 
-## Key Features
+## Ключевые возможности
 
-### Intelligent Assistant
+### Интеллектуальный ассистент
 
-- Unified voice and typed command handling
-- Wake-word listening ("Voice Echo") and responsive assistant activation
-- Dynamic screen inspection for context-aware answers
-- **Offline local voice** (Vosk/sherpa STT + Piper TTS, no Google dependency)
-- **Unified Gemini Native Voice** for all system alerts and daily briefings
-- **True Interruption (Barge-in)** with dynamic noise-gating
-- **Proactive Engine** for spontaneous, context-aware interaction when idle
-- Gemini-first AI with OpenRouter fallback resilience
+- Единая обработка голосовых и текстовых команд
+- Слушание ключевого слова пробуждения («Voice Echo») и отзывчивая активация ассистента
+- Динамический осмотр экрана для контекстных ответов
+- **Офлайновый локальный голос** (Vosk/sherpa STT + Piper TTS, без зависимости от Google)
+- **Единый Gemini Native Voice** для всех системных оповещений и ежедневных брифингов
+- **Настоящее прерывание (Barge-in)** с динамическим шумоподавлением
+- **Проактивный движок** для спонтанного, контекстного взаимодействия в режиме ожидания
+- ИИ на базе Gemini с устойчивым резервированием через OpenRouter
 
-### Productivity & Automation
+### Продуктивность и автоматизация
 
-- **System Health & Resource Manager** — monitor CPU/RAM and forcefully close frozen apps
-- **Background Monitors & Alerts** — poll crypto prices, system RAM/CPU, or website uptime autonomously
-- **Smart Clipboard Analyzer** — instantly read and process copied text natively
-- Open and control Windows apps, windows, files, and system actions
-- Browser automation with Playwright-driven workflows
-- Contextual automation based on screen content and notifications
-- **Instagram AI Assistant** — poll DMs, notify, and seamlessly take over chats or reply
-- Reminder, meeting assistance, and notification management
+- **Менеджер состояния системы и ресурсов** — мониторинг CPU/RAM и принудительное закрытие зависших приложений
+- **Фоновые мониторы и оповещения** — автономный опрос цен криптовалют, потребления RAM/CPU или работоспособности сайтов
+- **Анализатор буфера обмена** — мгновенное чтение и обработка скопированного текста
+- Открытие и управление приложениями Windows, окнами, файлами и системными действиями
+- Автоматизация браузера с рабочими процессами на базе Playwright
+- Контекстная автоматизация на основе содержимого экрана и уведомлений
+- **ИИ-ассистент Instagram** — опрос Direct-сообщений, уведомления и бесшовный перехват чатов или ответ
+- Напоминания, помощь в организации встреч и управление уведомлениями
 
-### Content & Office Tools
+### Документы и офисные инструменты
 
-- Generate presentation decks, summaries, and slide content
-- Create Word documents and spreadsheets from prompts
-- Export polished reports and deliverables as PDF
-- Build landing pages and website workspaces locally
+- Генерация презентаций, сводок и содержимого слайдов
+- Создание документов Word и таблиц из промптов
+- Экспорт оформленных отчётов и материалов в PDF
+- Локальная сборка целевых страниц и веб-пространств
 
-### Integrations
+### Интеграции
 
-- Instagram DM bridge for reading and auto-replying to messages natively
-- Discord bridge for remote commands and collaboration
-- OpenRouter fallback for uninterrupted AI access
-- Configurable voice, UI, startup, and notification settings
-- Voice Connect for device discovery and command routing
+- Мост Instagram Direct для чтения и автоответа на сообщения
+- Мост Discord для дистанционных команд и совместной работы
+- Резервирование OpenRouter для непрерывного доступа к ИИ
+- Настраиваемые параметры голоса, интерфейса, запуска и уведомлений
+- Voice Connect для обнаружения устройств и маршрутизации команд
 
-## Tech Stack
+## Технологический стек
 
-| Layer | Technology |
+| Уровень | Технология |
 |---|---|
-| Language | Python 3.11/3.12 |
-| UI Framework | PyQt6 (custom glassmorphic dark theme) |
-| Primary AI | Google Gemini 2.5 Flash (Native Audio) |
-| Fallback AI | OpenRouter (40+ free models) |
-| Local AI | Ollama/LM Studio via OpenAI-compatible API |
-| Browser Automation | Playwright |
-| Smart Home | TP-Link Kasa, Philips Hue, LG ThinQ, Daikin, Tuya, Nest, SmartThings, Atomberg |
-| Voice (online) | sounddevice + PyAudio, Gemini Live Audio |
-| Voice (offline) | Vosk/sherpa-onnx (STT) + Piper (TTS) via `local_voice.py` |
-| Clipboard | pyperclip |
-| Screen Capture | mss + OpenCV + MediaPipe |
-| Desktop Control | pyautogui, pygetwindow, psutil, comtypes, pycaw |
+| Язык | Python 3.11/3.12 |
+| Фреймворк UI | PyQt6 (кастомная гласмorfic тёмная тема) |
+| Основной ИИ | Google Gemini 2.5 Flash (Native Audio) |
+| Резервный ИИ | OpenRouter (40+ бесплатных моделей) |
+| Локальный ИИ | Ollama/LM Studio через совместимый с OpenAI API |
+| Автоматизация браузера | Playwright |
+| Умный дом | TP-Link Kasa, Philips Hue, LG ThinQ, Daikin, Tuya, Nest, SmartThings, Atomberg |
+| Голос (онлайн) | sounddevice + PyAudio, Gemini Live Audio |
+| Голос (офлайн) | Vosk/sherpa-onnx (STT) + Piper (TTS) через `local_voice.py` |
+| Буфер обмена | pyperclip |
+| Захват экрана | mss + OpenCV + MediaPipe |
+| Управление рабочим столом | pyautogui, pygetwindow, psutil, comtypes, pycaw |
 | Discord | discord.py |
 | Instagram | instagrapi |
-| Document Gen | python-pptx, python-docx, openpyxl, reportlab |
-| Backend | FastAPI + Uvicorn (dashboard server) |
-| Config | JSON-based in `config/` |
+| Генерация документов | python-pptx, python-docx, openpyxl, reportlab |
+| Бэкенд | FastAPI + Uvicorn (сервер панели) |
+| Конфигурация | JSON-файлы в `config/` |
 
-## Project Structure
+## Структура проекта
 
 ```
 Voice-Echo-rus/
@@ -161,79 +161,79 @@ Voice-Echo-rus/
 └── auth/                    # Authentication module
 ```
 
-## Core Architecture
+## Основная архитектура
 
 ### VoiceLive (main.py:1449)
 
-The central orchestration class. Handles:
-- Voice input via `sounddevice` (16kHz send, 24kHz receive)
-- Gemini Native Voice LLM with OpenRouter fallback
-- **Offline voice loop**: when `local_voice_engine` is enabled in settings, skips the Gemini Live connect loop entirely and runs `LocalVoiceEngine` (sherpa/Vosk STT → command router) with Piper TTS for all spoken replies
-- Command routing to tool handlers
-- Memory extraction and context building
-- Task plan generation per request type
-- Idle/proactive engagement
-- Screen/window inspection
-- Meeting mode with barge-in support
-- Instagram DM monitoring and reply flow
-- Attention monitoring (calls, messages)
-- Smart home command dispatch
-- Voice Connect device commands
+Центральный класс оркестрации. Обеспечивает:
+- Голосовой ввод через `sounddevice` (отправка 16 кГц, приём 24 кГц)
+- Gemini Native Voice LLM с резервированием через OpenRouter
+- **Офлайновый голосовой цикл**: когда `local_voice_engine` включён в настройках, пропускает цикл подключения Gemini Live и запускает `LocalVoiceEngine` (sherpa/Vosk STT → маршрутизатор команд) с Piper TTS для всех голосовых ответов
+- Маршрутизация команд к обработчикам инструментов
+- Извлечение памяти и построение контекста
+- Генерацию плана задач для каждого типа запроса
+- Режим холостого/проактивного взаимодействия
+- Осмотр экрана/окон
+- Режим встреч с поддержкой перехвата
+- Мониторинг Direct-сообщений Instagram и поток ответов
+- Мониторинг внимания (звонки, сообщения)
+- Диспетчеризацию команд умного дома
+- Команды устройств Voice Connect
 
 ### LocalVoiceEngine (local_voice.py)
 
-Offline, Google-independent voice path (default on):
-- `LocalSTT` — sherpa-onnx streaming Zipformer (`sherpa-onnx-streaming-zipformer-small-ru-vosk`), VAD with silence/endpoint detection, wake-word gating
-- `LocalTTS` — Piper neural Russian voice (`ru_RU-irina-medium`), int16 → sounddevice playback with echo guarding (no transcription while TTS talks)
-- Submits recognized phrases through `ui.submit_external_command(text, "local")` on a background thread
+Офлайновый, независимый от Google голосовой путь (включён по умолчанию):
+- `LocalSTT` — streaming Zipformer на базе sherpa-onnx (`sherpa-onnx-streaming-zipformer-small-ru-vosk`), VAD с обнаружением тишины/конца фразы, фильтрация по ключевому слову пробуждения
+- `LocalTTS` — нейронный русский голос Piper (`ru_RU-irina-medium`), int16 → воспроизведение через sounddevice с защитой от эха (нет транскрипции во время работы TTS)
+- Отправка распознанных фраз через `ui.submit_external_command(text, "local")` в фоновом потоке
 
 ### VoiceUI (ui.py:10713 / 12205)
 
-The Qt main window with:
-- Glassmorphic dark theme (gold `#ffb300` accent, dynamically recolorable)
-- Background widget with WebEngine animated background or static image fallback
-- Remote key overlay with QR code for phone pairing
-- System metrics display
-- Gesture camera preview
-- HUD canvas with metric bars
-- Message/task/attachment/event/artifact/chat bubbles
-- Workspace sidebar, inline chat, launcher control panel
-- Settings hub, system connectivity page
-- Smart devices section
-- Boot sequence, scanning, incoming alert, meeting overlays
-- Floating launcher and gesture card
+Главное окно Qt с:
+- Гласмorfic тёмной темой (золотой акцент `#ffb300`, динамически перекрашиваемый)
+- Фоновым виджетом с анимированным фоном WebEngine или статическим изображением
+- Оверлеем удалённого ключа с QR-кодом для сопряжения с телефоном
+- Отображением системных метрик
+- Предпросмотром камеры жестов
+- HUD-холстом с индикаторами
+- Пузырьками сообщений/задач/вложений/событий/артефактов/чатов
+- Боковой панелью рабочего пространства, встроенным чатом, панелью управления лаунчером
+- Центром настроек, страницей системных подключений
+- Разделом умных устройств
+- Последовательностью загрузки, сканирования, входящих оповещений и оверлеями встреч
+- Плавающим лаунчером и карточкой жестов
 
 ### UnifiedAIClient (llm_client.py)
 
-Provider-agnostic AI client:
-- `chat()` — text completion with Local/OpenRouter routing
-- `chat_json()` — structured JSON output
-- `vision()` — image analysis from base64
-- `vision_from_file()` — image analysis from file path
-- `multi_turn()` — conversation history support
-- Falls back to OpenRouter if local AI fails
+Независимый от провайдера ИИ-клиент:
+- `chat()` — текстовое дополнение с маршрутизацией Local/OpenRouter
+- `chat_json()` — структурированный вывод JSON
+- `vision()` — анализ изображений из base64
+- `vision_from_file()` — анализ изображений по пути к файлу
+- `multi_turn()` — поддержка истории разговора
+- Резервирование через OpenRouter при сбое локального ИИ
 
 ### OpenRouterClient (or_client.py)
 
-OpenRouter API client with:
-- 30+ text models + 9 vision models in fallback pool
-- Rate-limit tracking with 60s cooldown
-- Retry logic (2 attempts per model, 2s delay)
-- JSON mode with markdown stripping
-- `vision_from_file()` for file-based image analysis
+Клиент API OpenRouter с:
+- 30+ текстовыми моделями + 9 моделями зрения в пуле резервирования
+- Отслеживание лимита запросов с 60-секундным периодом восстановления
+- Логикой повторных попыток (2 попытки на модель, задержка 2 с)
+- Режимом JSON с удалением разметки
+- `vision_from_file()` для анализа изображений из файлов
 
-### Plugin System
+### Система плагинов
 
-`plugin_manager.py` loads `.py` files from `plugins/` and dispatches hooks:
-- `on_voice_created(voice)` — when assistant instance initializes
-- `on_startup(voice)` — after startup when plugins registered
-- `on_text_command(text, source, voice=None)` — each incoming text command; return `True` to indicate handled
+`plugin_manager.py` загружает `.py` файлы из `plugins/` и диспетчизирует хуки:
+- `on_voice_created(voice)` — при инициализации экземпляра ассистента
+- `on_startup(voice)` — после запуска при регистрации плагинов
+- `on_text_command(text, source, voice=None)` — для каждой входящей текстовой команды; верните `True`, чтобы указать обработку
 
-### Memory System
+### Система памяти
 
-`memory/memory_manager.py` — short-term and long-term memory with extraction, formatting, and context building for requests.
+`memory/memory_manager.py` — краткосрочная и долгосрочная память с извлечением, форматированием и построением контекста для запросов.
 
-## Running the Application
+## Запуск приложения
 
 ```powershell
 # Manual start
@@ -249,49 +249,49 @@ bootstrap.ps1
 python setup.py
 ```
 
-## Development Conventions
+## Соглашения разработки
 
-- **Monolithic architecture**: Main logic lives in `main.py` and `ui.py` (large files, intentionally consolidated)
-- **Tool-first design**: Always call the appropriate tool rather than simulate results
-- **Gemini fallback chain**: Gemini Native Audio → Gemini text → OpenRouter → local AI
-- **Offline voice default**: with `local_voice_engine: true` in `config/app_settings.json` the voice loop is fully local (Vosk/sherpa + Piper) and Gemini is never contacted for speech
-- **JSON config**: All settings stored in `config/*.json` (gitignored for secrets)
-- **No committed secrets**: `config/api_keys.json` and `config/discord_bot.json` are in `.gitignore`
-- **Virtual environment**: Required for all development and runtime (`.venv/` in `.gitignore`)
-- **Windows-first**: Some paths hardcode Windows-specific locations (e.g., `pythonw.exe` in `ui.py`)
-- **Testing**: `pytest` with `conftest.py` for path setup; tests in `tests/`
-- **Plugin hooks**: Return `True` from `on_text_command` to indicate the command was handled and stop propagation
+- **Монолитная архитектура**: Основная логика находится в `main.py` и `ui.py` (крупные файлы, намеренно объединённые)
+- **Инструменто-ориентированный дизайн**: Всегда вызывайте соответствующий инструмент, а не имитируйте результаты
+- **Цепочка резервирования Gemini**: Gemini Native Audio → текстовый Gemini → OpenRouter → локальный ИИ
+- **Офлайновый голос по умолчанию**: при `local_voice_engine: true` в `config/app_settings.json` голосовой цикл полностью локальный (Vosk/sherpa + Piper), и Gemini никогда не используется для распознавания речи
+- **JSON-конфигурация**: Все настройки хранятся в `config/*.json` (секреты исключены из git)
+- **Без коммита секретов**: `config/api_keys.json` и `config/discord_bot.json` находятся в `.gitignore`
+- **Виртуальное окружение**: Требуется для всей разработки и выполнения (`.venv/` в `.gitignore`)
+- **Ориентация на Windows**: Некоторые пути жёстко задают расположения для Windows (например, `pythonw.exe` в `ui.py`)
+- **Тестирование**: `pytest` с `conftest.py` для настройки путей; тесты в `tests/`
+- **Хуки плагинов**: Верните `True` из `on_text_command`, чтобы указать, что команда обработана, и остановить распространение
 
-## Configuration Files
+## Файлы конфигурации
 
-| File | Purpose |
+| Файл | Назначение |
 |---|---|
-| `config/api_keys.json` | Gemini and OpenRouter API keys |
-| `config/app_settings.json` | Voice, UI, startup, automation preferences |
-| `config/voice_connect.json` | Device pairing, gateway, discovery settings |
-| `config/discord_bot.json` | Discord bridge credentials (gitignored) |
-| `config/models/` | Offline voice models (Piper + Vosk/sherpa, gitignored) |
-| `core/prompt.txt` | System prompt template loaded at startup |
-| `core/identity.py` | Dynamic identity injection (assistant name, owner, role, mode) |
+| `config/api_keys.json` | Ключи API Gemini и OpenRouter |
+| `config/app_settings.json` | Параметры голоса, интерфейса, запуска и автоматизации |
+| `config/voice_connect.json` | Настройки сопряжения устройств, шлюза и обнаружения |
+| `config/discord_bot.json` | Учётные данные моста Discord (исключены из git) |
+| `config/models/` | Офлайновые голосовые модели (Piper + Vosk/sherpa, исключены из git) |
+| `core/prompt.txt` | Шаблон системного промпта, загружаемый при запуске |
+| `core/identity.py` | Динамическая вставка идентификации (имя ассистента, владелец, роль, режим) |
 
-## Known Characteristics
+## Известные особенности
 
-- **Large files**: `main.py` (3.4K lines) and `ui.py` (12.9K lines) are intentionally consolidated; refactoring into smaller modules is out of scope unless explicitly requested
-- **Windows dependency**: `start_voice.vbs`, `bootstrap.ps1`, and some `ui.py` paths assume Windows; Linux/macOS support is limited
-- **Gemini API key required**: Primary AI provider; OpenRouter is fallback-only without Gemini
-- **Playwright browsers**: Must run `playwright install` after `pip install -r requirements.txt`
+- **Крупные файлы**: `main.py` (3,4 тыс. строк) и `ui.py` (12,9 тыс. строк) намеренно объединённые; рефакторинг в меньшие модули не входит в_SCOPE, если это не запрошено явно
+- **Зависимость от Windows**: `start_voice.vbs`, `bootstrap.ps1` и некоторые пути в `ui.py` предполагают Windows; поддержка Linux/macOS ограничена
+- **Требуется ключ API Gemini**: Основной провайдер ИИ; OpenRouter используется только как резервирование без Gemini
+- **Браузеры Playwright**: Необходимо запустить `playwright install` после `pip install -r requirements.txt`
 
-## Community & Support
+## Сообщество и поддержка
 
 - Discord: https://discord.gg/gEYmJKKtq3
 - GitHub: https://github.com/titechprabhasolutions/Voice-AI---Lite.git
 
-## License
+## Лицензия
 
-Custom source-available license. See `LICENSE` for details.
+Пользовательская лицензия с доступным исходным кодом. Подробности см. в `LICENSE`.
 
-## Maintainer
+## Ответственный
 
 Suryaansh Tiwari
 
-> Preserve attribution and keep credentials secure when building on top of Voice Echo.
+> Сохраняйте атрибуцию и держите учётные данные в безопасности при разработке на базе Voice Echo.

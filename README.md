@@ -3,8 +3,8 @@
 
   <h1>Voice Echo</h1>
 
-  <p><strong>Open-source desktop AI assistant for Windows, macOS, and Linux</strong></p>
-  <p>Voice-first automation · contextual desktop intelligence · productivity workflows</p>
+  <p><strong>Настольный ИИ-ассистент с открытым исходным кодом для Windows, macOS и Linux</strong></p>
+  <p>Голосовое управление · контекстная осведомлённость рабочего стола · рабочие процессы для повышения продуктивности</p>
 
   <p>
     <a href="#overview"><img src="https://img.shields.io/badge/experience-open%20source-blue?style=for-the-badge" alt="Open Source" /></a>
@@ -22,130 +22,123 @@
 
 ---
 
-## Overview
+## Обзор
 
-Voice Echo is a premium desktop assistant for Windows, macOS, and Linux that combines voice and text control with automated workflows, screen-aware intelligence, and rich content generation.
+Voice Echo — это премиальный настольный ассистент для Windows, macOS и Linux, сочетающий голосовое и текстовое управление с автоматизированными рабочими процессами, осведомлённостью о содержимом экрана и генерацией разнообразного контента.
 
-Designed for advanced desktop productivity, Voice Echo delivers:
+Разработанный для продвинутой продуктивности на рабочем столе, Voice Echo предоставляет:
 
-- Voice-first command and desktop automation
-- Application control, browser workflows, and file handling
-- Contextual screen inspection and adaptive task execution
-- Presentation, document, and report generation
-- Remote control via Discord and Voice Connect
-- Fully offline voice (speech-to-text and text-to-speech) with no Google dependency
+- Голосовое управление и автоматизацию рабочего стола
+- Управление приложениями, браузерные рабочие процессы и работу с файлами
+- Контекстный осмотр экрана и адаптивное выполнение задач
+- Генерацию презентаций, документов и отчётов
+- Дистанционное управление через Discord и Voice Connect
+- Полностью офлайновый голос (распознавание речи и синтез речи) без зависимости от Google
 
-## Quick Highlights
+## Ключевые особенности
 
-| Core capability | Why it matters |
+| Основная возможность | Почему это важно |
 |---|---|
-| Voice-first assistant | Speak commands naturally and stay hands-free |
-| Gemini + OpenRouter | Fast responses with resilient fallback support |
-| Offline local voice | STT (Vosk/sherpa) and TTS (Piper) run 100% on-device |
-| Screen-aware context | Ask about visible windows and on-screen content |
-| Document automation | Create presentations, docs, spreadsheets, and PDFs |
-| Plugin-ready | Extend features with lightweight Python plugins |
+| Голосовой ассистент | Говорите команды естественно и работайте свободно |
+| Gemini + OpenRouter | Быстрые ответы с устойчивой поддержкой резервирования |
+| Офлайновый локальный голос | STT (Vosk/sherpa) и TTS (Piper) работают на 100% локально |
+| Контекст экрана | Задавайте вопросы о видимых окнах и содержимом экрана |
+| Автоматизация документов | Создавайте презентации, документы, таблицы и PDF |
+| Готовность к плагинам | Расширяйте функциональность лёгкими плагинами на Python |
 
-## Key Benefits
+## Основные преимущества
 
-- Wake-word support for “Voice Echo” and responsive assistant activation
-- Gemini 2.5 Flash-powered AI with OpenRouter fallback resilience
-- **Fully offline voice engine** (Vosk/sherpa STT + Piper TTS) that requires no cloud services
-- Polished Qt interface with live status displays and workflow cards
-- Modular action architecture for clean extensibility and automation
-- Secure local configuration with file-based credential storage
-- Device pairing and remote routing through Voice Connect
+- Поддержка ключевого слова пробуждения «Voice Echo» и отзывчивая активация ассистента
+- ИИ на базе Gemini 2.5 Flash с устойчивым резервированием через OpenRouter
+- **Полностью офлайновый голосовой движок** (Vosk/sherpa STT + Piper TTS), не требующий облачных сервисов
+- Утончённый интерфейс на Qt с индикаторами состояния и карточками рабочих процессов
+- Модульная архитектура действий для чистого расширения и автоматизации
+- Безопасная локальная конфигурация с хранилищем учётных данных в файлах
+- Сопряжение устройств и дистанционная маршрутизация через Voice Connect
 
-## Features
+## Возможности
 
-### Intelligent Assistant
+### Интеллектуальный ассистент
 
-- Unified voice and typed command handling
-- Wake-word listening and responsive assistant activation
-- Dynamic screen inspection for context-aware answers
-- **Offline local voice** (speech-to-text and text-to-speech) with no Google dependency
-- **Unified Gemini Native Voice** for all system alerts and daily briefings
-- **True Interruption (Barge-in)** with dynamic noise-gating
-- **Proactive Engine** for spontaneous, context-aware interaction when idle
-- Gemini-first AI with OpenRouter fallback resilience
+- Единая обработка голосовых и текстовых команд
+- Слушание ключевого слова пробуждения и отзывчивая активация ассистента
+- Динамический осмотр экрана для контекстных ответов
+- **Офлайновый локальный голос** (распознавание речи и синтез речи) без зависимости от Google
+- **Единый Gemini Native Voice** для всех системных оповещений и ежедневных брифингов
+- **Настоящее прерывание (Barge-in)** с динамическим шумоподавлением
+- **Проактивный движок** для спонтанного, контекстного взаимодействия в режиме ожидания
+- ИИ на базе Gemini с устойчивым резервированием через OpenRouter
 
-### Productivity & Automation
+### Продуктивность и автоматизация
 
-- **System Health & Resource Manager** to monitor CPU/RAM and forcefully close frozen apps
-- **Background Monitors & Alerts** for polling crypto prices, website uptime, or memory spikes autonomously
-- **Smart Clipboard Analyzer** to instantly read and process copied text natively
-- Open and control Windows apps, windows, files, and system actions
-- Browser automation with Playwright-driven workflows
-- Contextual automation based on screen content and notifications
-- **Instagram AI Assistant** to poll DMs, notify you, and seamlessly take over chats or reply on your behalf
-- Reminder, meeting assistance, and notification management
+- **Менеджер состояния системы и ресурсов** для мониторинга CPU/RAM и принудительного закрытия зависших приложений
+- **Фоновые мониторы и оповещения** для автономного опроса цен криптовалют, работоспособности сайтов или скачков потребления памяти
+- **Анализатор буфера обмена** для мгновенного чтения и обработки скопированного текста
+- Открытие и управление приложениями Windows, окнами, файлами и системными действиями
+- Автоматизация браузера с рабочими процессами на базе Playwright
+- Контекстная автоматизация на основе содержимого экрана и уведомлений
+- **ИИ-ассистент Instagram** для опроса Direct-сообщений, уведомлений и бесшовного перехвата чатов или ответа от вашего имени
+- Напоминания, помощь в организации встреч и управление уведомлениями
 
-### Content & Office Tools
+### Документы и офисные инструменты
 
-- Generate presentation decks, summaries, and slide content
-- Create Word documents and spreadsheets from prompts
-- Export polished reports and deliverables as PDF
-- Build landing pages and website workspaces locally
+- Генерация презентаций, сводок и содержимого слайдов
+- Создание документов Word и таблиц из промптов
+- Экспорт оформленных отчётов и материалов в PDF
+- Локальная сборка целевых страниц и веб-пространств
 
-### Integrations
+### Интеграции
 
-- Instagram DM bridge for reading and auto-replying to messages natively
-- Discord bridge for remote commands and collaboration
-- OpenRouter fallback for uninterrupted AI access
-- Configurable voice, UI, startup, and notification settings
-- Voice Connect for device discovery and command routing
+- Мост Instagram Direct для чтения и автоответа на сообщения
+- Мост Discord для дистанционных команд и совместной работы
+- Резервирование OpenRouter для непрерывного доступа к ИИ
+- Настраиваемые параметры голоса, интерфейса, запуска и уведомлений
+- Voice Connect для обнаружения устройств и маршрутизации команд
 
-## Offline Voice
+## Офлайновый голос
 
-By default Voice Echo uses a **fully offline voice engine** — no Google/Gemini
-endpoint is contacted for speech. This avoids “Gemini unreachable” errors on
-networks where Google services are blocked or unavailable.
+По умолчанию Voice Echo использует **полностью офлайновый голосовой движок** — обращение к Google/Gemini для распознавания речи не выполняется. Это исключает ошибки «Gemini недоступен» в сетях, где сервисы Google заблокированы или недоступны.
 
-- **Speech-to-text:** sherpa-onnx streaming Zipformer, the engine behind the modern Vosk streaming models (`sherpa-onnx-streaming-zipformer-small-ru-vosk`). Real-time recognition from the microphone with silence/endpoint detection and wake-word support.
-- **Text-to-speech:** Piper with the Russian neural voice `ru_RU-irina-medium`.
+- **Распознавание речи:** streaming Zipformer на базе sherpa-onnx, движок, лежащий в основе современных streaming-моделей Vosk (`sherpa-onnx-streaming-zipformer-small-ru-vosk`). Распознавание в реальном времени с микрофона с обнаружением тишины/конца фразы и поддержкой ключевого слова пробуждения.
+- **Синтез речи:** Piper с русским нейронным голосом `ru_RU-irina-medium`.
 
-Models are stored under `config/models/`:
+Модели хранятся в `config/models/`:
 
 ```
 config/models/piper/      Piper TTS voice (ru_RU-irina-medium.onnx + .json)
 config/models/sherpa-ru/  Vosk/sherpa STT model (encoder/decoder/joiner, tokens, bpe)
 ```
 
-Download them with:
+Скачайте их с помощью:
 
 ```bash
 .venv/bin/python download_voice_models.py
 ```
 
-The feature is managed from **Settings → System & Connectivity → Local Voice
-Engine** (`local_voice_engine` in `config/app_settings.json`, enabled by
-default). Toggle it off to return to the cloud Gemini Native Voice path; a
-restart is required either way.
+Функция управляется через **Настройки → Система и подключения → Локальный голосовой движок** (`local_voice_engine` в `config/app_settings.json`, включена по умолчанию). Отключите её, чтобы вернуться к облачному пути Gemini Native Voice; в любом случае потребуется перезапуск.
 
-**Requirements:** `sherpa-onnx` and `piper-tts` are part of
-`requirements.txt`. If a model file or package is missing the app falls back
-gracefully to its previous online behaviour instead of crashing.
+**Требования:** `sherpa-onnx` и `piper-tts` входят в `requirements.txt`. Если файл модели или пакет отсутствует, приложение корректно возвращается к предыдущему онлайн-поведению вместо аварийного завершения.
 
-## Getting Started
+## Быстрый старт
 
-### Prerequisites
+### Предварительные требования
 
-- Windows 10/11, macOS 12+, or a modern Linux distribution
-- Python 3.11 or Python 3.12
-- Git installed
-- Gemini API key
-- OpenRouter API key (optional but recommended)
+- Windows 10/11, macOS 12+ или современный дистрибутив Linux
+- Python 3.11 или Python 3.12
+- Установленный Git
+- Ключ API Gemini
+- Ключ API OpenRouter (необязательно, но рекомендуется)
 
-> **Linux notes:** voice/audio uses `sounddevice` (PortAudio). Install it with your package manager (e.g. `sudo apt install libportaudio2`). Screen features that rely on `pyautogui` need an active X11/Wayland session. Desktop autostart is Windows-only; on Linux/macOS launch via the commands below.
+> **Примечания для Linux:** звук/аудио использует `sounddevice` (PortAudio). Установите его через менеджер пакетов (например, `sudo apt install libportaudio2`). Экранные функции, использующие `pyautogui`, требуют активной сессии X11/Wayland. Автозапуск на рабочем столе доступен только в Windows; на Linux/macOS запускайте через команды ниже.
 
-### 1. Clone the repository
+### 1. Клонируйте репозиторий
 
 ```bash
 git clone https://github.com/titechprabhasolutions/Voice-AI---Lite.git
 cd "Voice AI - Lite"
 ```
 
-### 2. Create and activate a virtual environment
+### 2. Создайте и активируйте виртуальное окружение
 
 **Windows (PowerShell):**
 
@@ -161,7 +154,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-### 3. Install dependencies
+### 3. Установите зависимости
 
 ```bash
 pip install -r requirements.txt
@@ -170,16 +163,16 @@ playwright install
 python download_voice_models.py            # offline voice models (Piper + Vosk/sherpa)
 ```
 
-> `mediapipe` (used only for the gesture camera and push-up tracking) publishes
-> wheels for a narrower range of interpreters than the rest of the stack. It
-> lives in `requirements-optional.txt` so a missing wheel never aborts the
-> install — the app starts and the gesture camera simply stays disabled.
-> On Python 3.14 (e.g. macOS Intel) mediapipe has no wheel; use Python 3.11 or
-> 3.12 if you need gestures.
+> `mediapipe` (используется только для камеры жестов и отслеживания отжиманий) публикует
+> сборки для узкого диапазона интерпретаторов по сравнению с остальным стеком. Он
+> находится в `requirements-optional.txt`, поэтому отсутствие сборки не прерывает
+> установку — приложение запускается, а камера жестов просто остаётся отключённой.
+> В Python 3.14 (например, macOS Intel) mediapipe не имеет сборки; используйте Python 3.11 или
+> 3.12, если вам нужны жесты.
 
-### 4. Configure API credentials
+### 4. Настройте учётные данные API
 
-Create `config/api_keys.json` with your keys:
+Создайте `config/api_keys.json` с вашими ключами:
 
 ```json
 {
@@ -190,89 +183,89 @@ Create `config/api_keys.json` with your keys:
 }
 ```
 
-#### Gemini API Key
+#### Ключ API Gemini
 
-1. Create a Google Cloud or Gemini account.
-2. Enable Gemini API access for your project.
-3. Add the generated key to `gemini_api_key`.
+1. Создайте аккаунт Google Cloud или Gemini.
+2. Включите доступ к Gemini API для вашего проекта.
+3. Добавьте сгенерированный ключ в `gemini_api_key`.
 
-#### OpenRouter API Key
+#### Ключ API OpenRouter
 
-1. Register at https://openrouter.ai.
-2. Generate an `sk-or-` API key.
-3. Add the key to `openrouter_api_key`.
+1. Зарегистрируйтесь на https://openrouter.ai.
+2. Сгенерируйте ключ API с префиксом `sk-or-`.
+3. Добавьте ключ в `openrouter_api_key`.
 
-### 5. Optional: Configure Discord integration
+### 5. Опционально: настройте интеграцию с Discord
 
-If you want Discord remote control, populate `config/discord_bot.json` with your bot credentials and connection settings.
+Если вам нужно дистанционное управление через Discord, заполните `config/discord_bot.json` учётными данными вашего бота и настройками подключения.
 
-### 6. Launch Voice Echo
+### 6. Запустите Voice Echo
 
 ```bash
 python main.py
 ```
 
-**macOS / Linux:** `run.sh` sets up `.venv` and installs dependencies on first run, then launches the app:
+**macOS / Linux:** `run.sh` настраивает `.venv` и устанавливает зависимости при первом запуске, затем запускает приложение:
 
 ```bash
 ./run.sh
 ```
 
-For a cleaner startup experience on Windows:
+Для более чистого запуска в Windows:
 
 ```powershell
 start_voice.vbs
 ```
 
-## Configuration
+## Конфигурация
 
-Core configuration files:
+Основные файлы конфигурации:
 
-- `config/api_keys.json` — Gemini and OpenRouter credentials
-- `config/app_settings.json` — voice, UI, startup, and automation preferences
-- `config/voice_connect.json` — device pairing, gateway, and discovery settings
-- `config/discord_bot.json` — Discord bridge configuration
-- `config/models/` — offline voice models (Piper TTS + Vosk/sherpa STT)
+- `config/api_keys.json` — учётные данные Gemini и OpenRouter
+- `config/app_settings.json` — параметры голоса, интерфейса, запуска и автоматизации
+- `config/voice_connect.json` — настройки сопряжения устройств, шлюза и обнаружения
+- `config/discord_bot.json` — конфигурация моста Discord
+- `config/models/` — офлайновые голосовые модели (Piper TTS + Vosk/sherpa STT)
 
-## Project Structure
+## Структура проекта
 
-- `main.py` — application startup, AI orchestration, and command routing
-- `local_voice.py` — offline STT/TTS engine (Vosk/sherpa + Piper) and voice loop
-- `download_voice_models.py` — fetches the offline voice model files into `config/models/`
-- `ui.py` — Qt-based desktop interface and live assistant controls
-- `actions/` — modular automation, document, and assistant tools
-- `voice_connect/` — local gateway, pairing, and remote routing
-- `config/` — local settings, credentials, and runtime configuration
-- `plugins/` — optional plugin extensions
-- `tests/` — integration and validation tests
+- `main.py` — запуск приложения, оркестрация ИИ и маршрутизация команд
+- `local_voice.py` — офлайновый движок STT/TTS (Vosk/sherpa + Piper) и голосовой цикл
+- `download_voice_models.py` — загрузка файлов офлайновых голосовых моделей в `config/models/`
+- `ui.py` — настольный интерфейс на Qt и элементы управления ассистентом
+- `actions/` — модульные инструменты автоматизации, документов и ассистента
+- `voice_connect/` — локальный шлюз, сопряжение и дистанционная маршрутизация
+- `config/` — локальные настройки, учётные данные и конфигурация выполнения
+- `plugins/` — дополнения в виде плагинов
+- `tests/` — интеграционные и проверочные тесты
 
-## Plugin System
+## Система плагинов
 
-Extend Voice Echo with custom Python plugins by adding files to `plugins/`.
+Расширяйте Voice Echo пользовательскими плагинами на Python, добавляя файлы в `plugins/`.
 
-Supported hooks:
+Поддерживаемые хуки:
 
-- `on_voice_created(voice)` — called when the assistant instance is initialized
-- `on_startup(voice)` — called after startup when plugins are registered
-- `on_text_command(text, source, voice=None)` — called for each incoming text command; return `True` to indicate the command was handled
+- `on_voice_created(voice)` — вызывается при инициализации экземпляра ассистента
+- `on_startup(voice)` — вызывается после запуска при регистрации плагинов
+- `on_text_command(text, source, voice=None)` — вызывается для каждой входящей текстовой команды; верните `True`, чтобы указать, что команда обработана
 
-## Best Practices
+## Рекомендации
 
-- Keep credentials in `config/api_keys.json` and avoid committing secrets.
-- Use the virtual environment for all development and runtime sessions.
-- Restart the app after changing config or adding plugins.
-- Review `config/app_settings.json` to tune voice, UI, and automation behavior.
+- Храните учётные данные в `config/api_keys.json` и не коммитьте секреты.
+- Используйте виртуальное окружение для всей разработки и выполнения.
+- Перезапускайте приложение после изменения конфигурации или добавления плагинов.
+- Просматривайте `config/app_settings.json` для настройки голоса, интерфейса и автоматизации.
 
-## Community & Support
+## Сообщество и поддержка
 
 - Discord: https://discord.gg/gEYmJKKtq3
 
-## License
+## Лицензия
 
-This project is published under a custom source-available license. See `LICENSE` for details.
+Этот проект опубликован под пользовательской лицензией с доступным исходным кодом. Подробности см. в `LICENSE`.
 
-## Maintainer
+## Ответственный
 
 - Suryaansh Tiwari
 
-> Preserve attribution and keep credentials secure when building on top of Voice Echo.
+> Сохраняйте атрибуцию и держите учётные данные в безопасности при разработке на базе Voice Echo.

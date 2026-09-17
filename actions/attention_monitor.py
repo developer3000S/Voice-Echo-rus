@@ -499,39 +499,39 @@ def _click_best_button(app: str, action: str) -> bool:
 def handle_call_action(event: dict, action: str) -> str:
     app = _norm(event.get("app") or "")
     if not app:
-        return "No app was detected for that call."
+        return "Не удалось определить приложение для этого звонка."
 
     if action in {"pick_up", "answer", "accept"}:
         if _click_best_button(app, "accept"):
-            return f"Picked up the call on {event.get('app', 'the app')}."
+            return f"Звонок принят в {event.get('app', 'приложении')}."
         if _focus_window_by_app(app):
             try:
                 pyautogui.press("enter")
-                return f"Tried to pick up the call on {event.get('app', 'the app')}."
+                return f"Попытка принять звонок в {event.get('app', 'приложении')}."
             except Exception:
                 pass
-        return f"I found the call on {event.get('app', 'the app')}, but could not confirm the answer button."
+        return f"Звонок найден в {event.get('app', 'приложении')}, но не удалось нажать кнопку ответа."
 
     if action in {"ignore", "decline", "reject", "cut"}:
         if _click_best_button(app, "decline"):
-            return f"Declined the call on {event.get('app', 'the app')}."
+            return f"Звонок отклонён в {event.get('app', 'приложении')}."
         if _focus_window_by_app(app):
             try:
                 pyautogui.press("esc")
-                return f"Tried to decline the call on {event.get('app', 'the app')}."
+                return f"Попытка отклонить звонок в {event.get('app', 'приложении')}."
             except Exception:
                 pass
-        return f"I found the call on {event.get('app', 'the app')}, but could not confirm the decline button."
+        return f"Звонок найден в {event.get('app', 'приложении')}, но не удалось нажать кнопку отклонения."
 
-    return "Unknown call action."
+    return "Неизвестное действие со звонком."
 
 
 def read_event_preview(event: dict) -> str:
     preview = (event.get("preview") or "").strip()
     app = (event.get("app") or "the app").strip()
     if preview:
-        return f"You received a message on {app}. {preview}"
-    return f"You received a message on {app}."
+        return f"Новое сообщение в {app}. {preview}"
+    return f"Новое сообщение в {app}."
 
 
 @dataclass

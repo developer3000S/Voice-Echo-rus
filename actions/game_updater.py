@@ -285,20 +285,20 @@ def _ensure_steam_running(steam_path: Path) -> bool:
 
 def _update_steam_games(steam_path: Path, game_name: str = None) -> str:
     if not _ensure_steam_running(steam_path):
-        return "Could not start Steam."
+        return "Не удалось запустить Steam."
 
     steam_exe = steam_path / "steam.exe"
     games     = _get_steam_games(steam_path)
 
     if not games:
-        return "No Steam games found."
+        return "Игры Steam не найдены."
 
     if game_name:
         name_lower = game_name.lower()
         matched    = [g for g in games if name_lower in g["name"].lower()]
         if not matched:
             available = ", ".join(g["name"] for g in games[:5])
-            return f"Game '{game_name}' not found. Installed: {available}..."
+            return f"Игра '{game_name}' не найдена. Установленные: {available}..."
         targets = matched
     else:
         targets = games
@@ -323,19 +323,19 @@ def _update_steam_games(steam_path: Path, game_name: str = None) -> str:
     parts = []
     if update_started:
         names  = ", ".join(update_started[:3])
-        suffix = f" and {len(update_started) - 3} more" if len(update_started) > 3 else ""
-        parts.append(f"Update started for: {names}{suffix}.")
+        suffix = f" и ещё {len(update_started) - 3}" if len(update_started) > 3 else ""
+        parts.append(f"Обновление начато для: {names}{suffix}.")
     if already_running:
-        parts.append(f"Already updating: {', '.join(already_running)}.")
+        parts.append(f"Уже обновляется: {', '.join(already_running)}.")
     if already_updated:
         parts.append(
-            f"{already_updated[0]} is already up to date."
+            f"{already_updated[0]} уже обновлена."
             if game_name else
-            f"{len(already_updated)} game(s) already up to date."
+            f"{len(already_updated)} игр уже обновлены."
         )
     if errors:
-        parts.append(f"Errors: {'; '.join(errors)}.")
-    return " ".join(parts) if parts else "No games to update."
+        parts.append(f"Ошибки: {'; '.join(errors)}.")
+    return " ".join(parts) if parts else "Нет игр для обновления."
 
 
 _KNOWN_APPIDS: dict[str, tuple[str, str]] = {
@@ -487,7 +487,7 @@ def _click_button(window, keywords: list[str]) -> bool:
 def _handle_install_dialog(game_name: str) -> str:
     best_drive = _find_best_drive()
     if not best_drive:
-        return f"Install dialog opened for '{game_name}'. Could not detect drives."
+        return f"Диалог установки открыт для '{game_name}'. Не удалось обнаружить диски."
 
     drive_letter = best_drive["letter"]
     drive_label  = f"{drive_letter}:"
@@ -525,9 +525,9 @@ def _handle_install_dialog(game_name: str) -> str:
         install_clicked = _click_button(dialog, ["install", "yükle", "next", "ileri", "ok", "tamam"])
 
         if install_clicked:
-            suffix = f"Selected {drive_label} and" if drive_selected else "Default drive used, but"
-            return f"{suffix} clicked Install for '{game_name}'."
-        return f"Please click Install manually in Steam for '{game_name}'."
+            suffix = f"Выбран {drive_label} и" if drive_selected else "Использован диск по умолчанию, но"
+            return f"{suffix} нажато «Установить» для '{game_name}'."
+        return f"Нажмите «Установить» вручную в Steam для '{game_name}'."
 
     except ImportError:
         return _handle_install_dialog_pyautogui(game_name, best_drive)
@@ -541,7 +541,7 @@ def _handle_install_dialog_pyautogui(game_name: str, best_drive: dict) -> str:
         import pyautogui
         import pygetwindow as gw
     except ImportError:
-        return f"Install dialog opened for '{game_name}'. Please select '{best_drive['letter']}:' and click Install manually."
+        return f"Диалог установки открыт для '{game_name}'. Выберите '{best_drive['letter']}:' и нажмите «Установить» вручную."
 
     pyautogui.FAILSAFE = False
     drive_label  = f"{best_drive['letter']}:"
@@ -557,7 +557,7 @@ def _handle_install_dialog_pyautogui(game_name: str, best_drive: dict) -> str:
             break
 
     if not install_win:
-        return f"Please select '{drive_label}' and click Install in Steam for '{game_name}'."
+        return f"Выберите '{drive_label}' и нажмите «Установить» в Steam для '{game_name}'."
 
     try:
         install_win.activate()
@@ -572,12 +572,12 @@ def _handle_install_dialog_pyautogui(game_name: str, best_drive: dict) -> str:
     pyautogui.typewrite(best_drive["letter"], interval=0.05)
     time.sleep(0.2)
     pyautogui.click(wx + int(ww * 0.72), wy + int(wh * 0.88))
-    return f"Attempted drive {drive_label} selection and Install click for '{game_name}'."
+    return f"Выполнен выбор диска {drive_label} и клик по «Установить» для '{game_name}'."
 
 
 def _install_steam_game(steam_path: Path, game_name: str = None, app_id: str = None) -> str:
     if not _ensure_steam_running(steam_path):
-        return "Could not start Steam."
+        return "Не удалось запустить Steam."
 
     steam_exe       = steam_path / "steam.exe"
     installed_games = _get_steam_games(steam_path)
@@ -589,24 +589,24 @@ def _install_steam_game(steam_path: Path, game_name: str = None, app_id: str = N
         name_lower = game_name.lower()
         already    = next((g for g in installed_games if name_lower in g["name"].lower()), None)
     else:
-        return "Please specify a game name or AppID."
+        return "Укажите название игры или AppID."
 
     if already:
         state = already["state"]
         name  = already["name"]
         if state == 4:
-            return f"'{name}' is already installed and up to date."
+            return f"'{name}' уже установлена и актуальна."
         if state == 1026:
-            return f"'{name}' is currently downloading or updating."
+            return f"'{name}' сейчас загружается или обновляется."
         if state in (6, 516):
             subprocess.Popen([str(steam_exe), f"steam://update/{already['id']}"])
-            return f"'{name}' has a pending update. Update started."
-        return f"'{name}' is already installed."
+            return f"'{name}' ожидает обновления. Обновление начато."
+        return f"'{name}' уже установлена."
 
     if not app_id and game_name:
         found_id, found_name = _search_steam_appid(game_name)
         if not found_id:
-            return f"Could not find '{game_name}' on Steam. Try providing the AppID directly."
+            return f"Не удалось найти '{game_name}' в Steam. Попробуйте указать AppID напрямую."
         app_id    = found_id
         game_name = found_name or game_name
         print(f"[GameUpdater] 🔍 Installing: {game_name} (AppID: {app_id})")
@@ -614,9 +614,9 @@ def _install_steam_game(steam_path: Path, game_name: str = None, app_id: str = N
     try:
         subprocess.Popen([str(steam_exe), f"steam://install/{app_id}"])
         threading.Thread(target=_handle_install_dialog, args=(game_name or str(app_id),), daemon=True).start()
-        return f"Install started for '{game_name}'. Steam will open the download dialog."
+        return f"Установка начата для '{game_name}'. Steam откроет диалог загрузки."
     except Exception as e:
-        return f"Install failed: {e}"
+        return f"Ошибка установки: {e}"
 
 
 def _get_download_status(steam_path: Path) -> str:
@@ -625,12 +625,12 @@ def _get_download_status(steam_path: Path) -> str:
     pending = [g for g in games if g["state"] in (6, 516)]
     lines   = []
     if active:
-        lines.append(f"Downloading: {', '.join(g['name'] for g in active)}.")
+        lines.append(f"Загружается: {', '.join(g['name'] for g in active)}.")
     if pending:
         names  = ", ".join(g["name"] for g in pending[:5])
-        suffix = f" and {len(pending) - 5} more" if len(pending) > 5 else ""
-        lines.append(f"Pending updates: {names}{suffix}.")
-    return " ".join(lines) if lines else "No active downloads or pending updates."
+        suffix = f" и ещё {len(pending) - 5}" if len(pending) > 5 else ""
+        lines.append(f"Ожидают обновления: {names}{suffix}.")
+    return " ".join(lines) if lines else "Нет активных загрузок или ожидающих обновлений."
 
 
 def _watch_and_shutdown(steam_path: Path, speak=None, check_interval: int = 30, timeout_hours: int = 12):
@@ -642,7 +642,7 @@ def _watch_and_shutdown(steam_path: Path, speak=None, check_interval: int = 30, 
         active = [g for g in _get_steam_games(steam_path) if g["state"] == 1026]
         if active:
             names = ", ".join(g["name"] for g in active)
-            if speak: speak(f"Download started for {names}. I'll shut down when done.")
+            if speak: speak(f"Загрузка начата для {names}. Выключу компьютер после завершения.")
             break
     else:
         return
@@ -650,12 +650,12 @@ def _watch_and_shutdown(steam_path: Path, speak=None, check_interval: int = 30, 
     while time.time() < deadline:
         time.sleep(check_interval)
         if not any(g["state"] == 1026 for g in _get_steam_games(steam_path)):
-            if speak: speak("Download complete. Shutting down now.")
+            if speak: speak("Загрузка завершена. Выключаю компьютер.")
             time.sleep(5)
             subprocess.run(["shutdown", "/s", "/t", "10"])
             return
 
-    if speak: speak("Download taking too long. Cancelling auto-shutdown.")
+    if speak: speak("Загрузка занимает слишком много времени. Отменяю автоматическое выключение.")
 
 
 def _get_epic_games() -> list[dict]:
@@ -688,30 +688,30 @@ def _is_epic_running() -> bool:
 def _update_epic_games(epic_path: Path, game_name: str = None) -> str:
     epic_exe = epic_path / "EpicGamesLauncher.exe"
     if not epic_exe.exists():
-        return "Epic Games Launcher not found."
+        return "Лаунчер Epic Games не найден."
     games = _get_epic_games()
     if game_name:
         name_lower = game_name.lower()
         matched    = [g for g in games if name_lower in g["name"].lower()]
         if not matched:
-            return f"'{game_name}' not found in Epic."
+            return f"'{game_name}' не найдена в Epic."
         try:
             subprocess.Popen([str(epic_exe), f"com.epicgames.launcher://apps/{matched[0]['id']}?action=launch&silent=true"])
-            return f"Opened Epic for '{matched[0]['name']}'."
+            return f"Открыт Epic для '{matched[0]['name']}'."
         except Exception as e:
-            return f"Epic update failed: {e}"
+            return f"Ошибка обновления Epic: {e}"
     else:
         try:
             if _is_epic_running():
                 for g in games[:10]:
                     subprocess.Popen([str(epic_exe), f"com.epicgames.launcher://apps/{g['id']}?action=launch&silent=true"])
                     time.sleep(0.5)
-                return f"Triggered update check for {len(games)} Epic game(s)."
+                return f"Запущена проверка обновлений для {len(games)} игр Epic."
             else:
                 subprocess.Popen([str(epic_exe)])
-                return f"Epic Games Launcher opened. {len(games)} game(s) will be checked."
+                return f"Лаунчер Epic Games открыт. Будет проверено игр: {len(games)}."
         except Exception as e:
-            return f"Epic update failed: {e}"
+            return f"Ошибка обновления Epic: {e}"
 
 
 def _schedule_daily_update(hour: int = 3, minute: int = 0) -> str:
@@ -724,25 +724,25 @@ def _schedule_daily_update(hour: int = 3, minute: int = 0) -> str:
                   "/SC", "DAILY", "/ST", f"{hour:02d}:{minute:02d}", "/F", *extra]
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode == 0:
-            return f"Daily game update scheduled at {hour:02d}:{minute:02d}."
-    return f"Scheduling failed: {result.stderr.strip()}"
+            return f"Ежедневное обновление игр запланировано на {hour:02d}:{minute:02d}."
+    return f"Не удалось запланировать: {result.stderr.strip()}"
 
 
 def _cancel_scheduled_update() -> str:
     result = subprocess.run(["schtasks", "/Delete", "/TN", "VoiceAI_GameUpdater", "/F"],
                             capture_output=True, text=True)
-    return "Scheduled update cancelled." if result.returncode == 0 else "No scheduled update found."
+    return "Запланированное обновление отменено." if result.returncode == 0 else "Запланированное обновление не найдено."
 
 
 def _get_schedule_status() -> str:
     result = subprocess.run(["schtasks", "/Query", "/TN", "VoiceAI_GameUpdater", "/FO", "LIST"],
                             capture_output=True, text=True)
     if result.returncode != 0:
-        return "No scheduled game update found."
+        return "Запланированное обновление игр не найдено."
     for line in result.stdout.strip().split("\n"):
         if any(k in line for k in ("Next Run", "Sonraki", "Prochaine", "Próxima", "Nächste")):
-            return f"Game update scheduled. {line.strip()}"
-    return "Game update is scheduled."
+            return f"Обновление игр запланировано. {line.strip()}"
+    return "Обновление игр запланировано."
 
 
 def game_updater(parameters: dict, player=None, speak=None) -> str:
@@ -768,35 +768,35 @@ def game_updater(parameters: dict, player=None, speak=None) -> str:
                 games = _get_steam_games(steam_path)
                 if games:
                     names  = ", ".join(g["name"] for g in games[:8])
-                    suffix = f" and {len(games) - 8} more" if len(games) > 8 else ""
-                    results.append(f"Steam ({len(games)} games): {names}{suffix}.")
+                    suffix = f" и ещё {len(games) - 8}" if len(games) > 8 else ""
+                    results.append(f"Steam ({len(games)} игр): {names}{suffix}.")
                 else:
-                    results.append("Steam: No games found.")
+                    results.append("Steam: игры не найдены.")
             else:
-                results.append("Steam: Not installed.")
+                results.append("Steam: не установлен.")
         if platform in ("epic", "both"):
             games = _get_epic_games()
             if games:
                 names  = ", ".join(g["name"] for g in games[:8])
-                suffix = f" and {len(games) - 8} more" if len(games) > 8 else ""
-                results.append(f"Epic ({len(games)} games): {names}{suffix}.")
+                suffix = f" и ещё {len(games) - 8}" if len(games) > 8 else ""
+                results.append(f"Epic ({len(games)} игр): {names}{suffix}.")
             else:
-                results.append("Epic: No games found.")
-        return " | ".join(results) or "No platforms found."
+                results.append("Epic: игры не найдены.")
+        return " | ".join(results) or "Платформы не найдены."
 
     if action == "download_status":
         if platform in ("steam", "both"):
             steam_path = _find_steam_path()
-            results.append(_get_download_status(steam_path) if steam_path else "Steam: Not installed.")
+            results.append(_get_download_status(steam_path) if steam_path else "Steam: не установлен.")
         if platform in ("epic", "both"):
-            results.append("Epic download status not available directly.")
+            results.append("Статус загрузки Epic напрямую недоступен.")
         return " ".join(results)
 
     if action in ("install", "update"):
         if platform in ("steam", "both"):
             steam_path = _find_steam_path()
             if not steam_path:
-                results.append("Steam: Not installed.")
+                results.append("Steam: не установлен.")
             else:
                 if game_name:
                     installed    = _get_steam_games(steam_path)
@@ -809,7 +809,7 @@ def game_updater(parameters: dict, player=None, speak=None) -> str:
                             threading.Thread(target=_watch_and_shutdown,
                                              kwargs={"steam_path": steam_path, "speak": speak},
                                              daemon=True).start()
-                            msg += " Auto-shutdown enabled."
+                            msg += " Автоматическое выключение включено."
                         if player: player.write_log(f"[GameUpdater] {msg[:100]}")
                         if speak: speak(msg)
                         return msg
@@ -817,7 +817,7 @@ def game_updater(parameters: dict, player=None, speak=None) -> str:
                         results.append(f"Steam: {_update_steam_games(steam_path, game_name=game_name)}")
                 else:
                     if action == "install":
-                        results.append("Steam: Please specify a game name to install.")
+                        results.append("Steam: Укажите название игры для установки.")
                     else:
                         results.append(f"Steam: {_update_steam_games(steam_path)}")
 
@@ -825,21 +825,21 @@ def game_updater(parameters: dict, player=None, speak=None) -> str:
                     threading.Thread(target=_watch_and_shutdown,
                                      kwargs={"steam_path": steam_path, "speak": speak},
                                      daemon=True).start()
-                    results.append("Auto-shutdown enabled.")
+                    results.append("Автоматическое выключение включено.")
 
         if platform in ("epic", "both"):
             epic_path = _find_epic_path()
             if epic_path:
                 results.append(f"Epic: {_update_epic_games(epic_path, game_name=game_name)}")
             else:
-                results.append("Epic: Not installed.")
+                results.append("Epic: не установлен.")
 
-        output = " | ".join(results) or "Nothing to do."
+        output = " | ".join(results) or "Нечего делать."
         if player: player.write_log(f"[GameUpdater] {output[:100]}")
         if speak: speak(output)
         return output
 
-    return f"Unknown action: '{action}'."
+    return f"Неизвестное действие: '{action}'."
 
 
 if __name__ == "__main__":

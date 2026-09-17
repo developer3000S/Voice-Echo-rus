@@ -204,10 +204,11 @@ def _load_system_prompt() -> str:
         base_prompt = PROMPT_PATH.read_text(encoding="utf-8")
     except Exception:
         base_prompt = (
-            "You are Voice Echo, a calm, direct, and professional AI assistant. "
-            "Be concise, direct, and always use the provided tools to complete tasks. "
-            "Never simulate or guess results — always call the appropriate tool. "
-            "If the user asks to create, build, launch, or open a website, always use the selected workspace folder."
+            "Ты — Voice Echo, спокойный, прямой и профессиональный ИИ-ассистент. "
+            "Общайся с пользователем на русском языке и отвечай по-русски. "
+            "Будь кратким и по делу, всегда используй предоставленные инструменты для выполнения задач. "
+            "Никогда не симулируй и не догадывайся о результатах — всегда вызывай подходящий инструмент. "
+            "Если пользователь просит создать, собрать, запустить или открыть сайт — всегда используй выбранную рабочую папку."
         )
         
     try:
@@ -217,17 +218,17 @@ def _load_system_prompt() -> str:
         role = identity.get_owner_role()
         mode = identity.get_behavior_mode()
         
-        identity_str = f"You are {ast_name}. You are assisting {own_name}"
+        identity_str = f"Ты — {ast_name}. Ты помогаешь {own_name}"
         if role:
-            identity_str += f" (Role: {role}).\n"
+            identity_str += f" (Роль: {role}).\n"
         else:
             identity_str += ".\n"
             
-        identity_str += f"Your current behavior mode is: {mode}.\n"
+        identity_str += f"Твой текущий режим поведения: {mode}.\n"
         
         custom = identity.get_custom_instructions()
         if custom:
-            identity_str += f"Custom Instructions: {custom}\n\n"
+            identity_str += f"Пользовательские инструкции: {custom}\n\n"
             
         return identity_str + base_prompt
     except Exception as e:
@@ -276,8 +277,9 @@ def _extract_gemini_text(response) -> str:
 def _gemini_text_reply(prompt: str) -> str:
     client = _get_gemini_client()
     system_prompt = (
-        "You are Voice Echo, a concise, helpful desktop assistant. "
-        "Reply naturally and briefly. Do not mention internal implementation details."
+        "Ты — Voice Echo, краткий и полезный настольный ассистент. "
+        "Отвечай естественно, кратко и всегда на русском языке. "
+        "Не упоминай внутренние детали реализации."
     )
     response = client.models.generate_content(
         model="gemini-2.5-flash",
@@ -289,10 +291,10 @@ def _gemini_text_reply(prompt: str) -> str:
 
 def _ig_gemini_reply(username: str, text: str) -> str:
     system_prompt = (
-        "You are Voice Echo, an AI personal assistant acting on behalf of your user. "
-        "You have taken over their Instagram chat with the user's permission. "
-        "Reply naturally, briefly, and conversationally to the incoming message. "
-        "Do not sound like a bot. Keep your replies under 2 sentences."
+        "Ты — Voice Echo, ИИ-личный ассистент, действующий от имени своего пользователя. "
+        "Ты ведёшь их чат в Instagram с разрешения пользователя. "
+        "Отвечай естественно, кратко и по-русски, живому собеседнику. "
+        "Не звучи как бот. Держи ответы короче двух предложений."
     )
     prompt = f"Instagram DM from {username}: {text}"
     
@@ -322,10 +324,10 @@ def _ig_gemini_reply(username: str, text: str) -> str:
 
 def _clipboard_gemini_reply(text: str) -> str:
     system_prompt = (
-        "You are Voice Echo, a witty and helpful AI assistant. "
-        "The user just copied the following text to their clipboard. "
-        "Make a very short, interesting, or helpful 1-sentence comment or question about it. "
-        "Do not offer to 'help' or ask 'how can I help'. Just make a standalone witty observation or summary."
+        "Ты — Voice Echo, остроумный и полезный ИИ-ассистент. "
+        "Пользователь только что скопировал в буфер обмена следующий текст. "
+        "Сделай очень короткий, интересный или полезный комментарий или вопрос об этом (одно предложение). "
+        "Не предлагай «помощь» и не спрашивай «чем помочь» — просто дай самостоятельное остроумное наблюдение или краткую суть на русском языке."
     )
     prompt = text
     try:
@@ -459,58 +461,58 @@ def _build_task_plan(text: str) -> list[str]:
     t = (text or "").lower()
     if any(word in t for word in ("presentation", "ppt", "slides", "deck")):
         return [
-            "Understand the topic and goal",
-            "Build a slide structure",
-            "Generate and format the deck",
-            "Open the finished presentation",
+            "Понять тему и цель",
+            "Построить структуру слайдов",
+            "Сгенерировать и оформить презентацию",
+            "Открыть готовую презентацию",
         ]
     if any(word in t for word in ("spreadsheet", "excel", "sheet", "table", "tracker", "budget")):
         return [
-            "Read the data request",
-            "Lay out sheets and columns",
-            "Apply formulas and formatting",
-            "Open the workbook",
+            "Разобрать запрос по данным",
+            "Составить листы и колонки",
+            "Применить формулы и форматирование",
+            "Открыть таблицу",
         ]
     if any(word in t for word in ("word", "docx", "document", "report", "letter")):
         return [
-            "Understand the document type",
-            "Draft the structure and content",
-            "Preserve formatting and polish",
-            "Save the editable file",
+            "Определить тип документа",
+            "Подготовить структуру и содержание",
+            "Сохранить форматирование",
+            "Сохранить редактируемый файл",
         ]
     if any(word in t for word in ("website", "web site", "landing page", "saaS", "saas", "dashboard", "app")):
         return [
-            "Interpret the brief",
-            "Generate frontend and backend files",
-            "Launch the local preview",
-            "Debug and fix launch issues if needed",
+            "Интерпретировать задание",
+            "Создать файлы фронтенда и бэкенда",
+            "Запустить локальный предпросмотр",
+            "Отладить проблемы запуска при необходимости",
         ]
     if any(word in t for word in ("browser", "website", "google", "search", "open url", "navigate")):
         return [
-            "Open the browser",
-            "Navigate to the target page",
-            "Collect the needed information",
-            "Return the result",
+            "Открыть браузер",
+            "Перейти на нужную страницу",
+            "Собрать необходимую информацию",
+            "Сообщить результат",
         ]
     if any(word in t for word in ("screen", "camera", "meeting", "call", "analyze", "analyse", "analyze")):
         return [
-            "Capture the live screen or camera",
-            "Inspect what is visible",
-            "Answer with the important details",
-            "Keep listening for follow-up commands",
+            "Захватить живой экран или камеру",
+            "Изучить, что видно на экране",
+            "Ответить с важными деталями",
+            "Продолжать слушать дальнейшие команды",
         ]
     if any(word in t for word in ("fan", "light", "plug", "kasa", "atomberg", "smart home", "home device", "room", "bedroom", "living room", "kitchen", "office", "bathroom", "balcony")):
         return [
-            "Identify the smart-home device or room",
-            "Choose the correct action",
-            "Send the command to the connected provider",
-            "Confirm the result back to the user",
+            "Определить устройство или комнату",
+            "Выбрать нужное действие",
+            "Отправить команду подключённому провайдеру",
+            "Сообщить пользователю результат",
         ]
     return [
-        "Understand the command",
-        "Choose the right tool",
-        "Execute the task",
-        "Return the result",
+        "Понять команду",
+        "Выбрать нужный инструмент",
+        "Выполнить задачу",
+        "Сообщить результат",
     ]
 
 
@@ -1593,7 +1595,7 @@ class VoiceLive:
 
     def _make_remote_key(self):
         if self._dashboard is None:
-            self.ui.write_log("ERR: Mobile Connect unavailable. Install fastapi, uvicorn, cryptography, and qrcode[pil].")
+            self.ui.write_log("ERR: Mobile Connect недоступен. Установите fastapi, uvicorn, cryptography и qrcode[pil].")
             return None
         key = self._dashboard.new_key()
         url = self._dashboard.get_url()
@@ -1660,10 +1662,10 @@ class VoiceLive:
                 self.ui.begin_task_workspace(
                     text,
                     [
-                        "Identify the recipient",
-                        "Select email application",
-                        "Collect message content",
-                        "Open application & compose",
+                        "Определить получателя",
+                        "Выбрать почтовое приложение",
+                        "Собрать текст сообщения",
+                        "Открыть приложение и составить письмо",
                     ],
                     source=source or "local",
                 )
@@ -1672,26 +1674,26 @@ class VoiceLive:
                 
             if not recipient:
                 self._email_step = 0
-                prompt = "Who would you like to send the email to?"
+                prompt = "Кому вы хотите отправить письмо?"
                 self.ui.write_log(f"Voice Echo: {prompt}")
                 self.speak(prompt)
                 try:
                     self.ui.update_task_workspace(
-                        status="Identifying recipient",
-                        output="Asking for email recipient...",
+                        status="Определение получателя",
+                        output="Запрашиваю получателя письма...",
                         percent=10,
                     )
                 except Exception:
                     pass
             else:
                 self._email_step = 1
-                prompt = "Which email app would you like to use? (Gmail, default mail app, etc.)"
+                prompt = "Каким почтовым приложением воспользоваться? (Gmail, стандартная почта и т. д.)"
                 self.ui.write_log(f"Voice Echo: {prompt}")
                 self.speak(prompt)
                 try:
                     self.ui.update_task_workspace(
-                        status="Selecting email app",
-                        output=f"Recipient identified: {recipient}. Asking for email application...",
+                        status="Выбор почтового приложения",
+                        output=f"Получатель: {recipient}. Запрашиваю почтовое приложение...",
                         percent=25,
                     )
                 except Exception:
@@ -1721,7 +1723,7 @@ class VoiceLive:
 
         if website_request and developer_enabled and developer_workspace:
             try:
-                self.speak("Working on your website...")
+                self.speak("Собираю ваш сайт...")
                 if hasattr(self.ui, "_developer_status_lbl"):
                     self.ui._developer_status_lbl.setText("Building website with Gemini in the selected workspace")
                     self.ui._developer_card.show()
@@ -1740,14 +1742,14 @@ class VoiceLive:
                 self.speak(result[:800])
                 return
             except Exception as exc:
-                self.ui.write_log(f"ERR: Website build failed: {exc}")
+                self.ui.write_log(f"ERR: Не удалось собрать сайт: {exc}")
 
         memory_ctx = _memory_context_for_request(text)
         routed_text = f"{memory_ctx}\n\nCurrent User Request:\n{text}" if memory_ctx else text
         if source == "instagram":
             routed_text = f"Owner sent this via Instagram DM: {text}\n(SYSTEM: If this is an action like opening an app or running a command, you MUST execute it using your tools rather than just replying with text.)"
         if text.lower() in {"stop meeting mode", "end meeting mode", "close meeting mode"}:
-            self._stop_meeting_mode("Meeting mode closed.")
+            self._stop_meeting_mode("Режим встречи закрыт.")
             return
         if self._handle_attention_response(text):
             return
@@ -1762,8 +1764,8 @@ class VoiceLive:
         if _looks_like_screen_request(text):
             try:
                 self.ui.update_task_workspace(
-                    status="Scanning screen",
-                    output="Voice Echo is inspecting the screen for what you asked about.",
+                    status="Анализ экрана",
+                    output="Voice Echo изучает экран по вашему запросу.",
                     percent=40,
                 )
             except Exception:
@@ -1790,10 +1792,10 @@ class VoiceLive:
                 if not success:
                     try:
                         self.ui.update_task_workspace(
-                            status="Screen analysis failed",
+                            status="Не удалось проанализировать экран",
                             output=(
-                                "Screen analysis could not complete. "
-                                "Check your internet connection, API key, or screen capture permissions."
+                                "Не удалось завершить анализ экрана. "
+                                "Проверьте подключение к интернету, API-ключ или разрешения на запись экрана."
                             ),
                             percent=0,
                         )
@@ -1833,19 +1835,19 @@ class VoiceLive:
             return False
         try:
             result = self._smart_home.execute_command(text)
-            detail = str(result.get("detail") or "Smart-home command completed.")
-            title = f"Smart Home: {result.get('action', 'control')}"
+            detail = str(result.get("detail") or "Команда умного дома выполнена.")
+            title = f"Умный дом: {result.get('action', 'управление')}"
             plan = [
-                "Identify the target device or room",
-                "Send the command to the smart-home provider",
-                "Verify the new state",
-                "Report the result",
+                "Определить устройство или комнату",
+                "Отправить команду в умный дом",
+                "Проверить новое состояние",
+                "Сообщить результат",
             ]
             self.ui.update_task_workspace(
                 title=title,
                 command=text,
                 plan=plan,
-                status="Executing smart-home command",
+                status="Выполнение команды умного дома",
                 output=detail,
                 percent=100,
                 source=source,
@@ -1856,17 +1858,17 @@ class VoiceLive:
                 self.ui.set_state("LISTENING")
             return True
         except Exception as exc:
-            message = f"I couldn't control the smart home device: {exc}"
+            message = f"Не удалось управлять устройством умного дома: {exc}"
             self.ui.write_log(f"ERR: {message}")
             self.ui.update_task_workspace(
-                title="Smart Home Control",
+                title="Управление умным домом",
                 command=text,
                 plan=[
-                    "Identify the target device or room",
-                    "Send the command to the smart-home provider",
-                    "Verify the new state",
+                    "Определить устройство или комнату",
+                    "Отправить команду в умный дом",
+                    "Проверить новое состояние",
                 ],
-                status="Smart-home command failed",
+                status="Команда умного дома не выполнена",
                 output=message,
                 percent=100,
                 source=source,
@@ -1987,18 +1989,18 @@ class VoiceLive:
             result_json = connect_execute(parameters=payload, player=self.ui)
             result = json.loads(result_json)
             if result.get("success", False):
-                detail = str(result.get("detail") or result.get("error") or "Device command completed.")
+                detail = str(result.get("detail") or result.get("error") or "Команда устройства выполнена.")
                 title = f"Voice Connect: {action}"
                 self.ui.update_task_workspace(
                     title=title,
                     command=text,
                     plan=[
-                        "Identify the paired phone or device",
-                        "Route the command through Voice Connect",
-                        "Verify the device response",
-                        "Report the result",
+                        "Определить сопряжённый телефон или устройство",
+                        "Отправить команду через Voice Connect",
+                        "Проверить ответ устройства",
+                        "Сообщить результат",
                     ],
-                    status="Executing device command",
+                    status="Выполнение команды на устройстве",
                     output=detail,
                     percent=100,
                     source=source,
@@ -2009,7 +2011,7 @@ class VoiceLive:
                     self.ui.set_state("LISTENING")
                 return True
 
-            self.ui.write_log(f"ERR: Voice Connect command failed: {result.get('error') or 'Unknown error'}")
+            self.ui.write_log(f"ERR: Ошибка Voice Connect: {result.get('error') or 'Неизвестная ошибка'}")
             return False
         except Exception:
             return False
@@ -2024,28 +2026,28 @@ class VoiceLive:
 
         if name == "connect_list_devices":
             count = int(data.get("count") or len(data.get("devices") or []))
-            return f"I found {count} connected device{'s' if count != 1 else ''}."
+            return f"Найдено подключённых устройств: {count}."
 
         if name == "connect_get_device":
             device = data.get("device") or {}
-            label = str(device.get("name") or "the device")
-            status = "online" if device.get("online") else "offline"
-            return f"{label} is {status}."
+            label = str(device.get("name") or "устройство")
+            status = "онлайн" if device.get("online") else "офлайн"
+            return f"{label} — {status}."
 
         if name == "connect_get_capabilities":
             device = data.get("device") or {}
-            label = str(device.get("name") or "The device")
-            return f"{label} capabilities are ready."
+            label = str(device.get("name") or "Устройство")
+            return f"Возможности {label} готовы."
 
         if name == "connect_pair_device":
             pairing = data.get("pairing") or data
             code = str(pairing.get("pairing_code") or "").strip()
             if code:
-                return f"Pairing code ready: {code}."
-            return "Pairing is ready."
+                return f"Код сопряжения готов: {code}."
+            return "Сопряжение готово."
 
         if name == "connect_disconnect_device":
-            return "The device has been disconnected."
+            return "Устройство отключено."
 
         if name == "connect_execute":
             if data.get("success", False):
@@ -2056,22 +2058,22 @@ class VoiceLive:
                     payload = data.get("data") or {}
                     detail = payload.get("message") or payload.get("status") or payload.get("result")
                 if not detail:
-                    detail = data.get("error") or "Task completed."
+                    detail = data.get("error") or "Задача выполнена."
                 return str(detail)
-            return str(data.get("error") or "The device command failed.")
+            return str(data.get("error") or "Не удалось выполнить команду на устройстве.")
 
         return None
 
     def _attention_message(self, event: dict) -> str:
-        app = (event.get("app") or "an app").strip()
+        app = (event.get("app") or "приложении").strip()
         kind = (event.get("kind") or "message").strip().lower()
         if kind == "call":
-            return f"Incoming call detected on {app}. Should I pick it up, ignore it, or cut the call?"
+            return f"Обнаружен входящий звонок в {app}. Ответить, проигнорировать или сбросить?"
         title = (event.get("title") or "").strip()
         preview = (event.get("preview") or "").strip()
         if title:
-            return f"You received a message on {app} from {title}. It says: {preview}"
-        return f"You received a message on {app}. It says: {preview}"
+            return f"Вам пришло сообщение в {app} от {title}. Текст: {preview}"
+        return f"Вам пришло сообщение в {app}. Текст: {preview}"
 
     def _announce_attention(self, event: dict):
         msg = self._attention_message(event)
@@ -2086,7 +2088,7 @@ class VoiceLive:
         if not isinstance(event, dict):
             return
         kind = (event.get("kind") or "message").strip().lower()
-        app = (event.get("app") or "App").strip()
+        app = (event.get("app") or "Приложение").strip()
         preview = (event.get("preview") or "").strip()
         settings = {}
         try:
@@ -2116,17 +2118,17 @@ class VoiceLive:
 
     def _start_meeting_mode(self, event: dict):
         event = dict(event or {})
-        app = (event.get("app") or "Meeting").strip()
-        title = event.get("title") or f"{app} meeting"
-        summary = f"Watching {app} for questions and answers."
+        app = (event.get("app") or "приложении").strip()
+        title = event.get("title") or f"Встреча в {app}"
+        summary = f"В {app}: слежу и отвечаю на вопросы."
         with self._meeting_lock:
             self._meeting_active = True
             self._meeting_event = event
-        self.ui.set_meeting_mode(True, title, summary, "Listening for questions on screen...", self._meeting_assistant.latest_speech())
+        self.ui.set_meeting_mode(True, title, summary, "Жду вопросов, читаю экран.", self._meeting_assistant.latest_speech())
         self._meeting_assistant.start(title=title, context=summary)
-        self.ui.write_log(f"SYS: Meeting mode enabled for {app}.")
+        self.ui.write_log(f"SYS: Режим встречи включён в {app}.")
 
-    def _stop_meeting_mode(self, reason: str = "Meeting mode stopped."):
+    def _stop_meeting_mode(self, reason: str = "Режим встречи остановлен."):
         with self._meeting_lock:
             was_active = self._meeting_active
             self._meeting_active = False
@@ -2140,7 +2142,7 @@ class VoiceLive:
         if not isinstance(payload, dict):
             return
         active = bool(payload.get("active"))
-        title = payload.get("title") or "Meeting mode"
+        title = payload.get("title") or "Режим встречи"
         summary = payload.get("summary") or ""
         answer = payload.get("answer") or ""
         speech = payload.get("speech") or ""
@@ -2168,7 +2170,7 @@ class VoiceLive:
             self._pending_attention = None
             self._reply_mode = True
 
-        message = "What would you like to say in reply?"
+        message = "Что вы хотите ответить?"
         self.ui.write_log(f"Voice Echo: {message}")
         if self.session and self._loop:
             self.speak(message)
@@ -2176,17 +2178,17 @@ class VoiceLive:
             threading.Thread(target=speak_native, args=(message,), daemon=True).start()
         try:
             self.ui.begin_task_workspace(
-                "Replying to message",
+                "Подготовка ответа",
                 [
-                    "Type your response",
-                    "I will reword it naturally",
-                    f"Send via {event.get('app', 'the app')}",
+                    "Введите ваш ответ",
+                    "Я придам ему естественный вид",
+                    f"Отправка через {event.get('app', 'приложение')}",
                 ],
                 source="reply",
             )
             self.ui.update_task_workspace(
-                status="Awaiting your reply",
-                output="Type the message you want to send, and I will make it sound natural before sending it as you.",
+                status="Ожидание ответа",
+                output="Введите сообщение для отправки — я придам ему естественный вид перед отправкой.",
                 percent=10,
             )
         except Exception:
@@ -2203,14 +2205,14 @@ class VoiceLive:
         lower = (text or "").lower()
         if self._attention_matches(lower, ("cancel", "never mind", "skip", "do not send", "don't send")):
             self._reply_mode = False
-            self.ui.write_log("SYS: Reply cancelled.")
+            self.ui.write_log("SYS: Ответ отменён.")
             try:
-                self.ui.finish_task_workspace("Reply cancelled.", "Cancelled", 100)
+                self.ui.finish_task_workspace("Ответ отменён.", "Отменено", 100)
             except Exception:
                 pass
             return True
 
-        self.ui.write_log(f"SYS: Drafting reply to {event.get('title') or event.get('app')}.")
+        self.ui.write_log(f"SYS: Готовлю ответ: {event.get('title') or event.get('app')}.")
         threading.Thread(target=self._draft_and_send_reply, args=(event, text), daemon=True).start()
         return True
 
@@ -2245,16 +2247,16 @@ class VoiceLive:
             if not reply_text:
                 reply_text = text
             self.ui.update_task_workspace(
-                status="Sending reply",
-                output="Sending your expanded reply now...",
+                status="Отправка ответа",
+                output="Отправляю ваш расширенный ответ...",
                 percent=70,
             )
             receiver = (event.get("title") or "").strip()
             platform = (event.get("app") or "whatsapp").strip()
             if not receiver:
-                self.ui.write_log("ERR: Could not determine recipient for reply.")
+                self.ui.write_log("ERR: Не удалось определить получателя ответа.")
                 try:
-                    self.ui.finish_task_workspace("Reply failed: recipient not found.", "Reply failed", 100)
+                    self.ui.finish_task_workspace("Ответ не отправлен: получатель не найден.", "Ответ не отправлен", 100)
                 except Exception:
                     pass
                 return
@@ -2269,14 +2271,14 @@ class VoiceLive:
             self._reply_mode = False
             self.ui.write_log(f"SYS: {result}")
             try:
-                self.ui.finish_task_workspace(reply_text, "Reply delivered.", 100)
+                self.ui.finish_task_workspace(reply_text, "Ответ доставлен.", 100)
             except Exception:
                 pass
         except Exception as e:
             self._reply_mode = False
             self.ui.write_log(f"ERR: Reply failed: {e}")
             try:
-                self.ui.finish_task_workspace(f"Reply failed: {e}", "Reply failed", 100)
+                self.ui.finish_task_workspace(f"Ответ не отправлен: {e}", "Ответ не отправлен", 100)
             except Exception:
                 pass
         finally:
@@ -2286,7 +2288,7 @@ class VoiceLive:
     def _parse_ig_reply_intent(self, text: str) -> tuple[str, str]:
         system_prompt = (
             "You are an intent parser. The user received an Instagram DM. I asked: 'What should I reply, or should I take over?'. "
-            "The user responded. Determine their intent.\n"
+            "The user responded, possibly in Russian. Determine their intent.\n"
             "1. If they want me to take over/handle it, return TAKE_OVER.\n"
             "2. If they want to cancel/skip, return CANCEL.\n"
             "3. If they dictate a specific message to send (e.g. 'tell them I am busy', 'say hi'), return MANUAL_REPLY and the exact text.\n"
@@ -2304,13 +2306,19 @@ class VoiceLive:
             return data.get("intent", "IGNORE"), data.get("reply_text", "")
         except Exception:
             lower = text.lower()
-            if any(c in lower for c in ("cancel", "stop", "skip", "never mind", "abort")):
+            if any(c in lower for c in ("cancel", "stop", "skip", "never mind", "abort", "отмена", "отменить", "стоп", "прекрати", "не надо",
+                                         "не нужно", "пропустить", "забудь")):
                 return "CANCEL", ""
-            if any(a in lower for a in ("take over", "auto mode", "handle it", "you reply")):
+            if any(a in lower for a in ("take over", "auto mode", "handle it", "you reply", "возьми", "прими", "управляй", "отвечай ты",
+                                         "отвечай за меня", "возьми на себя", "авторежим", "ты ответь")):
                 return "TAKE_OVER", ""
             if lower.startswith("tell ") or lower.startswith("reply ") or lower.startswith("say ") or lower.startswith("send "):
                 import re
                 cleaned = re.sub(r"^(tell (him|her|them)?|reply( saying)?|say|send) ", "", text, flags=re.IGNORECASE)
+                return "MANUAL_REPLY", cleaned
+            if re.search(r"^(ответь|напиши|передай|скажи|отправь|сообщи)( ему| ей| им)?\s+(?:что|что-то|следующее|так)?\s*", text, flags=re.IGNORECASE):
+                import re
+                cleaned = re.sub(r"^(ответь|напиши|передай|скажи|отправь|сообщи)( ему| ей| им)?\s+(?:что|что-то|следующее|так)?\s*", "", text, flags=re.IGNORECASE)
                 return "MANUAL_REPLY", cleaned
             return "IGNORE", ""
 
@@ -2331,8 +2339,8 @@ class VoiceLive:
                 return True
                 
             if intent == "TAKE_OVER":
-                self.ui.write_log("SYS: Taking over Instagram thread.")
-                self.speak(f"I will now take over the chat with {username}.")
+                self.ui.write_log("SYS: Беру управление перепиской в Instagram.")
+                self.speak(f"Теперь я беру на себя общение с {username}.")
                 from actions.instagram_chat import add_auto_thread, send_direct_reply
                 add_auto_thread(thread_id)
                 def _generate_and_send():
@@ -2344,8 +2352,8 @@ class VoiceLive:
                 threading.Thread(target=_generate_and_send, daemon=True).start()
                 
             elif intent == "MANUAL_REPLY":
-                self.ui.write_log(f"SYS: Sending manual reply to {username}.")
-                self.speak("Message sent.")
+                self.ui.write_log(f"SYS: Отправляю ручной ответ: {username}.")
+                self.speak("Сообщение отправлено.")
                 from actions.instagram_chat import send_direct_reply
                 send_direct_reply(thread_id, payload)
                 
@@ -2362,11 +2370,11 @@ class VoiceLive:
             self._email_mode = False
             self._email_step = 0
             self._email_profiles = {}
-            msg = "Email sending cancelled, sir."
+            msg = "Отправка письма отменена."
             self.ui.write_log(f"Voice Echo: {msg}")
             self.speak(msg)
             try:
-                self.ui.finish_task_workspace("Email sending cancelled.", "Cancelled", 100)
+                self.ui.finish_task_workspace("Отправка письма отменена.", "Отменено", 100)
             except Exception:
                 pass
             return True
@@ -2375,13 +2383,13 @@ class VoiceLive:
             # We just collected the recipient
             self._email_recipient = text.strip()
             self._email_step = 1
-            prompt = "Which email app would you like to use? (Gmail, default mail app, etc.)"
+            prompt = "Каким почтовым приложением воспользоваться? (Gmail, стандартная почта и т. д.)"
             self.ui.write_log(f"Voice Echo: {prompt}")
             self.speak(prompt)
             try:
                 self.ui.update_task_workspace(
-                    status="Selecting email app",
-                    output=f"Recipient: {self._email_recipient}. Asking for email application...",
+                    status="Выбор почтового приложения",
+                    output=f"Получатель: {self._email_recipient}. Запрашиваю почтовое приложение...",
                     percent=40,
                 )
             except Exception:
@@ -2393,13 +2401,13 @@ class VoiceLive:
             self._email_app = text.strip()
             self._email_step = 2
             
-            prompt = "What is the message you'd like to send?"
+            prompt = "Какое сообщение вы хотите отправить?"
             self.ui.write_log(f"Voice Echo: {prompt}")
             self.speak(prompt)
             try:
                 self.ui.update_task_workspace(
-                    status="Collecting message",
-                    output=f"Recipient: {self._email_recipient} | App: {self._email_app}. Asking for message content...",
+                    status="Сбор сообщения",
+                    output=f"Получатель: {self._email_recipient} | Приложение: {self._email_app}. Запрашиваю текст сообщения...",
                     percent=70,
                 )
             except Exception:
@@ -2413,13 +2421,13 @@ class VoiceLive:
             self._email_step = 0
             
             # Now let's execute composing!
-            msg = f"Opening {self._email_app} and composing email to {self._email_recipient}..."
+            msg = f"Открываю {self._email_app} и составляю письмо для {self._email_recipient}..."
             self.ui.write_log(f"Voice Echo: {msg}")
             self.speak(msg)
             try:
                 self.ui.update_task_workspace(
-                    status="Composing email",
-                    output=f"Composing message to {self._email_recipient} via {self._email_app}...",
+                    status="Составление письма",
+                    output=f"Составляю письмо для {self._email_recipient} через {self._email_app}...",
                     percent=90,
                 )
             except Exception:
@@ -2459,15 +2467,15 @@ class VoiceLive:
                     webbrowser.open(url)
                 
                 try:
-                    self.ui.finish_task_workspace("Email composed successfully.", "Composed", 100)
+                    self.ui.finish_task_workspace("Письмо успешно составлено.", "Составлено", 100)
                 except Exception:
                     pass
             except Exception as e:
-                err_msg = f"Failed to compose email: {e}"
+                err_msg = f"Не удалось составить письмо: {e}"
                 self.ui.write_log(f"ERR: {err_msg}")
                 self.speak(err_msg)
                 try:
-                    self.ui.finish_task_workspace(err_msg, "Failed", 100)
+                    self.ui.finish_task_workspace(err_msg, "Не удалось", 100)
                 except Exception:
                     pass
             return True
@@ -2494,7 +2502,7 @@ class VoiceLive:
                     self._pending_attention = None
                 return True
             if self._attention_matches(lower, ("ignore", "dismiss", "skip", "no", "not now")):
-                self.ui.write_log("SYS: Message alert dismissed.")
+                self.ui.write_log("SYS: Уведомление о сообщении отклонено.")
                 with self._attention_lock:
                     self._pending_attention = None
                 return True
@@ -2516,7 +2524,7 @@ class VoiceLive:
                     self._pending_attention = None
                 return True
             if self._attention_matches(lower, ("x", "nothing", "do nothing", "close")):
-                self.ui.write_log("SYS: Call alert dismissed.")
+                self.ui.write_log("SYS: Уведомление о звонке отклонено.")
                 with self._attention_lock:
                     self._pending_attention = None
                 return True
@@ -2544,7 +2552,7 @@ class VoiceLive:
                 self._prompt_message_reply(event)
                 return
             else:
-                self.ui.write_log("SYS: Message alert dismissed.")
+                self.ui.write_log("SYS: Уведомление о сообщении отклонено.")
             with self._attention_lock:
                 self._pending_attention = None
             return
@@ -2555,7 +2563,7 @@ class VoiceLive:
                 self.ui.write_log(f"SYS: {result}")
                 threading.Thread(target=speak_native, args=(result,), daemon=True).start()
             elif decision in {"noop", "x", "none"}:
-                self.ui.write_log("SYS: Call alert dismissed.")
+                self.ui.write_log("SYS: Уведомление о звонке отклонено.")
             else:
                 result = handle_call_action(event, "decline")
                 self.ui.write_log(f"SYS: {result}")
@@ -2569,8 +2577,8 @@ class VoiceLive:
             self.ui.set_state("THINKING")
             try:
                 self.ui.update_task_workspace(
-                    status="Thinking",
-                    output="Voice Echo is drafting a direct reply.",
+                    status="Думаю...",
+                    output="Voice Echo готовит прямой ответ.",
                     percent=35,
                 )
             except Exception:
@@ -2602,10 +2610,10 @@ class VoiceLive:
                         self._use_openrouter_first = True
             reply = (reply or "").strip()
             if not reply:
-                reply = "I’m ready, sir."
+                reply = "Я готов."
             self.ui.write_log(f"Voice Echo: {reply}")
             try:
-                self.ui.finish_task_workspace(reply, "Reply delivered.", 100)
+                self.ui.finish_task_workspace(reply, "Ответ доставлен.", 100)
             except Exception:
                 pass
             if not self.ui.muted:
@@ -2615,7 +2623,7 @@ class VoiceLive:
             print(f"[VOICE ECHO] ⚠️ {msg}")
             self.ui.write_log(f"ERR: {msg}")
             try:
-                self.ui.finish_task_workspace(msg, "Reply failed.", 100)
+                self.ui.finish_task_workspace(msg, "Ответ не отправлен.", 100)
             except Exception:
                 pass
             if not self.ui.muted:
@@ -2671,7 +2679,7 @@ class VoiceLive:
     def speak_error(self, tool_name: str, error: str):
         short = str(error)[:120]
         self.ui.write_log(f"ERR: {tool_name} — {short}")
-        self.speak(f"Sir, {tool_name} encountered an error. {short}")
+        self.speak(f"Во время выполнения «{tool_name.replace('_', ' ')}» произошла ошибка. {short}")
 
     def _build_config(self) -> types.LiveConnectConfig:
         from datetime import datetime
@@ -2721,13 +2729,13 @@ class VoiceLive:
         args = dict(fc.args or {})
 
         print(f"[VOICE ECHO] 🔧 {name}  {args}")
-        self.speak(f"Working on {name.replace('_', ' ')}...")
+        self.speak(f"Выполняю: {name.replace('_', ' ')}...")
         self.ui.set_state("THINKING")
         try:
             self.ui.update_task_workspace(
-                title=f"Running {name}",
-                status=f"Executing {name}",
-                output="Waiting for the tool to finish.",
+                title=f"Выполнение: {name}",
+                status=f"Выполняется: {name}",
+                output="Ожидание завершения инструмента.",
                 percent=45,
             )
         except Exception:
@@ -2740,7 +2748,7 @@ class VoiceLive:
                 update_memory({category: {key: {"value": value}}})
                 print(f"[Memory] 💾 save_memory: {category}/{key} = {value}")
                 try:
-                    self.ui.finish_task_workspace("Memory saved.", "Memory updated.", 100)
+                    self.ui.finish_task_workspace("Запоминаю.", "Память обновлена.", 100)
                 except Exception:
                     pass
             if not self.ui.muted:
@@ -2751,25 +2759,25 @@ class VoiceLive:
             )
 
         loop   = asyncio.get_event_loop()
-        result = "Done."
+        result = "Готово."
 
         try:
             if name == "computer_settings":
                 from actions.computer_settings import computer_settings as cs_run
                 r = await loop.run_in_executor(None, lambda: cs_run(parameters=args, player=self.ui))
-                result = r or "Settings updated."
+                result = r or "Настройки обновлены."
 
             elif name == "dev_agent":
                 from actions.dev_agent import dev_agent as da_run
                 r = await loop.run_in_executor(None, lambda: da_run(parameters=args, player=self.ui, speak=self.speak))
-                result = r or "Done."
+                result = r or "Готово."
 
             elif name == "open_app":
                 r = await loop.run_in_executor(None, lambda: open_app(parameters=args, response=None, player=self.ui))
-                result = r or f"Opened {args.get('app_name')}."
+                result = r or f"Приложение открыто: {args.get('app_name')}."
                 
             elif name == "check_instagram_messages":
-                self.ui.write_log("SYS: Checking Instagram messages...")
+                self.ui.write_log("SYS: Проверяю сообщения в Instagram...")
                 from actions.instagram_chat import get_recent_messages
                 result = await loop.run_in_executor(None, get_recent_messages, 5)
 
@@ -2780,7 +2788,7 @@ class VoiceLive:
                     thread_id = self._ig_pending_thread.get("thread_id")
                     username = self._ig_pending_thread.get("username")
                     if action == "take_over":
-                        self.ui.write_log("SYS: Taking over Instagram thread via tool.")
+                        self.ui.write_log("SYS: Беру управление перепиской (инструмент).")
                         from actions.instagram_chat import add_auto_thread, send_direct_reply
                         add_auto_thread(thread_id)
                         message_text = self._ig_pending_thread.get('message')
@@ -2791,56 +2799,56 @@ class VoiceLive:
                             except Exception as e:
                                 print(f"Error taking over thread: {e}")
                         threading.Thread(target=_generate_and_send, daemon=True).start()
-                        result = f"Successfully took over the chat with {username}. The backend will now automatically reply to them."
+                        result = f"Управление перепиской с {username} передано мне. Теперь я буду отвечать им автоматически."
                     else:
-                        self.ui.write_log(f"SYS: Sending manual reply to {username}.")
+                        self.ui.write_log(f"SYS: Отправляю ручной ответ: {username}.")
                         from actions.instagram_chat import send_direct_reply
                         send_direct_reply(thread_id, reply_text)
-                        result = f"Successfully sent the manual reply to {username}."
+                        result = f"Ручной ответ отправлен: {username}."
                         
                     self._ig_reply_mode = False
                     self._ig_pending_thread = None
                 else:
-                    result = "Error: There is no pending Instagram message to reply to right now."
+                    result = "Ошибка: сейчас нет ожидающего сообщения в Instagram, на которое можно ответить."
 
             elif name == "system_manager":
                 from actions.system_manager import run as sm_run
                 r = await loop.run_in_executor(None, lambda: sm_run(parameters=args, player=self.ui))
-                result = r or "System status retrieved."
+                result = r or "Информация о системе получена."
 
             elif name == "background_monitor":
                 from actions.background_monitor import run as bm_run
                 r = await loop.run_in_executor(None, lambda: bm_run(parameters=args, player=self.ui))
-                result = r or "Done."
+                result = r or "Готово."
 
             elif name == "clipboard_processor":
                 from actions.clipboard_processor import process_clipboard
                 r = await loop.run_in_executor(None, lambda: process_clipboard(parameters=args, player=self.ui))
-                result = r or "Clipboard read."
+                result = r or "Буфер обмена прочитан."
 
             elif name == "weather_report":
                 r = await loop.run_in_executor(None, lambda: weather_action(parameters=args, player=self.ui))
-                result = r or "Weather delivered."
+                result = r or "Прогноз погоды готов."
 
             elif name == "browser_control":
                 r = await loop.run_in_executor(None, lambda: browser_control(parameters=args, player=self.ui))
-                result = r or "Done."
+                result = r or "Готово."
 
             elif name == "file_controller":
                 r = await loop.run_in_executor(None, lambda: file_controller(parameters=args, player=self.ui))
-                result = r or "Done."
+                result = r or "Готово."
 
             elif name == "send_message":
                 r = await loop.run_in_executor(None, lambda: send_message(parameters=args, response=None, player=self.ui, session_memory=None))
-                result = r or f"Message sent to {args.get('receiver')}."
+                result = r or f"Сообщение отправлено: {args.get('receiver')}."
 
             elif name == "reminder":
                 r = await loop.run_in_executor(None, lambda: reminder(parameters=args, response=None, player=self.ui))
-                result = r or "Reminder set."
+                result = r or "Напоминание установлено."
 
             elif name == "youtube_video":
                 r = await loop.run_in_executor(None, lambda: youtube_video(parameters=args, response=None, player=self.ui))
-                result = r or "Done."
+                result = r or "Готово."
             elif name == "file_processor":
                 if not args.get("file_path") and self.ui.current_file:
                     args["file_path"] = self.ui.current_file
@@ -2848,21 +2856,21 @@ class VoiceLive:
                     None,
                     lambda: file_processor(parameters=args, player=self.ui, speak=self.speak)
                 )
-                result = r or "Done."
+                result = r or "Готово."
 
             elif name == "presentation_builder":
                 r = await loop.run_in_executor(
                     None,
                     lambda: create_presentation(parameters=args, player=self.ui)
                 )
-                result = r or "Presentation created."
+                result = r or "Презентация создана."
 
             elif name == "spreadsheet_builder":
                 r = await loop.run_in_executor(
                     None,
                     lambda: create_spreadsheet(parameters=args, player=self.ui)
                 )
-                result = r or "Spreadsheet created."
+                result = r or "Таблица создана."
 
 
             elif name == "word_document":
@@ -2874,14 +2882,14 @@ class VoiceLive:
                     None,
                     lambda: word_document(parameters=args, player=self.ui, speak=self.speak)
                 )
-                result = r or "Word document handled."
+                result = r or "Документ Word обработан."
 
             elif name == "pdf_document":
                 r = await loop.run_in_executor(
                     None,
                     lambda: create_pdf(parameters=args, player=self.ui)
                 )
-                result = r or "PDF created."
+                result = r or "PDF создан."
 
             elif name == "screen_process":
                 if hasattr(self, "set_scanning"):
@@ -2896,80 +2904,80 @@ class VoiceLive:
                     },
                     daemon=True,
                 ).start()
-                result = "Vision module activated. Stay completely silent — vision module will speak directly."
+                result = "Модуль зрения активирован. Храните полную тишину — модуль зрения ответит сам."
 
             elif name == "computer_settings":
                 r = await loop.run_in_executor(None, lambda: computer_settings(parameters=args, response=None, player=self.ui))
-                result = r or "Done."
+                result = r or "Готово."
 
             elif name == "smart_home_control":
                 command_text = str(args.get("command") or "").strip()
                 r = await loop.run_in_executor(None, lambda: self._smart_home.execute_command(command_text))
-                result = str((r or {}).get("detail") or "Smart-home command completed.")
+                result = str((r or {}).get("detail") or "Команда умного дома выполнена.")
 
             elif name == "desktop_control":
                 r = await loop.run_in_executor(None, lambda: desktop_control(parameters=args, player=self.ui))
-                result = r or "Done."
+                result = r or "Готово."
 
             elif name == "agent_task":
                 from agent.task_queue import get_queue, TaskPriority
                 priority_map = {"low": TaskPriority.LOW, "normal": TaskPriority.NORMAL, "high": TaskPriority.HIGH}
                 priority = priority_map.get(args.get("priority", "normal").lower(), TaskPriority.NORMAL)
                 task_id  = get_queue().submit(goal=args.get("goal", ""), priority=priority, speak=self.speak)
-                result   = f"Task started (ID: {task_id})."
+                result   = f"Задача запущена (ID: {task_id})."
 
             elif name == "web_search":
                 r = await loop.run_in_executor(None, lambda: web_search_action(parameters=args, player=self.ui))
-                result = r or "Done."
+                result = r or "Готово."
 
             elif name == "computer_control":
                 r = await loop.run_in_executor(None, lambda: computer_control(parameters=args, player=self.ui))
-                result = r or "Done."
+                result = r or "Готово."
 
             elif name == "game_updater":
                 r = await loop.run_in_executor(None, lambda: game_updater(parameters=args, player=self.ui, speak=self.speak))
-                result = r or "Done."
+                result = r or "Готово."
 
             elif name == "flight_finder":
                 r = await loop.run_in_executor(None, lambda: flight_finder(parameters=args, player=self.ui))
-                result = r or "Done."
+                result = r or "Готово."
             elif name == "connect_list_devices":
                 r = await loop.run_in_executor(None, lambda: connect_list_devices(parameters=args, player=self.ui))
-                result = r or "Done."
+                result = r or "Готово."
             elif name == "connect_get_device":
                 r = await loop.run_in_executor(None, lambda: connect_get_device(parameters=args, player=self.ui))
-                result = r or "Done."
+                result = r or "Готово."
             elif name == "connect_get_capabilities":
                 r = await loop.run_in_executor(None, lambda: connect_get_capabilities(parameters=args, player=self.ui))
-                result = r or "Done."
+                result = r or "Готово."
             elif name == "connect_execute":
                 r = await loop.run_in_executor(None, lambda: connect_execute(parameters=args, player=self.ui))
-                result = r or "Done."
+                result = r or "Готово."
             elif name == "connect_pair_device":
                 r = await loop.run_in_executor(None, lambda: connect_pair_device(parameters=args, player=self.ui))
-                result = r or "Done."
+                result = r or "Готово."
             elif name == "connect_disconnect_device":
                 r = await loop.run_in_executor(None, lambda: connect_disconnect_device(parameters=args, player=self.ui))
-                result = r or "Done."
+                result = r or "Готово."
             elif name in ("spotify_controller", "spotify", "music"):
                 from actions.spotify_controller import spotify_controller
                 r = await loop.run_in_executor(None, lambda: spotify_controller(parameters=args, player=self.ui, speak=self.speak))
-                result = r or "Done."
+                result = r or "Готово."
             elif name in ("calendar_scheduler", "calendar", "schedule"):
                 from actions.calendar_scheduler import calendar_scheduler
                 r = await loop.run_in_executor(None, lambda: calendar_scheduler(parameters=args, player=self.ui, speak=self.speak))
-                result = r or "Done."
+                result = r or "Готово."
             elif name in ("daily_briefing", "briefing"):
                 from actions.daily_briefing import daily_briefing
                 r = await loop.run_in_executor(None, lambda: daily_briefing(parameters=args, player=self.ui, speak=self.speak))
-                result = r or "Delivered daily briefing."
+                result = r or "Дневное резюме готово."
             elif name == "unlock_device":
                 from actions.unlock_device import unlock_device
                 r = await loop.run_in_executor(None, lambda: unlock_device(parameters=args, player=self.ui))
-                result = r or "Done."
+                result = r or "Готово."
             elif name == "shutdown_voice":
-                self.ui.write_log("SYS: Shutdown requested.")
-                self.speak("Goodbye, sir.")
+                self.ui.write_log("SYS: Запрошено завершение работы.")
+                self.speak("До свидания.")
 
                 def _shutdown():
                     import time, sys, os
@@ -2978,16 +2986,16 @@ class VoiceLive:
 
                 threading.Thread(target=_shutdown, daemon=True).start()
             else:
-                result = f"Unknown tool: {name}"
+                result = f"Неизвестный инструмент: {name}"
 
         except Exception as e:
-            result = f"Tool '{name}' failed: {e}"
+            result = f"Инструмент «{name}» не сработал: {e}"
             traceback.print_exc()
             self.speak_error(name, e)
 
         try:
-            self.speak(f"{name.replace('_', ' ')} completed.")
-            self.ui.finish_task_workspace(result, "Task completed.", 100)
+            self.speak(f"Готово: {name.replace('_', ' ')}.")
+            self.ui.finish_task_workspace(result, "Задача выполнена.", 100)
         except Exception:
             pass
 
@@ -3014,14 +3022,14 @@ class VoiceLive:
 
     async def _serve_dashboard(self):
         if self._dashboard is None:
-            self.ui.write_log("ERR: Mobile Connect disabled because dashboard dependencies are missing.")
+            self.ui.write_log("ERR: Mobile Connect отключён, так как отсутствуют зависимости панели управления.")
             return
         try:
             self._dashboard.set_connect_callback(self._on_phone_connected)
             self._dashboard.set_wake_callback(lambda: None)
             await self._dashboard.serve()
         except Exception as e:
-            self.ui.write_log(f"ERR: Mobile Connect server failed: {e}")
+            self.ui.write_log(f"ERR: Ошибка сервера Mobile Connect: {e}")
             traceback.print_exc()
 
     async def _consume_remote_commands(self):
@@ -3131,7 +3139,7 @@ class VoiceLive:
                                 if self.ui.muted and _wakeword_detected(txt):
                                     try:
                                         self.ui.set_muted_state(False, wakeword=True)
-                                        self.ui.write_log("SYS: Wake word detected. Mic active.")
+                                        self.ui.write_log("SYS: Активировано wake-word. Микрофон активен.")
                                     except Exception:
                                         pass
 
@@ -3140,7 +3148,7 @@ class VoiceLive:
 
                             full_in = " ".join(in_buf).strip()
                             if full_in:
-                                self.ui.write_log(f"You: {full_in}")
+                                self.ui.write_log(f"Вы: {full_in}")
                             in_buf = []
 
                             full_out = " ".join(out_buf).strip()
@@ -3197,20 +3205,20 @@ class VoiceLive:
     async def run(self):
         # announce boot steps to UI overlay (thread-safe wrappers)
         try:
-            self.ui.boot_add_step("Load configuration")
-            self.ui.boot_add_step("Start attention monitor")
-            self.ui.boot_add_step("Start dashboard server")
-            self.ui.boot_add_step("Initialize audio")
-            self.ui.boot_add_step("Connect AI backend")
-            self.ui.boot_add_step("Finalize startup")
-            self.ui.boot_set_progress(3, "Preparing startup...")
+            self.ui.boot_add_step("Загрузка конфигурации")
+            self.ui.boot_add_step("Запуск монитора внимания")
+            self.ui.boot_add_step("Запуск сервера Mobile Connect")
+            self.ui.boot_add_step("Инициализация аудио")
+            self.ui.boot_add_step("Подключение к AI backend")
+            self.ui.boot_add_step("Завершение запуска")
+            self.ui.boot_set_progress(3, "Подготовка к запуску...")
         except Exception:
             pass
 
         self._attention_monitor.start()
         try:
-            self.ui.boot_set_step_status("Start attention monitor", "done")
-            self.ui.boot_set_progress(12, "Attention monitor online")
+            self.ui.boot_set_step_status("Запуск монитора внимания", "done")
+            self.ui.boot_set_progress(12, "Монитор внимания запущен")
         except Exception:
             pass
         if self._dashboard is not None:
@@ -3218,14 +3226,14 @@ class VoiceLive:
                 self._dashboard_started = True
                 asyncio.create_task(self._serve_dashboard())
                 try:
-                    self.ui.boot_set_step_status("Start dashboard server", "done")
-                    self.ui.boot_set_progress(22, "Mobile connect server running")
+                    self.ui.boot_set_step_status("Запуск сервера Mobile Connect", "done")
+                    self.ui.boot_set_progress(22, "Сервер Mobile Connect запущен")
                 except Exception:
                     pass
             asyncio.create_task(self._consume_remote_commands())
             asyncio.create_task(self._relay_phone_audio())
         try:
-            self.ui.boot_set_progress(36, "Initializing AI client")
+            self.ui.boot_set_progress(36, "Инициализация AI-клиента")
         except Exception:
             pass
 
@@ -3233,12 +3241,12 @@ class VoiceLive:
             # Fully offline voice loop: local STT (Vosk/sherpa) + local TTS (Piper).
             # No Google/Gemini endpoint is contacted for speech.
             try:
-                self.ui.boot_set_step_status("Connect AI backend", "done")
-                self.ui.boot_set_progress(70, "Offline voice engine loading")
+                self.ui.boot_set_step_status("Подключение к AI backend", "done")
+                self.ui.boot_set_progress(70, "Загрузка офлайн-голосового движка")
             except Exception:
                 pass
             self.ui.set_state("LISTENING")
-            self.ui.write_log("SYS: Voice Echo online (offline voice — Vosk/Piper).")
+            self.ui.write_log("SYS: Voice Echo онлайн (офлайн-голос — Vosk/Piper).")
 
             def _local_submit(text):
                 try:
@@ -3259,18 +3267,18 @@ class VoiceLive:
             if self._local_engine.stt_available:
                 self._local_engine.start()
                 try:
-                    self.ui.boot_set_step_status("Initialize audio", "done")
-                    self.ui.boot_set_progress(92, "Offline STT + Piper online")
+                    self.ui.boot_set_step_status("Инициализация аудио", "done")
+                    self.ui.boot_set_progress(92, "Офлайн STT + Piper запущены")
                 except Exception:
                     pass
             else:
                 self.ui.write_log(
-                    "ERR: Local speech model files not found under config/models. "
-                    "Run the model downloader or install the models before enabling local voice."
+                    "ERR: Файлы локальных речевых моделей не найдены в config/models. "
+                    "Запустите загрузчик моделей или установите модели перед включением локального голоса."
                 )
             try:
-                self.ui.boot_set_step_status("Finalize startup", "done")
-                self.ui.boot_set_progress(100, "Startup complete")
+                self.ui.boot_set_step_status("Завершение запуска", "done")
+                self.ui.boot_set_progress(100, "Запуск завершён")
             except Exception:
                 pass
             while True:
@@ -3299,12 +3307,12 @@ class VoiceLive:
                         
                         print("[VOICE ECHO] ✅ Connected.")
                         try:
-                            self.ui.boot_set_step_status("Connect AI backend", "done")
-                            self.ui.boot_set_progress(75, "AI backend connected")
+                            self.ui.boot_set_step_status("Подключение к AI backend", "done")
+                            self.ui.boot_set_progress(75, "AI backend подключён")
                         except Exception:
                             pass
                         self.ui.set_state("LISTENING")
-                        self.ui.write_log("SYS: Voice Echo online.")
+                        self.ui.write_log("SYS: Voice Echo онлайн.")
 
                         tg.create_task(self._send_realtime())
                         tg.create_task(self._listen_audio())
@@ -3312,14 +3320,14 @@ class VoiceLive:
                         tg.create_task(self._receive_audio())
                         tg.create_task(self._play_audio())
                         try:
-                            self.ui.boot_set_step_status("Initialize audio", "done")
-                            self.ui.boot_set_progress(92, "Audio subsystems online")
+                            self.ui.boot_set_step_status("Инициализация аудио", "done")
+                            self.ui.boot_set_progress(92, "Аудио-подсистемы запущены")
                         except Exception:
                             pass
                         # finalize
                         try:
-                            self.ui.boot_set_step_status("Finalize startup", "done")
-                            self.ui.boot_set_progress(100, "Startup complete")
+                            self.ui.boot_set_step_status("Завершение запуска", "done")
+                            self.ui.boot_set_progress(100, "Запуск завершён")
                         except Exception:
                             pass
                 finally:
@@ -3339,8 +3347,8 @@ class VoiceLive:
             self.ui.set_state("LISTENING")
             if fatal_hint:
                 self.ui.write_log(
-                    "ERR: Cannot reach the Gemini endpoint. This is a host/network "
-                    "misconfiguration (see /etc/hosts or proxy), not a transient glitch."
+                    "ERR: Не удаётся подключиться к серверу Gemini. Это ошибка конфигурации "
+                    "хоста/сети (см. /etc/hosts или прокси), а не временный сбой."
                 )
                 print(
                     "[VOICE ECHO] 🚫 Gemini host unreachable — retrying will not help "
@@ -3366,7 +3374,7 @@ def main():
     if DashboardServer is not None and not dashboard_enabled:
         _startup_log("dashboard disabled: port 8000 already in use")
         try:
-            ui.write_log("SYS: Mobile Connect is already running in another Voice Echo instance.")
+            ui.write_log("SYS: Mobile Connect уже запущен в другом экземпляре Voice Echo.")
         except Exception:
             pass
     if dashboard_enabled:
@@ -3380,7 +3388,7 @@ def main():
             except Exception as exc:
                 _startup_log(f"dashboard thread error: {exc}")
                 try:
-                    ui.write_log(f"ERR: Mobile Connect server failed: {exc}")
+                    ui.write_log(f"ERR: Ошибка сервера Mobile Connect: {exc}")
                 except Exception:
                     pass
 
@@ -3396,7 +3404,7 @@ def main():
         except Exception as exc:
             _startup_log(f"voice connect init failed: {exc}")
             try:
-                ui.write_log(f"ERR: Voice Connect failed to initialize: {exc}")
+                ui.write_log(f"ERR: Не удалось инициализировать Voice Connect: {exc}")
             except Exception:
                 pass
             voice_connect = None
@@ -3410,7 +3418,7 @@ def main():
         if _is_port_in_use(connect_port):
             _startup_log(f"voice connect disabled: port {connect_port} already in use")
             try:
-                ui.write_log(f"SYS: Voice Connect is already running on port {connect_port}.")
+                ui.write_log(f"SYS: Voice Connect уже запущен на порту {connect_port}.")
             except Exception:
                 pass
         else:
@@ -3422,7 +3430,7 @@ def main():
                 except Exception as exc:
                     _startup_log(f"voice connect thread error: {exc}")
                     try:
-                        ui.write_log(f"ERR: Voice Connect server failed: {exc}")
+                        ui.write_log(f"ERR: Ошибка сервера Voice Connect: {exc}")
                     except Exception:
                         pass
 
@@ -3476,7 +3484,7 @@ def main():
                         "username": username,
                         "message": text
                     }
-                    msg = f"You have a new Instagram message from {username}. What should I reply, or should I take over the chat?"
+                    msg = f"Вам новое сообщение в Instagram от {username}. Что ответить, или мне взять переписку на себя?"
                     ui.write_log(f"📱 Insta ({username}): {text}")
                     ui.write_log(f"Voice Echo: {msg}")
                     voice_echo.speak(msg)

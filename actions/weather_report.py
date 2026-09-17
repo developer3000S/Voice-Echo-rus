@@ -17,7 +17,7 @@ def weather_action(
     city = parameters.get("city")
     time = parameters.get("time")
     if not city or not isinstance(city, str):
-        msg = "Sir, the city is missing for the weather report."
+        msg = "Не указан город для отчёта о погоде."
         _speak_and_log(msg, player)
         return msg
 
@@ -35,11 +35,11 @@ def weather_action(
     try:
         webbrowser.open(url)
     except Exception:
-        msg = f"Sir, I couldn't open the browser for the weather report."
+        msg = "Не удалось открыть браузер для отчёта о погоде."
         _speak_and_log(msg, player)
         return msg
 
-    msg = f"Showing the weather for {city}, {time}, sir."
+    msg = f"Погода в {city}, {time}."
     _speak_and_log(msg, player)
 
     if session_memory:

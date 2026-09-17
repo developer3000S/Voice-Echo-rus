@@ -63,7 +63,7 @@ class UnifiedAIClient:
             logger.error(f"[LLM Client] Local AI Request Failed: {e}")
             return None
 
-    def chat(self, prompt: str, system: str = "You are a helpful assistant.", history: Optional[list[dict]] = None, model: Optional[str] = None, max_tokens: int = 4096, temperature: float = 0.7) -> str:
+    def chat(self, prompt: str, system: str = "Ты полезный ассистент. Отвечай кратко и на русском языке.", history: Optional[list[dict]] = None, model: Optional[str] = None, max_tokens: int = 4096, temperature: float = 0.7) -> str:
         self.reload_settings()
         if self._provider == "Local":
             messages = [{"role": "system", "content": system}]

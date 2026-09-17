@@ -1,18 +1,18 @@
-# Voice Connect Protocol
+# Протокол Voice Connect
 
-Voice Connect uses a small JSON protocol so Voice, companion apps, and
-device agents can communicate consistently over WebSocket.
+Voice Connect использует компактный JSON-протокол, чтобы Voice, сопутствующие приложения и
+агенты устройств могли стабильно взаимодействовать по WebSocket.
 
-## Required envelope
+## Обязательная обёртка
 
-Every message must contain:
+Каждое сообщение должно содержать:
 
 - `type`
 - `request_id`
 - `timestamp`
 - `payload`
 
-Example:
+Пример:
 
 ```json
 {
@@ -23,7 +23,7 @@ Example:
 }
 ```
 
-## Core message types
+## Основные типы сообщений
 
 - `hello`
 - `pair_request`
@@ -42,19 +42,19 @@ Example:
 - `screen_capture`
 - `chat_message`
 
-## Expected flow
+## Ожидаемый процесс
 
-1. Agent connects and sends `hello`.
-2. Gateway responds with a pairing request or known-device instructions.
-3. User approves the device in Voice.
-4. Agent sends `authenticate` with the persistent secret.
-5. Gateway marks the device online and publishes capabilities.
-6. Voice sends `execute` requests.
-7. Agent replies with `result` or `error`.
+1. Агент подключается и отправляет `hello`.
+2. Шлюз отвечает запросом на сопряжение или инструкциями для известного устройства.
+3. Пользователь одобряет устройство в Voice.
+4. Агент отправляет `authenticate` с постоянным секретом.
+5. Шлюз помечает устройство как онлайн и публикует возможности.
+6. Voice отправляет запросы `execute`.
+7. Агент отвечает `result` или `error`.
 
-## Notes
+## Примечания
 
-- Pairing offers expire.
-- Devices can be revoked or forgotten.
-- Capability checks happen before routing commands.
-- File transfer and screen capture are modeled as capabilities, not special cases.
+- Предложения сопряжения истекают.
+- Устройства могут быть отозваны или забыты.
+- Проверка возможностей выполняется перед маршрутизацией команд.
+- Передача файлов и захват экрана моделируются как возможности, а не как частные случаи.

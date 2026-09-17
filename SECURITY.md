@@ -1,130 +1,130 @@
-# Security Policy
+# Политика безопасности
 
-## Supported Versions
+## Поддерживаемые версии
 
-Security fixes should be applied to the latest maintained version of this repository.
+Исправления безопасности должны применяться к последней поддерживаемой версии этого репозитория.
 
-## Reporting a Vulnerability
+## Сообщение об уязвимости
 
-If you discover a security issue, do not post secrets or exploit details in public issues.
+Если вы обнаружили проблему безопасности, не публикуйте секреты или детали эксплойтов в публичных задачах.
 
-Please report security concerns through a private channel or repository owner contact method.
+Пожалуйста, сообщайте о проблемах безопасности через приватный канал или способом связи с владельцем репозитория.
 
-## Responsible Disclosure
+## Ответственное раскрытие
 
-- Do not share API keys, bot tokens, or access credentials publicly.
-- Revoke any exposed credentials immediately.
-- Update local configuration files after rotating secrets.
+- Не публикуйте ключи API, токены ботов или учётные данные открыто.
+- Немедленно отзывайте любые скомпрометированные учётные данные.
+- Обновляйте локальные файлы конфигурации после ротации секретов.
 
-## Voice Echo Security Overview
+## Обзор безопасности Voice Echo
 
-This repository includes a security overview for Voice Echo's current runtime model, gateway exposure, and authentication flow.
+Этот репозиторий содержит обзор безопасности текущей модели выполнения, доступности шлюза и процесса аутентификации Voice Echo.
 
-### Local credential handling
+### Локальная обработка учётных данных
 
-- API keys are stored in `config/api_keys.json`.
-- The code reads `gemini_api_key` and `openrouter_api_key` directly from this file.
-- This file is a local configuration artifact and should never be committed to source control.
-- There is no built-in secret vault; security depends on file system permissions and local access controls.
+- Ключи API хранятся в `config/api_keys.json`.
+- Код читает `gemini_api_key` и `openrouter_api_key` напрямую из этого файла.
+- Этот файл является локальным артефактом конфигурации и никогда не должен коммититься в систему контроля версий.
+- Встроенного хранилища секретов нет; безопасность зависит от прав доступа файловой системы и локальных ограничений доступа.
 
-### AI provider access
+### Доступ к провайдеру ИИ
 
-- Voice Echo uses Gemini as the primary AI provider and OpenRouter as a fallback.
-- Both API keys are loaded from the local config file and sent to the respective service clients.
-- `config/api_keys.json` is plaintext JSON and is not encrypted by the application.
+- Voice Echo использует Gemini как основного провайдера ИИ и OpenRouter как резервный вариант.
+- Оба ключа API загружаются из локального файла конфигурации и отправляются соответствующим клиентам сервисов.
+- `config/api_keys.json` — это открытый текстовый JSON и не шифруется приложением.
 
-### Voice Connect gateway exposure
+### Доступность шлюза Voice Connect
 
-Voice Connect is the local device gateway layer for Voice Echo.
+Voice Connect — это локальный транспортный слой шлюза для Voice Echo.
 
-#### Configuration
+#### Конфигурация
 
-- Default gateway config: `config/voice_connect.json`
-- Default host: `0.0.0.0`
-- Default port: `8765`
-- Default advertise: `true`
-- Default pairing TTL: `300` seconds
+- Конфигурация шлюза по умолчанию: `config/voice_connect.json`
+- Хост по умолчанию: `0.0.0.0`
+- Порт по умолчанию: `8765`
+- Реклама по умолчанию: `true`
+- Время жизни сопряжения по умолчанию: `300` секунд
 
-Because the gateway binds to `0.0.0.0`, it is reachable from any interface on the host unless OS firewall rules block it.
+Поскольку шлюз привязывается к `0.0.0.0`, он доступен с любого интерфейса хоста, если только правила файрвола ОС не блокируют его.
 
-#### Discovery
+#### Обнаружение
 
-- Optional mDNS discovery is provided through `voice_connect.gateway.discovery.GatewayDiscovery` and Zeroconf.
-- Discovery advertises service `_VOICE._tcp.local.` only when the Zeroconf library is installed and `advertise` is enabled.
+- Факультативное обнаружение через mDNS предоставляется через `voice_connect.gateway.discovery.GatewayDiscovery` и Zeroconf.
+- Обнаружение рекламирует сервис `_VOICE._tcp.local.` только тогда, когда библиотека Zeroconf установлена и `advertise` включён.
 
-#### Local network consideration
+#### Сетевые особенности локальной сети
 
-- The gateway is designed as a local network transport.
-- There is no built-in TLS/SSL for the gateway websocket in the current code.
-- Gateway traffic is not encrypted end-to-end by default and relies on LAN trust.
+- Шлюз разработан как транспорт для локальной сети.
+- В текущем коде нет встроенного TLS/SSL для WebSocket шлюза.
+- Трафик шлюза не шифруется end-to-end по умолчанию и опирается на доверие локальной сети.
 
-### Pairing and authentication flow
+### Процесс сопряжения и аутентификации
 
-#### Pairing
+#### Сопряжение
 
-- Pairing uses a temporary pairing offer created by `voice_connect.gateway.pairing.PairingManager`.
-- Each offer includes a `pairing_token`, a 6-digit `pairing_code`, and an expiration timestamp.
-- Pairing offers expire after `pairing_ttl_seconds` (default 300 seconds).
+- Сопряжение использует временное предложение сопряжения, созданное `voice_connect.gateway.pairing.PairingManager`.
+- Каждое предложение содержит `pairing_token`, 6-значный `pairing_code` и временную метку истечения.
+- Предложения сопряжения истекают через `pairing_ttl_seconds` (по умолчанию 300 секунд).
 
-#### Approval
+#### Одобрение
 
-- Incoming device connections begin with `HELLO` and create a pending request.
-- A user must explicitly approve or reject each pending pairing request through the app.
-- Approved devices are added to the registry and issued a permanent `device_secret`.
+- Входящие соединения устройств начинаются с `HELLO` и создают ожидающий запрос.
+- Пользователь должен явно одобрить или отклонить каждый ожидающий запрос на сопряжение через приложение.
+- Одобренные устройства добавляются в реестр и получают постоянный `device_secret`.
 
-#### Device credentials
+#### Учётные данные устройства
 
-- Device records are stored in `config/voice_connect/devices.json`.
-- Device secrets are not stored plaintext; the repository stores a `secret_hash`.
-- The `secret_hash` is computed using `hashlib.sha256(secret.encode('utf-8')).hexdigest()`.
-- Authentication uses constant-time comparison (`hmac.compare_digest`) to avoid timing attacks.
+- Записи устройств хранятся в `config/voice_connect/devices.json`.
+- Секреты устройств не хранятся в открытом виде; репозиторий хранит `secret_hash`.
+- `secret_hash` вычисляется с помощью `hashlib.sha256(secret.encode('utf-8')).hexdigest()`.
+- Аутентификация использует сравнение фиксированного времени (`hmac.compare_digest`) для защиты от атак по времени.
 
-#### Authentication
+#### Аутентификация
 
-- Authenticated device connections use the websocket `/ws` endpoint and send an `AUTHENTICATE` message with `device_id` and `device_secret`.
-- On successful authentication, the device is marked online and registered in the connection hub.
-- Revoked devices are rejected by `DeviceManager.authenticate`.
+- Аутентифицированные соединения устройств используют WebSocket-эндпоинт `/ws` и отправляют сообщение `AUTHENTICATE` с `device_id` и `device_secret`.
+- При успешной аутентификации устройство помечается как онлайн и регистрируется в хабе соединений.
+- Отозванные устройства отклоняются через `DeviceManager.authenticate`.
 
-### Gateway request handling
+### Обработка запросов шлюза
 
-- The gateway exposes REST endpoints for `/gateway/info`, `/gateway/pair`, `/gateway/devices`, `/gateway/devices/{device_id}/revoke`, `/gateway/devices/{device_id}/forget`, `/gateway/pending`, `/gateway/pending/{pending_id}/approve`, and `/gateway/pending/{pending_id}/reject`.
-- These endpoints are exposed on the same host and port as the gateway service.
-- There is no API authentication for these admin endpoints in the current code, so local network access is effectively trusted.
+- Шлюз предоставляет REST-эндпоинты для `/gateway/info`, `/gateway/pair`, `/gateway/devices`, `/gateway/devices/{device_id}/revoke`, `/gateway/devices/{device_id}/forget`, `/gateway/pending`, `/gateway/pending/{pending_id}/approve` и `/gateway/pending/{pending_id}/reject`.
+- Эти эндпоинты доступны на том же хосте и порту, что и сервис шлюза.
+- В текущем коде нет аутентификации API для этих административных эндпоинтов, поэтому доступ из локальной сети фактически считается доверенным.
 
-### Firewall behavior
+### Поведение файрвола
 
-#### Dashboard firewall helper
+#### Вспомогательная функция файрвола панели
 
-- The local dashboard (`dashboard/server.py`) includes `_ensure_network_access`.
-- This helper attempts to open a Windows firewall rule for dashboard ports and includes cross-platform stubs for macOS/Linux.
-- The dashboard uses port `8000` by default and a legacy HTTPS alias on `8001`.
+- Локальная панель (`dashboard/server.py`) содержит `_ensure_network_access`.
+- Эта функция пытается открыть правило файрвола Windows для портов панели и включает заглушки для macOS/Linux.
+- Панель использует порт `8000` по умолчанию и устаревший псевдоним HTTPS на `8001`.
 
-#### Gateway firewall behavior
+#### Поведение файрвола шлюза
 
-- The gateway does not automatically open OS firewall ports.
-- Because it binds to `0.0.0.0:8765`, administrators should verify and restrict firewall access manually if needed.
+- Шлюз не автоматически открывает порты файрвола ОС.
+- Поскольку он привязывается к `0.0.0.0:8765`, администраторы должны вручную проверить и ограничить доступ файрвола при необходимости.
 
-### Security strengths
+### Сильные стороны безопасности
 
-- Pairing is explicit and requires user approval.
-- Device secret handling uses hashed secrets and constant-time comparison.
-- Temporary pairing codes expire quickly.
-- Device revocation and forgetting are supported.
-- The dashboard encrypts local commands using AES-256-CBC with a session-derived key.
+- Сопряжение является явным и требует одобрения пользователя.
+- Обработка секретов устройств использует хешированные секреты и сравнение фиксированного времени.
+- Временные коды сопряжения быстро истекают.
+- Поддерживаются отзыв и забвение устройств.
+- Панель шифрует локальные команды с помощью AES-256-CBC с ключом, производным от сессии.
 
-### Security limitations
+### Ограничения безопасности
 
-- No built-in gateway TLS/SSL for WebSocket `/ws`; websocket traffic is plaintext on the LAN.
-- Admin REST endpoints have no authentication layer in the current codebase.
-- Local API key storage is plaintext.
-- The gateway host default of `0.0.0.0` exposes the service broadly unless OS firewall restrictions are applied.
-- There is no remote access firewall or gateway-level authentication beyond pairing and device credentials.
+- Нет встроенного TLS/SSL для WebSocket `/ws`; трафик WebSocket является открытым текстом в локальной сети.
+- Административные REST-эндпоинты не имеют слоя аутентификации в текущей кодовой базе.
+- Хранение локальных ключей API является открытым текстом.
+- Хост шлюза по умолчанию `0.0.0.0` широко раскрывает сервис, если не применены ограничения файрвола ОС.
+- Нет файрвола дистанционного доступа или аутентификации на уровне шлюза помимо сопряжения и учётных данных устройств.
 
-### Recommendations
+### Рекомендации
 
-- Keep `config/api_keys.json` private and out of version control.
-- Use OS firewall rules to restrict access to port `8765` when Voice Connect is enabled.
-- Disable `advertise` in `config/voice_connect.json` unless discovery is needed.
-- Revoke lost or untrusted devices using `/gateway/devices/{device_id}/revoke`.
-- Run Voice Echo on a trusted local network.
-- Consider adding HTTPS/TLS support for the gateway websocket and admin REST endpoints for secure remote access.
+- Держите `config/api_keys.json` приватным и исключите его из контроля версий.
+- Используйте правила файрвола ОС для ограничения доступа к порту `8765` при включённом Voice Connect.
+- Отключите `advertise` в `config/voice_connect.json`, если обнаружение не требуется.
+- Отзывайте потерянные или ненадёжные устройства через `/gateway/devices/{device_id}/revoke`.
+- Запускайте Voice Echo в доверенной локальной сети.
+- Рассмотрите добавление поддержки HTTPS/TLS для WebSocket шлюза и административных REST-эндпоинтов для безопасного дистанционного доступа.

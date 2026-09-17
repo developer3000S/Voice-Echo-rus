@@ -1,35 +1,35 @@
-# Contributing
+# Участие в разработке
 
-Thank you for helping improve Voice AI - Lite.
+Спасибо за помощь в улучшении Voice AI - Lite.
 
-## Before You Start
+## Перед началом
 
-- Read the README and the code of conduct.
-- Do not commit API keys, bot tokens, or personal secrets.
-- Keep changes focused and easy to review.
+- Прочитайте README и кодекс поведения.
+- Не коммитьте ключи API, токены ботов или личные секреты.
+- Делайте изменения сфокусированными и удобными для проверки.
 
-## Suggested Workflow
+## Рекомендуемый рабочий процесс
 
-1. Fork or create a branch.
-2. Make your changes locally.
-3. Test the app on your machine.
-4. Open a pull request with a clear description.
+1. Сделайте форк или создайте ветку.
+2. Внесите изменения локально.
+3. Протестируйте приложение на вашей машине.
+4. Откройте pull request с понятным описанием.
 
-## Style Notes
+## Заметки о стиле
 
-- Prefer small, readable changes.
-- Keep names and comments clear.
-- Preserve the existing app structure unless the task requires a refactor.
+- Предпочитайте маленькие, читаемые изменения.
+- Сохраняйте понятные имена и комментарии.
+- Сохраняйте существующую структуру приложения, если только задача не требует рефакторинга.
 
-## Reporting Issues
+## Сообщение об ошибках
 
-When reporting a bug, include:
+При сообщении об ошибке приложите:
 
-- Steps to reproduce
-- Expected behavior
-- Actual behavior
-- Any relevant logs or screenshots
+- Шаги для воспроизведения
+- Ожидаемое поведение
+- Фактическое поводение
+- Соответствующие логи или скриншоты
 
-## Licensing
+## Лицензирование
 
-By contributing to this repository, you agree that your contributions may be distributed under the project license.
+Участвуя в этом репозитории, вы соглашаетесь, что ваш вклад может распространяться под лицензией проекта.

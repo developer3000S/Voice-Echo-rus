@@ -1,27 +1,27 @@
 # Voice Connect Android
 
-Android agent for Voice Connect.
+Агент Android для Voice Connect.
 
-What this project is:
-- Native Android agent
-- WebSocket client for the existing Voice Gateway
-- Minimal pairing and reconnect flow
-- First command set only
+Чем является этот проект:
+- Нативный агент Android
+- WebSocket-клиент для существующего Voice Gateway
+- Минимальный процесс сопряжения и переподключения
+- Первоначальный набор команд
 
-What this project is not:
-- Not an AI assistant
-- Not a second dashboard
-- Not a cloud service
-- Not a Windows or Companion build
+Чем этот проект не является:
+- Не ИИ-ассистент
+- Не вторая панель управления
+- Не облачный сервис
+- Не сборка Windows или Companion
 
-Build requirements:
-- Android Studio or Android Gradle Plugin toolchain
+Требования для сборки:
+- Android Studio или инструментарий Android Gradle Plugin
 - JDK 17
 - Android SDK 35
 
-Phase scope:
-- Gateway discovery
-- QR pairing
-- Secure credential storage
-- Persistent WebSocket connection
-- Battery, flashlight, launch app, open URL, and volume commands
+Область фазы:
+- Обнаружение шлюза
+- Сопряжение через QR
+- Безопасное хранение учётных данных
+- Постоянное WebSocket-соединение
+- Команды: батарея, фонарик, запуск приложения, открытие URL и громкость

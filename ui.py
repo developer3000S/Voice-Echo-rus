@@ -315,13 +315,13 @@ class RemoteKeyOverlay(QWidget):
         except Exception:
             pass
 
-        title = QLabel("Mobile Connect")
+        title = QLabel("Мобильное подключение")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
         title.setStyleSheet("color: #ffffff; background: transparent; border: none;")
         lay.addWidget(title)
 
-        subtitle = QLabel("Scan the QR code with your phone to remotely control Voice Echo.")
+        subtitle = QLabel("Отсканируйте QR-код телефоном, чтобы удалённо управлять Voice Echo.")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         subtitle.setWordWrap(True)
         subtitle.setFont(QFont("Segoe UI", 9))
@@ -338,7 +338,7 @@ class RemoteKeyOverlay(QWidget):
         qr_row.addStretch()
         lay.addLayout(qr_row)
 
-        manual_hint = QLabel("Manual address")
+        manual_hint = QLabel("Адрес вручную")
         manual_hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
         manual_hint.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
         manual_hint.setStyleSheet(f"color: {C.TEXT_DIM}; border: none; margin-top: 10px;")
@@ -376,7 +376,7 @@ class RemoteKeyOverlay(QWidget):
         btn_row = QHBoxLayout()
         btn_row.setSpacing(14)
         
-        self._new_btn = QPushButton("New Key")
+        self._new_btn = QPushButton("Новый ключ")
         self._new_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._new_btn.setFixedHeight(40)
         self._new_btn.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
@@ -396,7 +396,7 @@ class RemoteKeyOverlay(QWidget):
         self._new_btn.clicked.connect(self._refresh_key)
         btn_row.addWidget(self._new_btn)
 
-        close_btn = QPushButton("Close")
+        close_btn = QPushButton("Закрыть")
         close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         close_btn.setFixedHeight(40)
         close_btn.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
@@ -435,7 +435,7 @@ class RemoteKeyOverlay(QWidget):
 
     def _update_qr(self, url: str) -> None:
         if not url:
-            self._qr_label.setText("NO URL")
+            self._qr_label.setText("НЕТ URL")
             return
         try:
             import qrcode
@@ -450,22 +450,22 @@ class RemoteKeyOverlay(QWidget):
             pix.loadFromData(buf.getvalue())
             self._qr_label.setPixmap(pix.scaled(172, 172, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
         except ImportError:
-            self._qr_label.setText("Install\nqrcode[pil]")
+            self._qr_label.setText("Установите\nqrcode[pil]")
             self._qr_label.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
             self._qr_label.setStyleSheet("color: #111; background: white; border-radius: 12px; padding: 6px;")
         except Exception:
-            self._qr_label.setText("QR failed")
+            self._qr_label.setText("Ошибка QR-кода")
 
     def _tick(self):
         remaining = max(0, int(self._expiry - time.time()))
         mins, secs = divmod(remaining, 60)
-        self._timer_lbl.setText(f"Key expires in {mins:02d}:{secs:02d}")
+        self._timer_lbl.setText(f"Ключ истекает через {mins:02d}:{secs:02d}")
         if remaining <= 0:
             self._do_close()
 
     def mark_connected(self) -> None:
         self._ctimer.stop()
-        self._key_lbl.setText("CONNECTED")
+        self._key_lbl.setText("ПОДКЛЮЧЕНО")
         self._key_lbl.setStyleSheet(f"""
             color: {C.GREEN};
             background: rgba(55,255,95,20);
@@ -477,7 +477,7 @@ class RemoteKeyOverlay(QWidget):
         self._qr_label.setText("OK")
         self._qr_label.setFont(QFont("Segoe UI", 34, QFont.Weight.Black))
         self._qr_label.setStyleSheet("color: #37ff5f; background: #041006; border-radius: 12px;")
-        self._timer_lbl.setText("Phone connected. Voice Echo remote is ready.")
+        self._timer_lbl.setText("Телефон подключён. Удалённый Voice Echo готов.")
 
     def _refresh_key(self):
         if not self._on_new_key:
@@ -951,7 +951,7 @@ class _GestureRenderCanvas(QWidget):
         else:
             self._skeleton_opacity += (self._target_opacity - self._skeleton_opacity) * 0.24
             dot_count = (self._search_phase // 8) % 4
-            message = "Searching for hand" + ("." * dot_count)
+            message = "Поиск руки" + ("." * dot_count)
             painter.setPen(QColor(200, 200, 220, 180))
             painter.setFont(QFont("Segoe UI", 10, QFont.Weight.Medium))
             painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, message)
@@ -1007,7 +1007,7 @@ class GestureCameraPreview(QFrame):
         header_row.setContentsMargins(0, 0, 0, 0)
         header_row.setSpacing(10)
 
-        title = QLabel("HAND TRACKING")
+        title = QLabel("ОТСЛЕЖИВАНИЕ РУК")
         title.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
         title.setStyleSheet(f"color: {C.WHITE}; letter-spacing: 1px;")
         header_row.addWidget(title)
@@ -1018,12 +1018,12 @@ class GestureCameraPreview(QFrame):
         self._status_dot.setStyleSheet("border-radius: 6px; background: #ffb347;")
         header_row.addWidget(self._status_dot)
 
-        self._status_text = QLabel("SEARCHING")
+        self._status_text = QLabel("ПОИСК")
         self._status_text.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
         self._status_text.setStyleSheet("color: #ffb347;")
         header_row.addWidget(self._status_text)
 
-        self._invert_btn = QPushButton("⇄ Invert: ON")
+        self._invert_btn = QPushButton("⇄ Инверсия: ВКЛ")
         self._invert_btn.setCheckable(True)
         self._invert_btn.setChecked(True)
         self._invert_btn.setFixedHeight(26)
@@ -1034,7 +1034,7 @@ class GestureCameraPreview(QFrame):
         def _toggle_invert(checked):
             self._invert_cursor_x = checked
             self._hand_canvas.set_invert_x(checked)
-            self._invert_btn.setText("⇄ Invert: ON" if checked else "⇄ Invert: OFF")
+            self._invert_btn.setText("⇄ Инверсия: ВКЛ" if checked else "⇄ Инверсия: ВЫКЛ")
         self._invert_btn.toggled.connect(_toggle_invert)
         header_row.addWidget(self._invert_btn)
 
@@ -1054,7 +1054,7 @@ class GestureCameraPreview(QFrame):
         self._hand_canvas.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         lay.addWidget(self._hand_canvas)
 
-        self._status_hint_label = QLabel("Initializing hand detection...")
+        self._status_hint_label = QLabel("Инициализация распознавания рук...")
         self._status_hint_label.setFont(QFont("Segoe UI", 8))
         self._status_hint_label.setStyleSheet(f"color: {C.TEXT_DIM};")
         self._status_hint_label.setWordWrap(True)
@@ -1065,16 +1065,16 @@ class GestureCameraPreview(QFrame):
         footer.setHorizontalSpacing(16)
         footer.setVerticalSpacing(8)
 
-        self._status_value = QLabel("Searching")
+        self._status_value = QLabel("Поиск")
         self._confidence_value = QLabel("0%")
-        self._gesture_value = QLabel("None")
-        self._cursor_value = QLabel("Inactive")
+        self._gesture_value = QLabel("Нет")
+        self._cursor_value = QLabel("Неактивен")
 
         for idx, (label_text, value_label) in enumerate([
-            ("Status", self._status_value),
-            ("Confidence", self._confidence_value),
-            ("Gesture", self._gesture_value),
-            ("Cursor", self._cursor_value),
+            ("Статус", self._status_value),
+            ("Уверенность", self._confidence_value),
+            ("Жест", self._gesture_value),
+            ("Курсор", self._cursor_value),
         ]):
             label = QLabel(label_text.upper())
             label.setFont(QFont("Segoe UI", 7, QFont.Weight.DemiBold))
@@ -1094,7 +1094,7 @@ class GestureCameraPreview(QFrame):
         except Exception:
             pass
 
-        self._set_status("Camera offline", "lost")
+        self._set_status("Камера отключена", "lost")
         # Do not start camera automatically
 
     def closeEvent(self, event):
@@ -1142,14 +1142,14 @@ class GestureCameraPreview(QFrame):
             self._timer = QTimer(self)
             self._timer.timeout.connect(self._tick)
             self._timer.start(30)
-            self._set_status("Camera ready. Move your hand to steer the cursor.", "searching")
+            self._set_status("Камера готова. Двигайте рукой, чтобы управлять курсором.", "searching")
             try:
                 import pyautogui
                 pyautogui.FAILSAFE = False
             except Exception:
                 pass
         except Exception as exc:
-            self._set_status(f"Gesture camera is offline: {exc}", "lost")
+            self._set_status(f"Жестовая камера отключена: {exc}", "lost")
 
         if self._cap is not None:
             try:
@@ -1179,14 +1179,14 @@ class GestureCameraPreview(QFrame):
             self.setFixedHeight(self._collapsed_height)
         except Exception:
             pass
-        self._set_status("Camera stopped", "lost")
+        self._set_status("Камера остановлена", "lost")
 
     def _download_hand_landmarker_model(self, model_path: Path) -> bool:
         temp_path = model_path.with_suffix(model_path.suffix + ".download")
         try:
             import urllib.request
 
-            self._set_status("Downloading gesture model...", "searching")
+            self._set_status("Загрузка модели жестов...", "searching")
             model_path.parent.mkdir(parents=True, exist_ok=True)
             with urllib.request.urlopen(MODEL_DOWNLOAD_URL, timeout=60) as response:
                 with open(temp_path, "wb") as out_file:
@@ -1204,8 +1204,8 @@ class GestureCameraPreview(QFrame):
             except Exception:
                 pass
             self._set_status(
-                f"Gesture model download failed: {exc}. "
-                f"Put hand_landmarker.task into {model_path.parent} and restart.",
+                f"Не удалось загрузить модель жестов: {exc}. "
+                f"Поместите hand_landmarker.task в {model_path.parent} и перезапустите.",
                 "lost",
             )
             return False
@@ -1216,17 +1216,17 @@ class GestureCameraPreview(QFrame):
         try:
             ret, frame = self._cap.read()
             if not ret or frame is None:
-                self._set_status("Camera feed dropped. Trying again…", "lost")
+                self._set_status("Потерян поток камеры. Пробую снова…", "lost")
                 return
             self._process_frame(frame)
         except Exception as exc:
-            self._set_status(f"Gesture camera error: {exc}", "lost")
+            self._set_status(f"Ошибка жестовой камеры: {exc}", "lost")
 
     def _process_frame(self, frame):
         try:
             import cv2
         except Exception as exc:
-            self._set_status(f"Gesture camera unavailable: {exc}", "lost")
+            self._set_status(f"Жестовая камера недоступна: {exc}", "lost")
             return
 
         import importlib
@@ -1239,8 +1239,8 @@ class GestureCameraPreview(QFrame):
 
         if mp is None:
             self._set_status(
-                "Gesture camera unavailable: mediapipe not found. "
-                "Install it into the app venv: .venv\\Scripts\\python.exe -m pip install mediapipe",
+                "Жестовая камера недоступна: mediapipe не найден. "
+                "Установите его в venv приложения: .venv\\Scripts\\python.exe -m pip install mediapipe",
                 "lost",
             )
             return
@@ -1264,7 +1264,7 @@ class GestureCameraPreview(QFrame):
                     )
                     self._use_tasks_api = False
                 except Exception as exc:
-                    self._set_status(f"Gesture init error: {exc}", "lost")
+                    self._set_status(f"Ошибка инициализации жестов: {exc}", "lost")
                     return
             else:
                 vision = None
@@ -1275,8 +1275,8 @@ class GestureCameraPreview(QFrame):
 
                 if vision is None or not hasattr(vision, "HandLandmarker"):
                     self._set_status(
-                        "Gesture camera unavailable: mediapipe Tasks API not available. "
-                        "Install mediapipe into the app venv and restart.",
+                        "Жестовая камера недоступна: mediapipe Tasks API недоступен. "
+                        "Установите mediapipe в venv приложения и перезапустите.",
                         "lost",
                     )
                     return
@@ -1285,7 +1285,7 @@ class GestureCameraPreview(QFrame):
                 model_dir.mkdir(parents=True, exist_ok=True)
                 model_path = model_dir / "hand_landmarker.task"
                 if not model_path.exists():
-                    self._set_status("Downloading model", "searching")
+                    self._set_status("Загрузка модели", "searching")
                     if not self._download_hand_landmarker_model(model_path):
                         return
 
@@ -1294,7 +1294,7 @@ class GestureCameraPreview(QFrame):
                     self._use_tasks_api = True
                     self._vision_module = vision
                 except Exception as exc:
-                    self._set_status(f"Gesture init error: {exc}", "lost")
+                    self._set_status(f"Ошибка инициализации жестов: {exc}", "lost")
                     return
 
         height, width = frame.shape[:2]
@@ -1309,7 +1309,7 @@ class GestureCameraPreview(QFrame):
                 mp_image = image_lib.Image(image_lib.ImageFormat.SRGB, np.ascontiguousarray(rgb))
                 results = self._hands.detect(mp_image)
             except Exception as exc:
-                self._set_status(f"Gesture task detect error: {exc}", "lost")
+                self._set_status(f"Ошибка отслеживания жеста: {exc}", "lost")
                 return
             if getattr(results, "hand_landmarks", None):
                 hand_landmarks = results.hand_landmarks[0]
@@ -1382,7 +1382,7 @@ class GestureCameraPreview(QFrame):
                 ts = datetime.now().strftime("%Y%m%d_%H%M%S")
                 shot_path = desktop_dir / f"screenshot_{ts}.png"
                 pyautogui.screenshot(str(shot_path))
-                self._show_gesture_toast("✌️ Screenshot saved to Desktop!")
+                self._show_gesture_toast("✌️ Скриншот сохранён на рабочий стол!")
 
         except Exception as e:
             print(f"[AirGesture] Action '{action}' error: {e}")
@@ -1411,18 +1411,18 @@ class GestureCameraPreview(QFrame):
             self._hand_canvas.set_landmarks(self._smoothed_landmarks)
             self._hand_canvas.set_hand_visible(True)
             self._hand_canvas.set_search_phase(0)
-            self._set_status("Hand detected and tracking.", "tracking")
+            self._set_status("Рука обнаружена, отслеживание идёт.", "tracking")
             self._confidence_value.setText(f"{int(confidence * 100)}%")
-            self._gesture_value.setText(gesture.get("gesture_name", "Open Hand"))
-            self._cursor_value.setText("Active" if gesture.get("cursor") else "Inactive")
+            self._gesture_value.setText(gesture.get("gesture_name", "Открытая ладонь"))
+            self._cursor_value.setText("Активен" if gesture.get("cursor") else "Неактивен")
         else:
             self._hand_canvas.set_hand_visible(False)
             self._search_phase = (self._search_phase + 1) % 32
             self._hand_canvas.set_search_phase(self._search_phase)
-            self._set_status("Searching for hand...", "searching")
+            self._set_status("Поиск руки...", "searching")
             self._confidence_value.setText("0%")
-            self._gesture_value.setText("None")
-            self._cursor_value.setText("Inactive")
+            self._gesture_value.setText("Нет")
+            self._cursor_value.setText("Неактивен")
 
     def _calibrate_and_smooth_cursor(self, cursor: tuple[float, float]) -> tuple[float, float]:
         raw_x = float(cursor[0])
@@ -1519,7 +1519,7 @@ def _active_net_label() -> str:
             return active[0]
     except Exception:
         pass
-    return "No active adapter"
+    return "Нет активного адаптера"
 
 class HudCanvas(QWidget):
     def __init__(self, face_path: str, parent=None):
@@ -1754,24 +1754,24 @@ class HudCanvas(QWidget):
         p.drawText(QRectF(cx + 8, y_title, 90, 48), Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, "ma")
         p.setFont(QFont("Segoe UI", int(max(8, fw * 0.018)), QFont.Weight.Bold))
         p.setPen(QColor(190, 196, 205, 190))
-        p.drawText(QRectF(cx - 90, cy + 18, 180, 22), Qt.AlignmentFlag.AlignCenter, "AI ASSISTANT")
+        p.drawText(QRectF(cx - 90, cy + 18, 180, 22), Qt.AlignmentFlag.AlignCenter, "ИИ-АССИСТЕНТ")
 
         # keep the center clean: no extra particles
 
         # status text
         sy = cy + fw * 0.40
         if self.muted:
-            txt, col = "MIC STATUS\nMUTED", QColor(255, 179, 0, 235)
+            txt, col = "МИКРОФОН\nОТКЛ", QColor(255, 179, 0, 235)
         elif self.speaking:
-            txt, col = "MIC STATUS\nSPEAKING", QColor(255, 255, 255, 235)
+            txt, col = "МИКРОФОН\nГОВОРИТ", QColor(255, 255, 255, 235)
         elif self.state == "THINKING":
-            txt, col = "AI CORE\nTHINKING", QColor(255, 185, 96, 235)
+            txt, col = "ИИ-ЯДРО\nДУМАЕТ", QColor(255, 185, 96, 235)
         elif self.state in ("PROCESSING", "EXECUTING"):
-            txt, col = "AI CORE\nEXECUTING", QColor(255, 179, 0, 235)
+            txt, col = "ИИ-ЯДРО\nВЫПОЛНЯЕТ", QColor(255, 179, 0, 235)
         elif self.state == "LISTENING":
-            txt, col = "MIC STATUS\nLISTENING", QColor(69, 127, 255, 220)
+            txt, col = "МИКРОФОН\nСЛУШАЕТ", QColor(69, 127, 255, 220)
         else:
-            txt, col = f"AI CORE\n{self.state}", QColor(255, 255, 255, 220)
+            txt, col = f"ИИ-ЯДРО\n{self.state}", QColor(255, 255, 255, 220)
 
         p.setPen(QPen(col, 1))
         p.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
@@ -1959,7 +1959,7 @@ class TaskCard(QFrame):
         lay.setSpacing(10)
 
         row = QHBoxLayout()
-        self._title = QLabel("Task Workspace")
+        self._title = QLabel("Рабочее пространство задач")
         self._title.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
         self._title.setStyleSheet(f"color: {C.PRI}; background: transparent;")
 
@@ -1972,25 +1972,25 @@ class TaskCard(QFrame):
         row.addWidget(self._pct)
         lay.addLayout(row)
 
-        self._command_lbl = QLabel("Command: waiting for input")
+        self._command_lbl = QLabel("Команда: ожидание ввода")
         self._command_lbl.setWordWrap(True)
         self._command_lbl.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
         self._command_lbl.setStyleSheet(f"color: {C.WHITE}; background: transparent;")
         lay.addWidget(self._command_lbl)
 
-        self._plan_lbl = QLabel("Plan: Voice Echo will generate a task plan after you send a command.")
+        self._plan_lbl = QLabel("План: Voice Echo создаст план задачи после отправки команды.")
         self._plan_lbl.setWordWrap(True)
         self._plan_lbl.setFont(QFont("Segoe UI", 9))
         self._plan_lbl.setStyleSheet(f"color: {C.TEXT_MED}; background: transparent;")
         lay.addWidget(self._plan_lbl)
 
-        self._status_lbl = QLabel("Status: Idle")
+        self._status_lbl = QLabel("Статус: Ожидание")
         self._status_lbl.setWordWrap(True)
         self._status_lbl.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
         self._status_lbl.setStyleSheet(f"color: {C.WHITE}; background: transparent;")
         lay.addWidget(self._status_lbl)
 
-        self._output_lbl = QLabel("Output: Ready to work.")
+        self._output_lbl = QLabel("Вывод: Готов к работе.")
         self._output_lbl.setWordWrap(True)
         self._output_lbl.setFont(QFont("Segoe UI", 9))
         self._output_lbl.setStyleSheet(f"color: {C.TEXT_MED}; background: transparent;")
@@ -2016,7 +2016,7 @@ class TaskCard(QFrame):
         )
         lay.addWidget(self._bar)
 
-        self._foot = QLabel("Working on it...")
+        self._foot = QLabel("В процессе...")
         self._foot.setFont(QFont("Segoe UI", 9))
         self._foot.setStyleSheet(f"color: {C.TEXT_DIM}; background: transparent;")
         lay.addWidget(self._foot)
@@ -2030,33 +2030,33 @@ class TaskCard(QFrame):
         self._title.setText(title)
         self._status_lbl.setText(desc)
         self._output_lbl.setText(desc)
-        self._plan_lbl.setText("Plan: Voice Echo will generate a task plan after you send a command.")
-        self._command_lbl.setText("Command: waiting for input")
+        self._plan_lbl.setText("План: Voice Echo создаст план задачи после отправки команды.")
+        self._command_lbl.setText("Команда: ожидание ввода")
         self._pct.setText(f"{percent}%")
         self._bar.setValue(max(0, min(100, percent)))
 
     def _format_plan(self, plan: list[str] | str | None) -> str:
         if not plan:
-            return "Plan: • Understand the request\n       • Execute the right tools\n       • Return the result"
+            return "План: • Понять запрос\n       • Выполнить нужные инструменты\n       • Вернуть результат"
         if isinstance(plan, str):
             text = plan.strip()
-            return f"Plan: {text}" if text.lower().startswith("plan:") else f"Plan: {text}"
+            return f"План: {text}" if text.lower().startswith(("plan:", "план:")) else f"План: {text}"
         items = [str(item).strip() for item in plan if str(item).strip()]
         if not items:
-            return "Plan: • Understand the request\n       • Execute the right tools\n       • Return the result"
-        return "Plan:\n" + "\n".join(f"• {item}" for item in items)
+            return "План: • Понять запрос\n       • Выполнить нужные инструменты\n       • Вернуть результат"
+        return "План:\n" + "\n".join(f"• {item}" for item in items)
 
     def start_workspace(self, command: str, plan: list[str] | str | None = None, source: str = "local"):
         self._active = True
         self._workspace_locked = False
-        self._title.setText("Task Workspace")
-        self._command_lbl.setText(f"Command: {command or 'waiting for input'}")
+        self._title.setText("Рабочее пространство задач")
+        self._command_lbl.setText(f"Команда: {command or 'ожидание ввода'}")
         self._plan_lbl.setText(self._format_plan(plan))
-        self._status_lbl.setText("Status: Planning task...")
-        self._output_lbl.setText("Output: Waiting for execution.")
+        self._status_lbl.setText("Статус: Планирование задачи...")
+        self._output_lbl.setText("Вывод: Ожидание выполнения.")
         self._pct.setText("8%")
         self._bar.setValue(8)
-        self._foot.setText(f"Source: {source}")
+        self._foot.setText(f"Источник: {source}")
         # self.show() intentionally removed to prevent flashing on quick/normal chats
 
     def update_workspace(self, *, title: str | None = None, command: str | None = None, plan: list[str] | str | None = None,
@@ -2065,13 +2065,13 @@ class TaskCard(QFrame):
         if title:
             self._title.setText(title)
         if command:
-            self._command_lbl.setText(f"Command: {command}")
+            self._command_lbl.setText(f"Команда: {command}")
         if plan is not None:
             self._plan_lbl.setText(self._format_plan(plan))
         if status:
-            self._status_lbl.setText(f"Status: {status}" if not status.lower().startswith("status:") else status)
+            self._status_lbl.setText(f"Статус: {status}" if not status.lower().startswith(("status:", "статус:")) else status)
         if output:
-            self._output_lbl.setText(f"Output: {output}" if not output.lower().startswith("output:") else output)
+            self._output_lbl.setText(f"Вывод: {output}" if not output.lower().startswith(("output:", "вывод:")) else output)
         if percent is not None:
             pct = max(0, min(100, int(percent)))
             self._pct.setText(f"{pct}%")
@@ -2082,29 +2082,29 @@ class TaskCard(QFrame):
         if percent is not None and int(percent) > 10:
             self.show()
 
-    def finish_workspace(self, result: str, status: str = "Task completed.", percent: int = 100):
+    def finish_workspace(self, result: str, status: str = "Задача выполнена.", percent: int = 100):
         self._active = False
         self._workspace_locked = True
-        self._title.setText("Task Complete")
-        self._status_lbl.setText(f"Status: {status}")
-        self._output_lbl.setText(f"Output: {result or 'Done.'}")
+        self._title.setText("Задача выполнена")
+        self._status_lbl.setText(f"Статус: {status}")
+        self._output_lbl.setText(f"Вывод: {result or 'Готово.'}")
         self._pct.setText(f"{max(0, min(100, percent))}%")
         self._bar.setValue(max(0, min(100, percent)))
-        self._foot.setText("Resetting workspace shortly...")
+        self._foot.setText("Сброс через несколько секунд...")
         self.show()
         QTimer.singleShot(5000, self.clear_workspace)
 
     def clear_workspace(self):
         self._active = False
         self._workspace_locked = False
-        self._title.setText("Ready")
-        self._command_lbl.setText("Command: waiting for input")
-        self._plan_lbl.setText("Plan: Voice Echo will generate a task plan after you send a command.")
-        self._status_lbl.setText("Status: Idle")
-        self._output_lbl.setText("Output: Ready to work.")
+        self._title.setText("Готово")
+        self._command_lbl.setText("Команда: ожидание ввода")
+        self._plan_lbl.setText("План: Voice Echo создаст план задачи после отправки команды.")
+        self._status_lbl.setText("Статус: Ожидание")
+        self._output_lbl.setText("Вывод: Готов к работе.")
         self._pct.setText("0%")
         self._bar.setValue(0)
-        self._foot.setText("Working on it...")
+        self._foot.setText("В процессе...")
         self.hide()
 
 
@@ -2223,7 +2223,7 @@ class EventCard(QFrame):
 
 
 class ArtifactCard(QFrame):
-    def __init__(self, title: str, file_type: str = "File", status: str = "Generated", path: str = "", parent=None):
+    def __init__(self, title: str, file_type: str = "Файл", status: str = "Сгенерировано", path: str = "", parent=None):
         super().__init__(parent)
         self._path = path.strip()
         self.setObjectName("ArtifactCard")
@@ -2266,7 +2266,7 @@ class ArtifactCard(QFrame):
         meta = QVBoxLayout()
         meta.setContentsMargins(0, 0, 0, 0)
         meta.setSpacing(2)
-        name_lbl = QLabel(title or "Generated file")
+        name_lbl = QLabel(title or "Сгенерированный файл")
         name_lbl.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
         name_lbl.setStyleSheet("color: #ffffff; background: transparent;")
         type_lbl = QLabel(f"{file_type} • {status}")
@@ -2280,7 +2280,7 @@ class ArtifactCard(QFrame):
         btn_row = QHBoxLayout()
         btn_row.setSpacing(8)
         self._open_btn = QPushButton("Open")
-        self._reveal_btn = QPushButton("Reveal Folder")
+        self._reveal_btn = QPushButton("Показать папку")
         self._open_btn.clicked.connect(self._open_file)
         self._reveal_btn.clicked.connect(self._reveal_file)
         if not self._path or not Path(self._path).exists():
@@ -2381,7 +2381,7 @@ class ChatBubble(QFrame):
             for attachment in attachments:
                 title = str(attachment.get("name") or attachment.get("title") or attachment.get("path") or "Attachment")
                 subtitle = str(attachment.get("path") or attachment.get("description") or "")
-                outer.addWidget(ArtifactCard(title, file_type=Path(title).suffix.lstrip(".").upper() or "File", status="Attached", path=subtitle or title))
+                outer.addWidget(ArtifactCard(title, file_type=Path(title).suffix.lstrip(".").upper() or "Файл", status="Прикреплено", path=subtitle or title))
 
         if animate and role == "assistant":
             self._start_typing_animation()
@@ -2526,10 +2526,10 @@ class ConversationFeed(QScrollArea):
         lay = QVBoxLayout(frame)
         lay.setContentsMargins(14, 12, 14, 12)
         lay.setSpacing(10)
-        title = QLabel("Try asking Voice Echo")
+        title = QLabel("Попробуйте спросить Voice Echo")
         title.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
         title.setStyleSheet("color: #ffffff; background: transparent;")
-        subtitle = QLabel("Create a presentation, analyze a screen, build a website, organize files, or run browser automation.")
+        subtitle = QLabel("Создать презентацию, проанализировать экран, собрать сайт, упорядочить файлы или запустить браузерную автоматизацию.")
         subtitle.setWordWrap(True)
         subtitle.setStyleSheet("color: rgba(255,255,255,0.64); background: transparent;")
         lay.addWidget(title)
@@ -2538,11 +2538,11 @@ class ConversationFeed(QScrollArea):
         grid.setSpacing(8)
         self._empty_widget_buttons = []
         for idx, suggestion in enumerate([
-            "Create Presentation",
-            "Analyze Screen",
-            "Build Website",
-            "Organize Downloads",
-            "Browser Automation",
+            "Создать презентацию",
+            "Проанализировать экран",
+            "Создать сайт",
+            "Упорядочить загрузки",
+            "Автоматизация браузера",
         ]):
             btn = QPushButton(suggestion)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -2596,31 +2596,31 @@ class ConversationFeed(QScrollArea):
 
     def _build_event_card(self, text: str, stamp: str, event_type: str | None = None) -> QWidget:
         low = (event_type or text or "").lower()
-        title = "System Event"
+        title = "Системное событие"
         icon = "●"
         accent = "#ffb300"
         if "discord" in low and "connected" in low:
-            title, icon, accent = "Discord Connected", "◉", "#5865F2"
+            title, icon, accent = "Discord подключён", "◉", "#5865F2"
         elif "presentation" in low:
-            title, icon, accent = "Presentation Generated", "▣", "#ff7a45"
+            title, icon, accent = "Презентация создана", "▣", "#ff7a45"
         elif "website" in low:
-            title, icon, accent = "Website Created", "⌂", "#37ff5f"
+            title, icon, accent = "Веб-сайт создан", "⌂", "#37ff5f"
         elif "spreadsheet" in low:
-            title, icon, accent = "Spreadsheet Generated", "▦", "#6fd6ff"
+            title, icon, accent = "Таблица создана", "▦", "#6fd6ff"
         elif "browser" in low:
-            title, icon, accent = "Browser Automation Completed", "↗", "#ffbf00"
+            title, icon, accent = "Автоматизация браузера завершена", "↗", "#ffbf00"
         elif "organ" in low and "file" in low:
-            title, icon, accent = "File Organization Completed", "🗂", "#37ff5f"
+            title, icon, accent = "Упорядочивание файлов завершено", "🗂", "#37ff5f"
         elif "screen" in low and "analysis" in low:
-            title, icon, accent = "Screen Analysis Completed", "◫", "#6fd6ff"
+            title, icon, accent = "Анализ экрана завершён", "◫", "#6fd6ff"
         return EventCard(title, text, stamp, icon=icon, accent=accent, parent=self)
 
     def _build_artifact_card(self, text: str, attachments: list[dict] | None = None, stamp: str = "") -> QWidget:
         attachment = (attachments or [{}])[0] if attachments else {}
         path = str(attachment.get("path") or attachment.get("file") or attachment.get("name") or "").strip()
-        title = str(attachment.get("name") or attachment.get("title") or Path(path).name or "Generated File").strip()
+        title = str(attachment.get("name") or attachment.get("title") or Path(path).name or "Сгенерированный файл").strip()
         suffix = Path(path or title).suffix.lstrip(".").upper() or (str(attachment.get("type") or "FILE")).upper()
-        status = "Ready"
+        status = "Готово"
         return ArtifactCard(title, file_type=suffix, status=status, path=path or title, parent=self)
 
     def scroll_to_bottom(self):
@@ -2692,7 +2692,7 @@ class TaskDock(QFrame):
 
         header = QHBoxLayout()
         header.setSpacing(8)
-        self._title = QLabel("TASK WORKSPACE")
+        self._title = QLabel("РАБОЧЕЕ ПРОСТРАНСТВО ЗАДАЧ")
         self._title.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
         self._title.setStyleSheet(f"color: {C.PRI}; background: transparent; letter-spacing: 1px;")
         header.addWidget(self._title)
@@ -2724,7 +2724,7 @@ class TaskDock(QFrame):
         self._task_card = TaskCard()
         lay.addWidget(self._task_card)
 
-        self._mini_hint = QLabel("TASK")
+        self._mini_hint = QLabel("ЗАДАЧА")
         self._mini_hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._mini_hint.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
         self._mini_hint.setStyleSheet(
@@ -2750,7 +2750,7 @@ class TaskDock(QFrame):
         self._content.setVisible(not self._collapsed)
         self._mini_hint.setVisible(self._collapsed)
         self._toggle_btn.setText(">" if self._collapsed else "<")
-        self._toggle_btn.setToolTip("Open task workspace" if self._collapsed else "Collapse task workspace")
+        self._toggle_btn.setToolTip("Открыть рабочее пространство задач" if self._collapsed else "Свернуть рабочее пространство задач")
         self._title.setVisible(not self._collapsed)
         self.setFixedWidth(self._collapsed_w if self._collapsed else self._expanded_w)
 
@@ -2762,7 +2762,7 @@ class TaskDock(QFrame):
     def update_workspace(self, **kwargs):
         self._task_card.update_workspace(**kwargs)
 
-    def finish_workspace(self, result: str, status: str = "Task completed.", percent: int = 100):
+    def finish_workspace(self, result: str, status: str = "Задача выполнена.", percent: int = 100):
         self._task_card.finish_workspace(result, status, percent)
 
     def clear_workspace(self):
@@ -2826,7 +2826,7 @@ class WorkspaceSidebar(QWidget):
 
         header = QHBoxLayout()
         header.setSpacing(10)
-        self._title = QLabel("CHAT + TASK WORKSPACE")
+        self._title = QLabel("ЧАТ + РАБОЧЕЕ ПРОСТРАНСТВО ЗАДАЧ")
         self._title.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
         self._title.setStyleSheet("color: #FFFFFF; background: transparent; letter-spacing: 1px;")
         header.addWidget(self._title)
@@ -2855,8 +2855,8 @@ class WorkspaceSidebar(QWidget):
 
         self._tab_row = QHBoxLayout()
         self._tab_row.setSpacing(8)
-        self._chat_tab_btn = self._make_tab_button("CHAT", True)
-        self._history_tab_btn = self._make_tab_button("HISTORY", False)
+        self._chat_tab_btn = self._make_tab_button("ЧАТ", True)
+        self._history_tab_btn = self._make_tab_button("ИСТОРИЯ", False)
         self._chat_tab_btn.clicked.connect(lambda: self._set_tab(0))
         self._history_tab_btn.clicked.connect(lambda: self._set_tab(1))
         self._tab_row.addWidget(self._chat_tab_btn)
@@ -2948,7 +2948,7 @@ class WorkspaceSidebar(QWidget):
         mem_lay = QVBoxLayout(self._memory_frame)
         mem_lay.setContentsMargins(12, 10, 12, 10)
         mem_lay.setSpacing(6)
-        mem_title = QLabel("Using Memory:")
+        mem_title = QLabel("Используется память:")
         mem_title.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
         mem_title.setStyleSheet("color: #FFFFFF; background: transparent;")
         self._memory_items = QLabel("")
@@ -2975,7 +2975,7 @@ class WorkspaceSidebar(QWidget):
         lay.setSpacing(10)
 
         self._history_search = QLineEdit()
-        self._history_search.setPlaceholderText("Search conversations...")
+        self._history_search.setPlaceholderText("Поиск диалогов...")
         self._history_search.setFont(QFont("Segoe UI", 10))
         self._history_search.setFixedHeight(38)
         self._history_search.setStyleSheet(
@@ -3052,7 +3052,7 @@ class WorkspaceSidebar(QWidget):
         groups = self._store.grouped_conversations(search)
         current = self._active_conversation_id
         if not groups:
-            empty = QLabel("No conversations yet.")
+            empty = QLabel("Пока нет диалогов.")
             empty.setStyleSheet("color: rgba(255,255,255,0.60); background: transparent;")
             self._history_layout.addWidget(empty)
             self._history_layout.addStretch(1)
@@ -3118,7 +3118,7 @@ class WorkspaceSidebar(QWidget):
         self._set_tab(0)
 
     def _new_conversation(self):
-        self._active_conversation_id = self._store.create_conversation("New Conversation")
+        self._active_conversation_id = self._store.create_conversation("Новый диалог")
         self._feed.clear_messages()
         self._hide_memory_banner()
         self._refresh_history()
@@ -3131,7 +3131,7 @@ class WorkspaceSidebar(QWidget):
         convo_id = self._ensure_active_conversation()
         convo = self._store.get_conversation(convo_id)
         current = (convo or {}).get("title") or "Conversation"
-        title, ok = QInputDialog.getText(self, "Rename Conversation", "Conversation title:", text=current)
+        title, ok = QInputDialog.getText(self, "Переименовать диалог", "Название диалога:", text=current)
         if ok and title.strip():
             self._store.rename_conversation(convo_id, title.strip())
             self._refresh_history()
@@ -3141,7 +3141,7 @@ class WorkspaceSidebar(QWidget):
         convo = self._store.get_conversation(convo_id)
         title = (convo or {}).get("title") or "conversation"
         default = str(BASE_DIR / "downloads" / f"{title}.json")
-        path, _ = QFileDialog.getSaveFileName(self, "Export Conversation", default, "JSON Files (*.json)")
+        path, _ = QFileDialog.getSaveFileName(self, "Экспорт диалога", default, "JSON-файлы (*.json)")
         if not path:
             return
         try:
@@ -3324,13 +3324,13 @@ class WorkspaceSidebar(QWidget):
         elif action == "finish":
             self._task_card.show()
             self._task_card.finish_workspace(
-                data.get("result") or data.get("output") or "Done.",
-                data.get("status") or "Task completed.",
+                data.get("result") or data.get("output") or "Готово.",
+                data.get("status") or "Задача выполнена.",
                 int(data.get("percent") or 100),
             )
             self.record_chat_event({
                 "role": "system",
-                "text": data.get("result") or data.get("output") or "Done.",
+                "text": data.get("result") or data.get("output") or "Готово.",
                 "source": data.get("source") or "local",
             })
             QTimer.singleShot(4000, self._task_card.hide)
@@ -3371,7 +3371,7 @@ class InlineChatWorkspace(QFrame):
 
         header = QHBoxLayout()
         header.setSpacing(8)
-        title = QLabel("CHAT + TASK WORKSPACE")
+        title = QLabel("ЧАТ + РАБОЧЕЕ ПРОСТРАНСТВО ЗАДАЧ")
         title.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
         title.setStyleSheet("color: #FFFFFF; background: transparent; letter-spacing: 1px;")
         header.addWidget(title)
@@ -3380,8 +3380,8 @@ class InlineChatWorkspace(QFrame):
 
         tabs = QHBoxLayout()
         tabs.setSpacing(8)
-        self._chat_btn = self._mk_tab("CHAT", True)
-        self._history_btn = self._mk_tab("HISTORY", False)
+        self._chat_btn = self._mk_tab("ЧАТ", True)
+        self._history_btn = self._mk_tab("ИСТОРИЯ", False)
         self._chat_btn.clicked.connect(lambda: self._set_tab(0))
         self._history_btn.clicked.connect(lambda: self._set_tab(1))
         tabs.addWidget(self._chat_btn)
@@ -3453,7 +3453,7 @@ class InlineChatWorkspace(QFrame):
 
         today_bar = QHBoxLayout()
         today_bar.addStretch()
-        today_pill = QLabel("Today")
+        today_pill = QLabel("Сегодня")
         today_pill.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
         today_pill.setStyleSheet("""
             QLabel {
@@ -3484,7 +3484,7 @@ class InlineChatWorkspace(QFrame):
         mlay = QVBoxLayout(self._memory_frame)
         mlay.setContentsMargins(12, 10, 12, 10)
         mlay.setSpacing(6)
-        title = QLabel("Using Memory:")
+        title = QLabel("Используется память:")
         title.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
         title.setStyleSheet("color: #FFFFFF; background: transparent;")
         self._memory_lbl = QLabel("")
@@ -3499,7 +3499,7 @@ class InlineChatWorkspace(QFrame):
 
         footer = QHBoxLayout()
         footer.setContentsMargins(4, 4, 4, 4)
-        self._footer_status = QLabel("Voice Echo is listening...")
+        self._footer_status = QLabel("Voice Echo слушает...")
         self._footer_status.setFont(QFont("Segoe UI", 9))
         self._footer_status.setStyleSheet("color: rgba(255, 255, 255, 0.70); background: transparent;")
         footer.addWidget(self._footer_status)
@@ -3520,7 +3520,7 @@ class InlineChatWorkspace(QFrame):
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(10)
         self._search = QLineEdit()
-        self._search.setPlaceholderText("Search conversations...")
+        self._search.setPlaceholderText("Поиск диалогов...")
         self._search.setFont(QFont("Segoe UI", 10))
         self._search.setFixedHeight(38)
         self._search.setStyleSheet("QLineEdit { background: rgba(10,11,14,205); color: #FFFFFF; border: 1px solid rgba(255, 179, 0,100); border-radius: 12px; padding: 0 12px; }")
@@ -3559,7 +3559,7 @@ class InlineChatWorkspace(QFrame):
         self._clear_layout(self._history_layout)
         groups = self._store.grouped_conversations(search)
         if not groups:
-            empty = QLabel("No conversations yet.")
+            empty = QLabel("Пока нет диалогов.")
             empty.setStyleSheet("color: rgba(255,255,255,0.60); background: transparent;")
             self._history_layout.addWidget(empty)
             self._history_layout.addStretch(1)
@@ -3670,13 +3670,13 @@ class InlineChatWorkspace(QFrame):
                 self.record_chat_event({"role": "system", "text": text, "source": data.get("source") or "local"})
         elif action == "finish":
             self._task_card.finish_workspace(
-                data.get("result") or data.get("output") or "Done.",
-                data.get("status") or "Task completed.",
+                data.get("result") or data.get("output") or "Готово.",
+                data.get("status") or "Задача выполнена.",
                 int(data.get("percent") or 100),
             )
             self.record_chat_event({
                 "role": "system",
-                "text": data.get("result") or data.get("output") or "Done.",
+                "text": data.get("result") or data.get("output") or "Готово.",
                 "source": data.get("source") or "local",
             })
             QTimer.singleShot(4000, self._task_card.hide)
@@ -3736,12 +3736,12 @@ class LauncherControlPanel(QDialog):
         lay.setContentsMargins(18, 16, 18, 16)
         lay.setSpacing(10)
 
-        title = QLabel("VOICE ECHO CONTROL")
+        title = QLabel("УПРАВЛЕНИЕ VOICE ECHO")
         title.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
         title.setStyleSheet("color: #FFFFFF; background: transparent; letter-spacing: 1px;")
         lay.addWidget(title)
 
-        sub = QLabel("Desktop launcher controls")
+        sub = QLabel("Управление настольным лаунчером")
         sub.setFont(QFont("Segoe UI", 9))
         sub.setStyleSheet("color: rgba(255,255,255,0.65); background: transparent;")
         lay.addWidget(sub)
@@ -3773,15 +3773,15 @@ class LauncherControlPanel(QDialog):
             """)
             return btn
 
-        self._open_btn = mk_btn("Open Workspace")
-        self._close_btn = mk_btn("Close Workspace")
-        self._startup_btn = mk_btn("Show Workspace On Startup", checkable=True, checked=bool(startup_workspace))
-        self._show_icon_btn = mk_btn("Show Floating Icon")
-        self._hide_icon_btn = mk_btn("Hide Floating Icon")
-        self._restart_btn = mk_btn("Restart Voice Echo")
-        self._quit_btn = mk_btn("Quit Voice Echo")
-        self._open_app_btn = mk_btn("Open App")
-        self._open_dev_btn = mk_btn("Open Developer Mode")
+        self._open_btn = mk_btn("Открыть рабочее пространство")
+        self._close_btn = mk_btn("Закрыть рабочее пространство")
+        self._startup_btn = mk_btn("Показывать рабочее пространство при запуске", checkable=True, checked=bool(startup_workspace))
+        self._show_icon_btn = mk_btn("Показывать плавающую иконку")
+        self._hide_icon_btn = mk_btn("Скрыть плавающую иконку")
+        self._restart_btn = mk_btn("Перезапустить Voice Echo")
+        self._quit_btn = mk_btn("Выйти из Voice Echo")
+        self._open_app_btn = mk_btn("Открыть приложение")
+        self._open_dev_btn = mk_btn("Открыть режим разработчика")
 
         self._open_btn.clicked.connect(lambda: self._invoke(self._on_open))
         self._close_btn.clicked.connect(lambda: self._invoke(self._on_close))
@@ -3822,15 +3822,15 @@ class LauncherControlPanel(QDialog):
         flay = QVBoxLayout(frame)
         flay.setContentsMargins(18, 16, 18, 16)
         flay.setSpacing(10)
-        lbl = QLabel("Hide Voice Echo icon?")
+        lbl = QLabel("Скрыть иконку Voice Echo?")
         lbl.setStyleSheet("color: #FFFFFF; background: transparent; font: 700 11pt 'Segoe UI';")
-        sub = QLabel("You can restore it from the system tray.")
+        sub = QLabel("Вы сможете вернуть её из системного трея.")
         sub.setStyleSheet("color: rgba(255,255,255,0.65); background: transparent;")
         flay.addWidget(lbl)
         flay.addWidget(sub)
         row = QHBoxLayout()
         cancel = QPushButton("Cancel")
-        hide = QPushButton("Hide")
+        hide = QPushButton("Скрыть")
         for btn in (cancel, hide):
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setMinimumHeight(34)
@@ -4106,15 +4106,15 @@ class FileDropZone(QWidget):
 
     def _browse(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, "Select a file for Voice Echo", str(Path.home()),
-            "All Files (*.*);;"
-            "Images (*.jpg *.jpeg *.png *.gif *.webp *.bmp *.svg);;"
-            "Documents (*.pdf *.docx *.txt *.md *.pptx);;"
-            "Data (*.csv *.xlsx *.json *.xml);;"
-            "Code (*.py *.js *.ts *.html *.css *.java *.cpp *.go);;"
-            "Audio (*.mp3 *.wav *.ogg *.m4a *.aac *.flac);;"
-            "Video (*.mp4 *.avi *.mov *.mkv *.wmv *.webm);;"
-            "Archives (*.zip *.rar *.tar *.gz *.7z)",
+            self, "Выберите файл для Voice Echo", str(Path.home()),
+            "Все файлы (*.*);;"
+            "Изображения (*.jpg *.jpeg *.png *.gif *.webp *.bmp *.svg);;"
+            "Документы (*.pdf *.docx *.txt *.md *.pptx);;"
+            "Данные (*.csv *.xlsx *.json *.xml);;"
+            "Код (*.py *.js *.ts *.html *.css *.java *.cpp *.go);;"
+            "Аудио (*.mp3 *.wav *.ogg *.m4a *.aac *.flac);;"
+            "Видео (*.mp4 *.avi *.mov *.mkv *.wmv *.webm);;"
+            "Архивы (*.zip *.rar *.tar *.gz *.7z)",
         )
         if path:
             self._set_file(path)
@@ -4167,11 +4167,11 @@ class _DropCanvas(QWidget):
         p.setFont(QFont("Courier New", 8))
         p.setPen(QPen(qcol(C.PRI_DIM if not hover else C.TEXT), 1))
         p.drawText(QRectF(0, cy + 8, W, 16), Qt.AlignmentFlag.AlignCenter,
-                   "Drop file here  or  Click to Browse")
+                   "Перетащите файл сюда или нажмите, чтобы выбрать")
         p.setFont(QFont("Courier New", 7))
         p.setPen(QPen(qcol("#1a4a5a"), 1))
         p.drawText(QRectF(0, cy + 24, W, 14), Qt.AlignmentFlag.AlignCenter,
-                   "Images · Video · Audio · PDF · Docs · Code · Data")
+                   "Изображения · Видео · Аудио · PDF · Документы · Код · Данные")
 
     def _paint_drag_over(self, p, W, H):
         cx, cy = W / 2, H / 2
@@ -4180,7 +4180,7 @@ class _DropCanvas(QWidget):
         p.drawText(QRectF(0, cy - 24, W, 32), Qt.AlignmentFlag.AlignCenter, "⬇")
         p.setFont(QFont("Courier New", 8, QFont.Weight.Bold))
         p.setPen(QPen(qcol(C.PRI), 1))
-        p.drawText(QRectF(0, cy + 12, W, 16), Qt.AlignmentFlag.AlignCenter, "Release to load")
+        p.drawText(QRectF(0, cy + 12, W, 16), Qt.AlignmentFlag.AlignCenter, "Отпустите для загрузки")
 
     def _paint_file(self, p, W, H):
         path = Path(self._z._current_file)
@@ -4324,14 +4324,14 @@ class SetupOverlay(QWidget):
 
     def _start_stage1(self):
         self._s1_lines = [
-            ("Scanning local configuration...", "#ffb300", False),
-            ("✓  " + self._detected.capitalize() + " detected", "#37ff5f", False),
-            ("✓  GPU acceleration enabled", "#37ff5f", False),
-            ("✓  Network online", "#37ff5f", False),
-            ("Looking for AI provider...", "#ffb300", False),
-            ("✕  No provider configured", "#ff3b30", True),
+            ("Чтение локальной конфигурации...", "#ffb300", False),
+            ("✓  обнаружено: " + self._detected.capitalize(), "#37ff5f", False),
+            ("✓  GPU-ускорение включено", "#37ff5f", False),
+            ("✓  Сеть онлайн", "#37ff5f", False),
+            ("Поиск ИИ-провайдера...", "#ffb300", False),
+            ("✕  Провайдер не настроен", "#ff3b30", True),
             ("", "", False),
-            ("One final step is required\nbefore I can think.", "#ffffff", True),
+            ("Остался последний шаг,\nчтобы я мог мыслить.", "#ffffff", True),
         ]
         self._s1_idx = 0
         self._s1_text_parts = []
@@ -4350,12 +4350,12 @@ class SetupOverlay(QWidget):
 
             if is_special and "✕" in line_text:
                 self._call_js("if(window.losePower) window.losePower();")
-            elif is_special and "final step" in line_text:
+            elif is_special and ("final step" in line_text or "последн" in line_text):
                 self._call_js("if(window.triggerPulse) window.triggerPulse();")
 
-            size = "14px" if is_special and "final" in line_text else "12px"
+            size = "14px" if is_special and ("final" in line_text or "последн" in line_text) else "12px"
             weight = "bold" if is_special else "normal"
-            spacing = "margin-top: 16px;" if is_special and "final" in line_text else "margin-top: 4px;"
+            spacing = "margin-top: 16px;" if is_special and ("final" in line_text or "последн" in line_text) else "margin-top: 4px;"
 
             self._s1_text_parts.append(
                 f'<div style="color:{color}; font-size:{size}; font-weight:{weight}; font-family:Consolas; {spacing}">{line_text}</div>'
@@ -4377,13 +4377,13 @@ class SetupOverlay(QWidget):
         lay.setContentsMargins(0, 0, 0, 0)
         lay.addStretch(2)
 
-        title = QLabel("DEFINE YOUR ASSISTANT")
+        title = QLabel("НАСТРОЙКА ПОМОЩНИКА")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
         title.setStyleSheet("color: rgba(255,255,255,0.7); background: transparent; letter-spacing: 2px;")
         lay.addWidget(title)
         
-        sub = QLabel("Every assistant needs an identity.")
+        sub = QLabel("Каждому помощнику нужна личность.")
         sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
         sub.setFont(QFont("Segoe UI", 10))
         sub.setStyleSheet("color: rgba(255,255,255,0.4); background: transparent;")
@@ -4393,14 +4393,14 @@ class SetupOverlay(QWidget):
         form_lay = QGridLayout()
         form_lay.setSpacing(16)
         
-        lbl_ast = QLabel("Assistant Name")
+        lbl_ast = QLabel("Имя помощника")
         lbl_ast.setStyleSheet("color: #ffaa30;")
         self._inp_ast = QLineEdit(identity.get_assistant_name())
         self._inp_ast.setStyleSheet("background: rgba(255,255,255,0.1); color: #fff; padding: 6px; border-radius: 4px;")
         form_lay.addWidget(lbl_ast, 0, 0)
         form_lay.addWidget(self._inp_ast, 0, 1)
 
-        lbl_app = QLabel("Application Name")
+        lbl_app = QLabel("Имя приложения")
         lbl_app.setStyleSheet("color: #ffaa30;")
         self._inp_app = QLineEdit(identity.get_application_name())
         self._inp_app.setStyleSheet("background: rgba(255,255,255,0.1); color: #fff; padding: 6px; border-radius: 4px;")
@@ -4412,7 +4412,7 @@ class SetupOverlay(QWidget):
         container.setLayout(form_lay)
         lay.addWidget(container, 0, Qt.AlignmentFlag.AlignCenter)
 
-        btn = QPushButton("CONTINUE →")
+        btn = QPushButton("ДАЛЕЕ →")
         btn.setFixedSize(160, 40)
         btn.setStyleSheet("background: rgba(255, 170, 48, 0.2); color: #ffaa30; border: 1px solid #ffaa30; border-radius: 20px;")
         btn.clicked.connect(self._save_identity_and_next)
@@ -4434,13 +4434,13 @@ class SetupOverlay(QWidget):
         lay.setContentsMargins(0, 0, 0, 0)
         lay.addStretch(2)
 
-        title = QLabel("WHO AM I ASSISTING?")
+        title = QLabel("КОМУ Я ПОМОГАЮ?")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
         title.setStyleSheet("color: rgba(255,255,255,0.7); background: transparent; letter-spacing: 2px;")
         lay.addWidget(title)
         
-        sub = QLabel("Tell me a little about yourself so I can work better with you.")
+        sub = QLabel("Расскажите немного о себе, чтобы я мог работать с вами лучше.")
         sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
         sub.setFont(QFont("Segoe UI", 10))
         sub.setStyleSheet("color: rgba(255,255,255,0.4); background: transparent;")
@@ -4450,17 +4450,17 @@ class SetupOverlay(QWidget):
         form_lay = QGridLayout()
         form_lay.setSpacing(16)
         
-        lbl_own = QLabel("Your Name")
+        lbl_own = QLabel("Ваше имя")
         lbl_own.setStyleSheet("color: #ffaa30;")
         self._inp_own = QLineEdit(identity.get_owner_name())
         self._inp_own.setStyleSheet("background: rgba(255,255,255,0.1); color: #fff; padding: 6px; border-radius: 4px;")
         form_lay.addWidget(lbl_own, 0, 0)
         form_lay.addWidget(self._inp_own, 0, 1)
 
-        lbl_role = QLabel("Your Role")
+        lbl_role = QLabel("Ваша роль")
         lbl_role.setStyleSheet("color: #ffaa30;")
         self._inp_role = QLineEdit(identity.get_owner_role())
-        self._inp_role.setPlaceholderText("e.g. Student, Developer")
+        self._inp_role.setPlaceholderText("напр. Студент, Разработчик")
         self._inp_role.setStyleSheet("background: rgba(255,255,255,0.1); color: #fff; padding: 6px; border-radius: 4px;")
         form_lay.addWidget(lbl_role, 1, 0)
         form_lay.addWidget(self._inp_role, 1, 1)
@@ -4470,7 +4470,7 @@ class SetupOverlay(QWidget):
         container.setLayout(form_lay)
         lay.addWidget(container, 0, Qt.AlignmentFlag.AlignCenter)
 
-        btn = QPushButton("CONTINUE →")
+        btn = QPushButton("ДАЛЕЕ →")
         btn.setFixedSize(160, 40)
         btn.setStyleSheet("background: rgba(255, 170, 48, 0.2); color: #ffaa30; border: 1px solid #ffaa30; border-radius: 20px;")
         btn.clicked.connect(self._save_owner_and_next)
@@ -4492,7 +4492,7 @@ class SetupOverlay(QWidget):
         lay.setContentsMargins(0, 0, 0, 0)
         lay.addStretch(2)
 
-        title = QLabel("HOW SHOULD I ASSIST YOU?")
+        title = QLabel("КАК МНЕ ПОМОГАТЬ ВАМ?")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
         title.setStyleSheet("color: rgba(255,255,255,0.7); background: transparent; letter-spacing: 2px;")
@@ -4506,7 +4506,7 @@ class SetupOverlay(QWidget):
         self._combo_mode.setFixedWidth(300)
         lay.addWidget(self._combo_mode, 0, Qt.AlignmentFlag.AlignCenter)
         
-        sub = QLabel("Custom Instructions (Optional)")
+        sub = QLabel("Свои инструкции (необязательно)")
         sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
         sub.setStyleSheet("color: #ffaa30; margin-top: 10px;")
         lay.addWidget(sub)
@@ -4517,7 +4517,7 @@ class SetupOverlay(QWidget):
         lay.addWidget(self._inp_custom, 0, Qt.AlignmentFlag.AlignCenter)
 
         lay.addSpacing(20)
-        btn = QPushButton("CONTINUE →")
+        btn = QPushButton("ДАЛЕЕ →")
         btn.setFixedSize(160, 40)
         btn.setStyleSheet("background: rgba(255, 170, 48, 0.2); color: #ffaa30; border: 1px solid #ffaa30; border-radius: 20px;")
         btn.clicked.connect(self._save_behavior_and_next)
@@ -4539,14 +4539,14 @@ class SetupOverlay(QWidget):
         lay.setContentsMargins(0, 0, 0, 0)
         lay.addStretch(2)
 
-        title = QLabel("WHO USES THIS COMPUTER?")
+        title = QLabel("КТО ИСПОЛЬЗУЕТ ЭТОТ КОМПЬЮТЕР?")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
         title.setStyleSheet("color: rgba(255,255,255,0.7); background: transparent; letter-spacing: 2px;")
         lay.addWidget(title)
         lay.addSpacing(20)
         
-        btn_personal = QPushButton("THIS IS MY PERSONAL COMPUTER")
+        btn_personal = QPushButton("ЭТО МОЙ ЛИЧНЫЙ КОМПЬЮТЕР")
         btn_personal.setFixedSize(300, 50)
         btn_personal.setStyleSheet("background: rgba(255, 170, 48, 0.1); color: #ffaa30; border: 1px solid #ffaa30; border-radius: 8px;")
         btn_personal.clicked.connect(lambda: self._save_shared_and_next(False))
@@ -4554,7 +4554,7 @@ class SetupOverlay(QWidget):
         
         lay.addSpacing(10)
         
-        btn_shared = QPushButton("THIS IS A SHARED COMPUTER")
+        btn_shared = QPushButton("ЭТО ОБЩИЙ КОМПЬЮТЕР")
         btn_shared.setFixedSize(300, 50)
         btn_shared.setStyleSheet("background: rgba(255,255,255, 0.05); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px;")
         btn_shared.clicked.connect(lambda: self._save_shared_and_next(True))
@@ -4582,7 +4582,7 @@ class SetupOverlay(QWidget):
 
         lay.addStretch(3)
 
-        title = QLabel("SELECT PRIMARY INTELLIGENCE")
+        title = QLabel("ВЫБЕРИТЕ ОСНОВНОЙ ИНТЕЛЛЕКТ")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
         title.setStyleSheet("color: rgba(255,255,255,0.5); background: transparent; border: none; letter-spacing: 4px;")
@@ -4617,19 +4617,19 @@ class SetupOverlay(QWidget):
         gt.setStyleSheet("color: #ffb300; background: transparent; border: none;")
         glay.addWidget(gt)
 
-        gs = QLabel("★★★★★  Recommended")
+        gs = QLabel("★★★★★  Рекомендуется")
         gs.setFont(QFont("Segoe UI", 9))
         gs.setStyleSheet("color: rgba(255,179,0,0.7); background: transparent; border: none;")
         glay.addWidget(gs)
 
-        gd = QLabel("Primary Intelligence")
+        gd = QLabel("Основной интеллект")
         gd.setFont(QFont("Segoe UI", 9))
         gd.setStyleSheet("color: rgba(255,255,255,0.35); background: transparent; border: none;")
         glay.addWidget(gd)
 
         glay.addStretch()
 
-        gc = QLabel("Connect →")
+        gc = QLabel("Подключить →")
         gc.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
         gc.setStyleSheet("color: #ffb300; background: transparent; border: none;")
         glay.addWidget(gc)
@@ -4667,19 +4667,19 @@ class SetupOverlay(QWidget):
         ot.setStyleSheet("color: rgba(255,255,255,0.8); background: transparent; border: none;")
         olay.addWidget(ot)
 
-        od = QLabel("Multiple Models")
+        od = QLabel("Несколько моделей")
         od.setFont(QFont("Segoe UI", 9))
         od.setStyleSheet("color: rgba(255,255,255,0.3); background: transparent; border: none;")
         olay.addWidget(od)
 
-        od2 = QLabel("Optional · Secondary")
+        od2 = QLabel("Опционально · Вторичный")
         od2.setFont(QFont("Segoe UI", 9))
         od2.setStyleSheet("color: rgba(255,255,255,0.2); background: transparent; border: none;")
         olay.addWidget(od2)
 
         olay.addStretch()
 
-        oc = QLabel("Configure Later →")
+        oc = QLabel("Настроить позже →")
         oc.setFont(QFont("Segoe UI", 11))
         oc.setStyleSheet("color: rgba(255,255,255,0.35); background: transparent; border: none;")
         olay.addWidget(oc)
@@ -4722,7 +4722,7 @@ class SetupOverlay(QWidget):
         self._s3_title.setStyleSheet("color: #ffb300; background: transparent; border: none;")
         blay.addWidget(self._s3_title)
 
-        self._s3_sub = QLabel("Paste your Neural Key")
+        self._s3_sub = QLabel("Вставьте ваш Neural Key")
         self._s3_sub.setFont(QFont("Segoe UI", 10))
         self._s3_sub.setStyleSheet("color: rgba(255,255,255,0.4); background: transparent; border: none;")
         blay.addWidget(self._s3_sub)
@@ -4733,7 +4733,7 @@ class SetupOverlay(QWidget):
         input_row = QHBoxLayout()
         self._key_input = QLineEdit()
         self._key_input.setEchoMode(QLineEdit.EchoMode.Password)
-        self._key_input.setPlaceholderText("Paste API key here...")
+        self._key_input.setPlaceholderText("Вставьте API-ключ сюда...")
         self._key_input.setFont(QFont("Consolas", 12))
         self._key_input.setFixedHeight(48)
         self._key_input.setStyleSheet("""
@@ -4777,7 +4777,7 @@ class SetupOverlay(QWidget):
 
         status_row.addStretch()
 
-        hint = QLabel("<a href='https://aistudio.google.com/app/apikey' style='color: rgba(255,179,0,0.5); text-decoration: none; font-size: 10px;'>Get API Key →</a>")
+        hint = QLabel("<a href='https://aistudio.google.com/app/apikey' style='color: rgba(255,179,0,0.5); text-decoration: none; font-size: 10px;'>Получить API-ключ →</a>")
         hint.setOpenExternalLinks(True)
         hint.setStyleSheet("background: transparent; border: none;")
         status_row.addWidget(hint)
@@ -4796,10 +4796,10 @@ class SetupOverlay(QWidget):
         intro_lay.setSpacing(12)
 
         self._intro_lines = []
-        for txt in ["Identity confirmed.", "Hello.", "I'm Voice Echo.", "Ready whenever you are."]:
+        for txt in ["Личность подтверждена.", "Здравствуйте.", "Я Voice Echo.", "Готов к работе, когда вы будете готовы."]:
             lbl = QLabel(txt)
             lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            if txt == "I'm Voice Echo.":
+            if txt == "Я Voice Echo.":
                 lbl.setFont(QFont("Segoe UI", 24, QFont.Weight.Bold))
                 lbl.setStyleSheet("color: #ffb300; background: transparent; border: none;")
             else:
@@ -4811,7 +4811,7 @@ class SetupOverlay(QWidget):
 
         intro_lay.addSpacing(20)
 
-        self._launch_btn = QPushButton("Launch Voice Echo →")
+        self._launch_btn = QPushButton("Запустить Voice Echo →")
         self._launch_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._launch_btn.setFixedSize(220, 48)
         self._launch_btn.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
@@ -4837,7 +4837,7 @@ class SetupOverlay(QWidget):
         if len(text) > 10 and not hasattr(self, "_authenticating"):
             self._authenticating = True
             self._key_input.setReadOnly(True)
-            self._s3_sub.setText("Authenticating...")
+            self._s3_sub.setText("Авторизация...")
             self._s3_sub.setStyleSheet("color: #ffb300; background: transparent; border: none;")
             self._auth_step = 0
             self._auth_timer = QTimer(self)
@@ -4863,7 +4863,7 @@ class SetupOverlay(QWidget):
             self._s3_status.setStyleSheet("color: #37ff5f; background: transparent; border: none;")
             self._s3_title.setText("✓ Google Gemini")
             self._s3_title.setStyleSheet("color: #37ff5f; background: transparent; border: none;")
-            self._s3_sub.setText("Gemini 2.5 Pro  ·  Ready")
+            self._s3_sub.setText("Gemini 2.5 Pro  ·  Готов")
             self._s3_sub.setStyleSheet("color: rgba(55,255,95,0.6); background: transparent; border: none;")
             self._key_input.setStyleSheet("""
                 QLineEdit {
@@ -4903,12 +4903,12 @@ class SetupOverlay(QWidget):
         prom_lay.setContentsMargins(32, 28, 32, 24)
         prom_lay.setSpacing(8)
 
-        q_title = QLabel("Secondary Intelligence")
+        q_title = QLabel("Вторичный интеллект")
         q_title.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
         q_title.setStyleSheet("color: #ffffff; background: transparent; border: none;")
         prom_lay.addWidget(q_title)
 
-        q_sub = QLabel("Would you like to configure OpenRouter as well?\nThis is optional and can be done later in Settings.")
+        q_sub = QLabel("Настроить OpenRouter сейчас?\nЭто необязательно — сделать это можно позже в настройках.")
         q_sub.setFont(QFont("Segoe UI", 10))
         q_sub.setWordWrap(True)
         q_sub.setStyleSheet("color: rgba(255,255,255,0.4); background: transparent; border: none;")
@@ -4919,7 +4919,7 @@ class SetupOverlay(QWidget):
         btn_row = QHBoxLayout()
         btn_row.setSpacing(12)
 
-        skip_btn = QPushButton("Skip")
+        skip_btn = QPushButton("Пропустить")
         skip_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         skip_btn.setFixedHeight(42)
         skip_btn.setFont(QFont("Segoe UI", 11))
@@ -4939,7 +4939,7 @@ class SetupOverlay(QWidget):
         skip_btn.clicked.connect(self._skip_or)
         btn_row.addWidget(skip_btn)
 
-        yes_btn = QPushButton("Configure OpenRouter")
+        yes_btn = QPushButton("Настроить OpenRouter")
         yes_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         yes_btn.setFixedHeight(42)
         yes_btn.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
@@ -4993,7 +4993,7 @@ class SetupOverlay(QWidget):
         or_title.setStyleSheet("color: rgba(255,255,255,0.8); background: transparent; border: none;")
         or_blay.addWidget(or_title)
 
-        or_sub = QLabel("Paste your OpenRouter API Key")
+        or_sub = QLabel("Вставьте ваш OpenRouter API-ключ")
         or_sub.setFont(QFont("Segoe UI", 10))
         or_sub.setStyleSheet("color: rgba(255,255,255,0.4); background: transparent; border: none;")
         or_blay.addWidget(or_sub)
@@ -5024,7 +5024,7 @@ class SetupOverlay(QWidget):
         or_blay.addStretch()
 
         or_btn_row = QHBoxLayout()
-        or_skip = QPushButton("Skip")
+        or_skip = QPushButton("Пропустить")
         or_skip.setCursor(Qt.CursorShape.PointingHandCursor)
         or_skip.setFixedHeight(42)
         or_skip.setFont(QFont("Segoe UI", 11))
@@ -5035,7 +5035,7 @@ class SetupOverlay(QWidget):
         or_skip.clicked.connect(self._skip_or)
         or_btn_row.addWidget(or_skip)
 
-        or_save = QPushButton("Save & Continue")
+        or_save = QPushButton("Сохранить и продолжить")
         or_save.setCursor(Qt.CursorShape.PointingHandCursor)
         or_save.setFixedHeight(42)
         or_save.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
@@ -5082,19 +5082,19 @@ class SetupOverlay(QWidget):
         c_blay.setContentsMargins(32, 28, 32, 28)
         c_blay.setSpacing(6)
 
-        c_title = QLabel("CHOOSE AESTHETIC")
+        c_title = QLabel("ВЫБЕРИТЕ ОФОРМЛЕНИЕ")
         c_title.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
         c_title.setStyleSheet("color: rgba(255,255,255,0.8); background: transparent; border: none;")
         c_blay.addWidget(c_title)
 
-        c_sub = QLabel("Select your preferred neural color palette.")
+        c_sub = QLabel("Выберите предпочитаемую нейронную цветовую палитру.")
         c_sub.setFont(QFont("Segoe UI", 10))
         c_sub.setStyleSheet("color: rgba(255,255,255,0.4); background: transparent; border: none;")
         c_blay.addWidget(c_sub)
 
         c_blay.addSpacing(12)
         
-        self._setup_color_btn = QPushButton("Pick Custom Color")
+        self._setup_color_btn = QPushButton("Выбрать свой цвет")
         self._setup_color_btn.setFixedHeight(48)
         self._setup_color_btn.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
         self._setup_color_btn.setStyleSheet(f"""
@@ -5112,7 +5112,7 @@ class SetupOverlay(QWidget):
 
         c_btn_row = QHBoxLayout()
         c_btn_row.addStretch()
-        c_continue = QPushButton("Continue →")
+        c_continue = QPushButton("Далее →")
         c_continue.setCursor(Qt.CursorShape.PointingHandCursor)
         c_continue.setFixedHeight(42)
         c_continue.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
@@ -5137,7 +5137,7 @@ class SetupOverlay(QWidget):
         lay.insertWidget(lay.count() - 1, self._color_box, 0, Qt.AlignmentFlag.AlignCenter)
         
     def _pick_setup_color(self):
-        color = QColorDialog.getColor(QColor(C.PRI), self, "Select App Theme Color")
+        color = QColorDialog.getColor(QColor(C.PRI), self, "Выберите цвет темы приложения")
         if color.isValid():
             hex_col = color.name()
             self._setup_color_btn.setStyleSheet(f"QPushButton {{ background: {hex_col}; color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; }}")
@@ -5213,7 +5213,7 @@ class SetupOverlay(QWidget):
         c4lay.setContentsMargins(30, 24, 30, 24)
         c4lay.setSpacing(8)
 
-        self._s4_title = QLabel("ESTABLISHING NEURAL LINK")
+        self._s4_title = QLabel("УСТАНОВКА НЕЙРОННОЙ СВЯЗИ")
         self._s4_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._s4_title.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
         self._s4_title.setStyleSheet("color: rgba(255,179,0,0.7); background: transparent; border: none; letter-spacing: 3px;")
@@ -5221,7 +5221,7 @@ class SetupOverlay(QWidget):
         c4lay.addSpacing(12)
 
         self._module_labels = {}
-        for mod in ["MEMORY", "VOICE", "VISION", "AUTOMATION", "REASONING"]:
+        for mod in ["ПАМЯТЬ", "ГОЛОС", "ЗРЕНИЕ", "АВТОМАТИЗАЦИЯ", "РАССУЖДЕНИЕ"]:
             row = QHBoxLayout()
             name_lbl = QLabel(mod)
             name_lbl.setFont(QFont("Consolas", 11))
@@ -5247,7 +5247,7 @@ class SetupOverlay(QWidget):
         self._call_js("if(window.setReactorSpeed) window.setReactorSpeed(5.0);")
 
         self._ignite_step = 0
-        self._module_order = ["MEMORY", "VOICE", "VISION", "AUTOMATION", "REASONING"]
+        self._module_order = ["ПАМЯТЬ", "ГОЛОС", "ЗРЕНИЕ", "АВТОМАТИЗАЦИЯ", "РАССУЖДЕНИЕ"]
         self._ignite_timer = QTimer(self)
         self._ignite_timer.timeout.connect(self._ignite_tick)
         self._ignite_timer.start(600)
@@ -5264,7 +5264,7 @@ class SetupOverlay(QWidget):
             self._ignite_step += 1
         else:
             self._ignite_timer.stop()
-            self._s4_title.setText("NEURAL LINK ESTABLISHED")
+            self._s4_title.setText("НЕЙРОННАЯ СВЯЗЬ УСТАНОВЛЕНА")
             self._s4_title.setStyleSheet("color: #37ff5f; background: transparent; border: none; letter-spacing: 3px; font-weight: bold;")
             self._s4_container.setStyleSheet("""
                 QFrame {
@@ -5343,7 +5343,7 @@ class CommandBar(QWidget):
 
         # Input field
         self._input = QLineEdit()
-        self._input.setPlaceholderText("Tell Voice Echo what to do...")
+        self._input.setPlaceholderText("Скажите Voice Echo, что нужно сделать...")
         self._input.setFont(QFont("Segoe UI", 9))
         self._input.setFixedHeight(32)
         self._input.setStyleSheet(f"""
@@ -5381,7 +5381,7 @@ class CommandBar(QWidget):
         attach = QPushButton()
         attach.setFixedSize(28, 28)
         attach.setCursor(Qt.CursorShape.PointingHandCursor)
-        attach.setToolTip("Attach file")
+        attach.setToolTip("Прикрепить файл")
         attach.setIcon(QIcon(_icon_pixmap("attach", 13)))
         attach.setIconSize(QSize(13, 13))
         attach.setStyleSheet(btn_style_ghost)
@@ -5391,7 +5391,7 @@ class CommandBar(QWidget):
         mic = QPushButton()
         mic.setFixedSize(28, 28)
         mic.setCursor(Qt.CursorShape.PointingHandCursor)
-        mic.setToolTip("Voice input")
+        mic.setToolTip("Голосовой ввод")
         mic.setIcon(QIcon(_icon_pixmap("mic", 13)))
         mic.setIconSize(QSize(13, 13))
         mic.setStyleSheet(btn_style_ghost)
@@ -5401,7 +5401,7 @@ class CommandBar(QWidget):
         dev = QPushButton("DEV")
         dev.setFixedSize(40, 28)
         dev.setCursor(Qt.CursorShape.PointingHandCursor)
-        dev.setToolTip("Developer mode")
+        dev.setToolTip("Режим разработчика")
         dev.setStyleSheet(f"""
             QPushButton {{
                 background: rgba(255, 179, 0, 0.06);
@@ -5424,7 +5424,7 @@ class CommandBar(QWidget):
         send = QPushButton()
         send.setFixedSize(32, 32)
         send.setCursor(Qt.CursorShape.PointingHandCursor)
-        send.setToolTip("Send")
+        send.setToolTip("Отправить")
         send.setIcon(QIcon(_icon_pixmap("send", 14)))
         send.setIconSize(QSize(14, 14))
         send.setStyleSheet(f"""
@@ -5479,7 +5479,7 @@ class CommandBar(QWidget):
 class DeveloperModeDialog(QDialog):
     def __init__(self, parent=None, settings: dict | None = None):
         super().__init__(parent)
-        self.setWindowTitle("Developer Mode")
+        self.setWindowTitle("Режим разработчика")
         self.setMinimumWidth(420)
         self.setStyleSheet(f"""
             QDialog {{ background: rgba(8,10,14,235); color: {C.WHITE}; border: 1px solid {C.BORDER_B}; }}
@@ -5512,12 +5512,12 @@ class DeveloperModeDialog(QDialog):
         root.setSpacing(12)
         root.setContentsMargins(16, 16, 16, 16)
 
-        title = QLabel("Developer Co-pilot")
+        title = QLabel("Со-пилот разработчика")
         title.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
         title.setStyleSheet(f"color: {C.PRI};")
         root.addWidget(title)
 
-        desc = QLabel("Pick a workspace folder Voice Echo should use when building websites or other workspace-based tasks.")
+        desc = QLabel("Выберите папку проекта, которую Voice Echo будет использовать при создании сайтов и других задач, связанных с рабочей папкой.")
         desc.setWordWrap(True)
         desc.setStyleSheet(f"color: {C.TEXT_DIM};")
         root.addWidget(desc)
@@ -5525,16 +5525,16 @@ class DeveloperModeDialog(QDialog):
         folder_row = QHBoxLayout()
         folder_row.setSpacing(8)
         self._workspace_edit = QLineEdit(self._workspace)
-        self._workspace_edit.setPlaceholderText("Select a folder...")
+        self._workspace_edit.setPlaceholderText("Выберите папку...")
         self._workspace_edit.setReadOnly(True)
         folder_row.addWidget(self._workspace_edit, stretch=1)
 
-        browse = QPushButton("Browse")
+        browse = QPushButton("Обзор")
         browse.clicked.connect(self._browse_folder)
         folder_row.addWidget(browse)
         root.addLayout(folder_row)
 
-        self._enabled_box = QCheckBox("Turn developer mode on")
+        self._enabled_box = QCheckBox("Включить режим разработчика")
         self._enabled_box.setChecked(self._enabled)
         root.addWidget(self._enabled_box)
 
@@ -5542,14 +5542,14 @@ class DeveloperModeDialog(QDialog):
         btn_row.addStretch()
         cancel = QPushButton("Cancel")
         cancel.clicked.connect(self.reject)
-        save = QPushButton("Save")
+        save = QPushButton("Сохранить")
         save.clicked.connect(self._save_and_close)
         btn_row.addWidget(cancel)
         btn_row.addWidget(save)
         root.addLayout(btn_row)
 
     def _browse_folder(self):
-        path = QFileDialog.getExistingDirectory(self, "Select developer workspace", self._workspace or str(BASE_DIR))
+        path = QFileDialog.getExistingDirectory(self, "Выберите рабочую папку разработчика", self._workspace or str(BASE_DIR))
         if path:
             self._workspace_edit.setText(path)
 
@@ -5579,8 +5579,8 @@ class ScanningOverlay(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
         
-        self._text = "SCANNING SCREEN"
-        self._sub = "Analyzing display..."
+        self._text = "СКАНИРОВАНИЕ ЭКРАНА"
+        self._sub = "Анализ экрана..."
         self._result_text = ""
         
         self._time = 0.0
@@ -5600,12 +5600,12 @@ class ScanningOverlay(QWidget):
         self.GOLD = QColor("#F4B400")
 
     def set_message(self, text: str, sub: str | None = None):
-        self._text = (text or "SCANNING SCREEN").upper()
+        self._text = (text or "СКАНИРОВАНИЕ ЭКРАНА").upper()
         if sub is not None:
             self._sub = sub
         self.update()
 
-    def show_fullscreen(self, text: str = "SCANNING SCREEN", sub: str = "Analyzing display..."):
+    def show_fullscreen(self, text: str = "СКАНИРОВАНИЕ ЭКРАНА", sub: str = "Анализ экрана..."):
         self.set_message(text, sub)
         self._time = 0.0
         self._fade_out_opacity = 1.0
@@ -5632,7 +5632,7 @@ class ScanningOverlay(QWidget):
             self._is_finishing = True
             self._finish_time = self._time
             
-            self._result_text = "Workspace Recognized\\nVisual Studio Code · Browser · Terminal"
+            self._result_text = "Рабочее пространство распознано\\nVisual Studio Code · Браузер · Терминал"
 
     def force_hide(self):
         self.hide()
@@ -5690,24 +5690,24 @@ class ScanningOverlay(QWidget):
                     
                     category = "UNKNOWN"
                     start_time = 1.0
-                    label = "UI Element"
+                    label = "Элемент интерфейса"
                     
                     if cw > 400 and ch > 300:
                         category = "WINDOW"
                         start_time = 2.5
-                        label = random.choice(["Dashboard Panel", "Task Workspace", "Editor Window"])
+                        label = random.choice(["Панель приборов", "Рабочее пространство задач", "Окно редактора"])
                     elif cw > 80 and ch < 40:
                         category = "OCR"
                         start_time = 0.5 + random.uniform(0, 0.5)
-                        label = random.choice(["System Online", "Settings", "Microphone", "User Profile"])
+                        label = random.choice(["Система онлайн", "Настройки", "Микрофон", "Профиль пользователя"])
                     elif cw < 60 and ch < 60:
                         category = "ICON"
                         start_time = 1.5 + random.uniform(0, 0.5)
-                        label = "Icon Node"
+                        label = "Узел иконки"
                     elif 1.2 < (cw/ch) < 4.0 and ch < 80:
                         category = "BUTTON"
                         start_time = 1.0 + random.uniform(0, 0.5)
-                        label = "Action Button"
+                        label = "Кнопка действия"
                     else:
                         continue # Skip weird shapes
                         
@@ -5732,7 +5732,7 @@ class ScanningOverlay(QWidget):
                     'w': random.uniform(100, 300),
                     'h': random.uniform(30, 60),
                     'category': "OCR",
-                    'label': "Fallback Element",
+                    'label': "Фоновый элемент",
                     'conf': 85,
                     'start_time': random.uniform(0.5, 1.5),
                     'has_product': False
@@ -5886,7 +5886,7 @@ class ScanningOverlay(QWidget):
                 
                 conf = box['conf']
                 label = box['label']
-                if conf < 75: label = f"Possible {label}"
+                if conf < 75: label = f"Возможно, {label}"
                 
                 p.setFont(QFont("Inter", 8, QFont.Weight.Bold))
                 p.setPen(QColor(244, 180, 0, int(255 * te * alpha_mult)))
@@ -5911,11 +5911,11 @@ class ScanningOverlay(QWidget):
                 if card_prog > 0.8:
                     p.setPen(QColor(255, 255, 255, int(255 * alpha_mult)))
                     p.setFont(QFont("Inter", 10, QFont.Weight.Bold))
-                    p.drawText(QRectF(cx + 12, cy + 10, cw, 20), Qt.AlignmentFlag.AlignLeft, "Detected Interface")
+                    p.drawText(QRectF(cx + 12, cy + 10, cw, 20), Qt.AlignmentFlag.AlignLeft, "Обнаруженный интерфейс")
                     
                     p.setPen(QColor(244, 180, 0, int(255 * alpha_mult)))
                     p.setFont(QFont("Inter", 8))
-                    p.drawText(QRectF(cx + 12, cy + 32, cw, 20), Qt.AlignmentFlag.AlignLeft, f"{label} Verified")
+                    p.drawText(QRectF(cx + 12, cy + 32, cw, 20), Qt.AlignmentFlag.AlignLeft, f"{label} — проверено")
 
     def _draw_context_lines(self, p):
         dt = self._time - 3.5
@@ -5985,14 +5985,14 @@ class ScanningOverlay(QWidget):
                     p.setFont(QFont("Inter", 10))
                     p.drawText(QRectF(cx - pw/2, cy + 10, pw, 20), Qt.AlignmentFlag.AlignCenter, lines[1])
         else:
-            status = "INITIALIZING..."
-            if self._time > 1.0: status = "SCANNING OCR..."
-            if self._time > 2.5: status = "RECOGNIZING OBJECTS..."
-            if self._time > 3.5: status = "ANALYZING CONTEXT..."
+            status = "ИНИЦИАЛИЗАЦИЯ..."
+            if self._time > 1.0: status = "СКАНИРОВАНИЕ OCR..."
+            if self._time > 2.5: status = "РАСПОЗНАВАНИЕ ОБЪЕКТОВ..."
+            if self._time > 3.5: status = "АНАЛИЗ КОНТЕКСТА..."
             if self._time > 4.5:
                 cycle = int(self._time * 2) % 4
                 dots = "." * cycle
-                status = f"THINKING{dots}"
+                status = f"РАЗМЫШЛЕНИЕ{dots}"
             p.setPen(QColor(255, 255, 255, 255))
             p.setFont(QFont("Inter", 12, QFont.Weight.Bold))
             p.drawText(QRectF(0, cy + 160, W, 20), Qt.AlignmentFlag.AlignCenter, status)
@@ -6029,9 +6029,9 @@ class BootSequenceOverlay(QWidget):
         self._start_time = time.time()
         
         self._status_messages = [
-            "Initializing Neural Engine...",
-            "Loading Intelligence...",
-            "Preparing Workspace..."
+            "Инициализация нейронного движка...",
+            "Загрузка интеллекта...",
+            "Подготовка рабочего пространства..."
         ]
         
     def _init_dots(self, cx, cy):
@@ -6299,17 +6299,17 @@ class IncomingAlertDialog(QDialog):
         lay.setContentsMargins(18, 16, 18, 16)
         lay.setSpacing(10)
 
-        heading = QLabel("Incoming Call" if self._kind == "call" else "Incoming Message")
+        heading = QLabel("Входящий звонок" if self._kind == "call" else "Входящее сообщение")
         heading.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
         heading.setStyleSheet(f"color: {C.WHITE}; background: transparent;")
         lay.addWidget(heading)
 
-        app_lbl = QLabel(f"From {self._app}")
+        app_lbl = QLabel(f"От {self._app}")
         app_lbl.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
         app_lbl.setStyleSheet(f"color: {C.TEXT_MED}; background: transparent;")
         lay.addWidget(app_lbl)
 
-        body = self._preview or self._title or "A notification was detected."
+        body = self._preview or self._title or "Обнаружено уведомление."
         body_lbl = QLabel(body)
         body_lbl.setWordWrap(True)
         body_lbl.setFont(QFont("Segoe UI", 10))
@@ -6346,9 +6346,9 @@ class IncomingAlertDialog(QDialog):
             return btn
 
         if self._kind == "call":
-            self._accept_btn = _btn("Pick up", primary=True)
+            self._accept_btn = _btn("Ответить", primary=True)
             self._ignore_btn = _btn("Ignore")
-            self._cut_btn = _btn("Cut call", danger=True)
+            self._cut_btn = _btn("Завершить", danger=True)
             self._x_btn = _btn("X")
             self._accept_btn.clicked.connect(lambda: self._choose("accept"))
             self._ignore_btn.clicked.connect(lambda: self._choose("ignore"))
@@ -6357,7 +6357,7 @@ class IncomingAlertDialog(QDialog):
             for btn in (self._accept_btn, self._ignore_btn, self._cut_btn, self._x_btn):
                 btn_row.addWidget(btn)
         else:
-            self._hear_btn = _btn("Hear it", primary=True)
+            self._hear_btn = _btn("Прослушать", primary=True)
             self._reply_btn = _btn("Reply")
             self._ignore_btn = _btn("Ignore")
             self._x_btn = _btn("X")
@@ -6426,14 +6426,14 @@ class MeetingOverlay(QWidget):
         top = QHBoxLayout()
         top.setSpacing(10)
 
-        self._badge = QLabel("MEETING MODE")
+        self._badge = QLabel("РЕЖИМ ВСТРЕЧИ")
         self._badge.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
         self._badge.setStyleSheet(
             f"color: {C.WHITE}; background: rgba(255,255,255,0.06); border: 1px solid {C.BORDER_B}; border-radius: 10px; padding: 4px 10px;"
         )
         top.addWidget(self._badge)
 
-        self._title = QLabel("Watching the meeting")
+        self._title = QLabel("Наблюдение за встречей")
         self._title.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
         self._title.setStyleSheet(f"color: {C.WHITE}; background: transparent;")
         top.addWidget(self._title)
@@ -6443,7 +6443,7 @@ class MeetingOverlay(QWidget):
         self._min_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._min_btn.setFixedSize(28, 28)
         self._min_btn.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
-        self._min_btn.setToolTip("Minimize meeting bar")
+        self._min_btn.setToolTip("Свернуть панель встречи")
         self._min_btn.setStyleSheet(f"""
             QPushButton {{
                 background: rgba(255,255,255,0.06);
@@ -6459,7 +6459,7 @@ class MeetingOverlay(QWidget):
         self._min_btn.clicked.connect(self._toggle_collapsed)
         top.addWidget(self._min_btn)
 
-        self._stop_btn = QPushButton("Stop")
+        self._stop_btn = QPushButton("Стоп")
         self._stop_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._stop_btn.setFixedHeight(28)
         self._stop_btn.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
@@ -6483,7 +6483,7 @@ class MeetingOverlay(QWidget):
         self._close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._close_btn.setFixedSize(28, 28)
         self._close_btn.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
-        self._close_btn.setToolTip("Close meeting bar")
+        self._close_btn.setToolTip("Закрыть панель встречи")
         self._close_btn.setStyleSheet(f"""
             QPushButton {{
                 background: rgba(255,255,255,0.06);
@@ -6500,19 +6500,19 @@ class MeetingOverlay(QWidget):
         top.addWidget(self._close_btn)
         lay.addLayout(top)
 
-        self._summary = QLabel("Waiting for a meeting to start...")
+        self._summary = QLabel("Ожидание начала встречи...")
         self._summary.setWordWrap(True)
         self._summary.setFont(QFont("Segoe UI", 10))
         self._summary.setStyleSheet(f"color: {C.TEXT_MED}; background: transparent;")
         lay.addWidget(self._summary)
 
-        self._speech = QLabel("They said: nothing yet.")
+        self._speech = QLabel("Они сказали: пока ничего.")
         self._speech.setWordWrap(True)
         self._speech.setFont(QFont("Segoe UI", 10))
         self._speech.setStyleSheet(f"color: {C.WHITE}; background: transparent;")
         lay.addWidget(self._speech)
 
-        self._answer = QLabel("Voice Echo will show the live answer here.")
+        self._answer = QLabel("Voice Echo покажет живой ответ здесь.")
         self._answer.setWordWrap(True)
         self._answer.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
         self._answer.setStyleSheet(f"color: {C.WHITE}; background: transparent;")
@@ -6521,18 +6521,18 @@ class MeetingOverlay(QWidget):
         self._apply_collapsed_state(False)
 
     def set_content(self, title: str, summary: str, answer: str, active: bool = True, speech: str = ""):
-        self._title.setText(title or "Watching the meeting")
-        self._summary.setText(summary or "Watching the meeting screen.")
-        self._speech.setText(f"They said: {speech or 'nothing yet.'}")
-        self._answer.setText(answer or "No question detected yet.")
-        self._badge.setText("MEETING LIVE" if active else "MEETING MODE")
+        self._title.setText(title or "Наблюдение за встречей")
+        self._summary.setText(summary or "Наблюдение за экраном встречи.")
+        self._speech.setText(f"Они сказали: {speech or 'пока ничего.'}")
+        self._answer.setText(answer or "Вопрос пока не обнаружен.")
+        self._badge.setText("ВСТРЕЧА В ЭФИРЕ" if active else "РЕЖИМ ВСТРЕЧИ")
 
     def _apply_collapsed_state(self, collapsed: bool):
         self._collapsed = bool(collapsed)
         for widget in (self._summary, self._speech, self._answer):
             widget.setVisible(not self._collapsed)
         self._min_btn.setText("?" if self._collapsed else "-")
-        self._min_btn.setToolTip("Restore meeting bar" if self._collapsed else "Minimize meeting bar")
+        self._min_btn.setToolTip("Развернуть панель встречи" if self._collapsed else "Свернуть панель встречи")
         self.setFixedHeight(self._collapsed_height if self._collapsed else self._expanded_height)
 
     def set_collapsed(self, collapsed: bool):
@@ -6562,7 +6562,7 @@ class FloatingLauncher(QWidget):
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setFixedSize(90, 90)
         self._state = "idle"
-        self._status_line = "Ready"
+        self._status_line = "Готов"
         self._hovered = False
 
         # Animation state
@@ -6746,12 +6746,12 @@ class FloatingLauncher(QWidget):
 
     def _default_status(self) -> str:
         return {
-            "idle": "Ready",
-            "listening": "Listening",
-            "thinking": "Thinking...",
-            "executing": "Executing task...",
-            "error": "Error",
-        }.get(self._state, "Ready")
+            "idle": "Готов",
+            "listening": "Слушает",
+            "thinking": "Думает...",
+            "executing": "Выполнение задачи...",
+            "error": "Ошибка",
+        }.get(self._state, "Готов")
 
     def _apply_state_style(self):
         self.setToolTip(f"Voice Echo\n{self._status_line}")
@@ -6777,12 +6777,12 @@ class FloatingLauncher(QWidget):
         """)
 
         actions = [
-            ("New Task", "new_task"),
-            ("Voice Mode", "voice_mode"),
-            ("Screen Analyzer", "screen_analyzer"),
-            ("Browser Agent", "browser_agent"),
-            ("Settings", "settings"),
-            ("Open Workspace", "open_workspace"),
+            ("Новая задача", "new_task"),
+            ("Голосовой режим", "voice_mode"),
+            ("Анализатор экрана", "screen_analyzer"),
+            ("Браузерный агент", "browser_agent"),
+            ("Настройки", "settings"),
+            ("Открыть рабочее пространство", "open_workspace"),
         ]
         for idx, (label, key) in enumerate(actions):
             action = QAction(label, self)
@@ -6985,9 +6985,9 @@ class MainWindow(QMainWindow):
         taskbar_lay = QHBoxLayout(self._taskbar)
         taskbar_lay.setContentsMargins(10, 10, 10, 10)
         
-        self._btn_dashboard = QPushButton("Dashboard")
-        self._btn_chat = QPushButton("Chat")
-        self._btn_settings = QPushButton("Settings")
+        self._btn_dashboard = QPushButton("Панель")
+        self._btn_chat = QPushButton("Чат")
+        self._btn_settings = QPushButton("Настройки")
 
         for btn in (self._btn_dashboard, self._btn_chat, self._btn_settings):
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -7111,13 +7111,13 @@ class MainWindow(QMainWindow):
         if not hasattr(self, "_startup_anim_btn"):
             return
         if platform.system() != "Windows":
-            self._startup_anim_btn.setText("Startup Animation (Windows only)")
+            self._startup_anim_btn.setText("Анимация запуска (только Windows)")
             self._startup_anim_btn.setEnabled(False)
             return
         if self._startup_animation_enabled():
-            self._startup_anim_btn.setText("Disable Startup Animation")
+            self._startup_anim_btn.setText("Отключить анимацию запуска")
         else:
-            self._startup_anim_btn.setText("Enable Startup Animation")
+            self._startup_anim_btn.setText("Включить анимацию запуска")
 
     def _toggle_startup_animation(self):
         if platform.system() != "Windows":
@@ -7165,27 +7165,27 @@ class MainWindow(QMainWindow):
         channel_id = self._discord_channel_input.text().strip() if hasattr(self, "_discord_channel_input") else ""
         if note:
             status = note
-            color = C.PRI if "error" in note.lower() or "missing" in note.lower() else C.TEXT_MED
+            color = C.PRI if "error" in note.lower() or "missing" in note.lower() or "ошибка" in note.lower() else C.TEXT_MED
         elif not token:
-            status = "Token required"
+            status = "Требуется токен"
             color = C.PRI
         elif not channel_id:
-            status = "Token saved - channel optional"
+            status = "Токен сохранён — канал необязателен"
             color = C.TEXT_MED
         elif enabled:
-            status = "Bot enabled"
+            status = "Бот включён"
             color = C.GREEN
         else:
-            status = "Bot disabled"
+            status = "Бот отключён"
             color = C.TEXT_MED
         self._discord_status_lbl.setText(status)
         self._discord_status_lbl.setStyleSheet(f"color: {color}; background: transparent;")
         if hasattr(self, "_discord_start_btn"):
-            self._discord_start_btn.setText("Start Discord Bot")
+            self._discord_start_btn.setText("Запустить бота Discord")
         if hasattr(self, "_discord_stop_btn"):
-            self._discord_stop_btn.setText("Stop Discord Bot")
+            self._discord_stop_btn.setText("Остановить бота Discord")
         if hasattr(self, "_discord_save_btn"):
-            self._discord_save_btn.setText("Save Settings")
+            self._discord_save_btn.setText("Сохранить настройки")
 
     def _save_discord_token(self):
         if not hasattr(self, "_discord_token_input"):
@@ -7201,11 +7201,11 @@ class MainWindow(QMainWindow):
         self.discord_config_changed.emit(dict(settings))
         if token:
             self._log.append_log("SYS: Discord bot token saved and bot enabled.")
-            self._refresh_discord_card("Token saved")
+            self._refresh_discord_card("Токен сохранён")
         else:
             self._log.append_log("SYS: Discord bot token cleared.")
             self._discord_enabled = False
-            self._refresh_discord_card("Token required")
+            self._refresh_discord_card("Требуется токен")
 
     def _start_discord_bot(self):
         if not hasattr(self, "_discord_token_input"):
@@ -7308,13 +7308,13 @@ class MainWindow(QMainWindow):
         if not hasattr(self, "_startup_btn"):
             return
         if platform.system() != "Windows":
-            self._startup_btn.setText("Start on Startup (Windows only)")
+            self._startup_btn.setText("Автозапуск (только Windows)")
             self._startup_btn.setEnabled(False)
             return
         if self._startup_enabled():
-            self._startup_btn.setText("Start on Startup: ON")
+            self._startup_btn.setText("Автозапуск: ВКЛ")
         else:
-            self._startup_btn.setText("Start on Startup: OFF")
+            self._startup_btn.setText("Автозапуск: ВЫКЛ")
 
     def _toggle_startup(self):
         if platform.system() != "Windows":
@@ -7340,7 +7340,7 @@ class MainWindow(QMainWindow):
                 self._left_panel.setFixedWidth(56 if self._left_collapsed else _LEFT_W)
             if hasattr(self, "_left_toggle_btn"):
                 self._left_toggle_btn.setText(">" if self._left_collapsed else "<")
-                self._left_toggle_btn.setToolTip("Expand left sidebar" if self._left_collapsed else "Collapse left sidebar")
+                self._left_toggle_btn.setToolTip("Развернуть левую боковую панель" if self._left_collapsed else "Свернуть левую боковую панель")
         if hasattr(self, "_right_content"):
             self._right_content.setVisible(not self._right_collapsed)
         if hasattr(self, "_right_stack"):
@@ -7349,7 +7349,7 @@ class MainWindow(QMainWindow):
                 self._right_panel.setFixedWidth(56 if self._right_collapsed else _RIGHT_W)
             if hasattr(self, "_right_toggle_btn"):
                 self._right_toggle_btn.setText("<" if self._right_collapsed else ">")
-                self._right_toggle_btn.setToolTip("Expand right sidebar" if self._right_collapsed else "Collapse right sidebar")
+                self._right_toggle_btn.setToolTip("Развернуть правую боковую панель" if self._right_collapsed else "Свернуть правую боковую панель")
         if hasattr(self, "_center_panel"):
             self._center_panel.update()
 
@@ -7446,7 +7446,7 @@ class MainWindow(QMainWindow):
             try:
                 boot = psutil.boot_time()
                 uptime_min = int((time.time() - boot) / 60)
-                self._uptime_lbl.setText(f"Up: {uptime_min // 60}h {uptime_min % 60}m")
+                self._uptime_lbl.setText(f"Аптайм: {uptime_min // 60}ч {uptime_min % 60}м")
             except: pass
 
         if hasattr(self, "_stat_mem"):
@@ -7494,9 +7494,9 @@ class MainWindow(QMainWindow):
         if hasattr(self, "_stat_cam"):
             cam_on = _camera_available()
             self._stat_cam.set_value(
-                "ON" if cam_on else "OFF",
+                "ВКЛ" if cam_on else "ВЫКЛ",
                 100 if cam_on else 0,
-                "Webcam detected" if cam_on else "No camera found",
+                "Веб-камера обнаружена" if cam_on else "Камера не найдена",
             )
 
         if hasattr(self, "_uptime_lbl"):
@@ -7505,16 +7505,16 @@ class MainWindow(QMainWindow):
                 elapsed = time.time() - boot_t
                 h = int(elapsed // 3600)
                 m = int((elapsed % 3600) // 60)
-                self._uptime_lbl.setText(f"UP  {h:02d}:{m:02d}")
+                self._uptime_lbl.setText(f"АПТАЙМ  {h:02d}:{m:02d}")
             except Exception:
-                self._uptime_lbl.setText("UP  --:--")
+                self._uptime_lbl.setText("АПТАЙМ  --:--")
 
         if hasattr(self, "_proc_lbl"):
             try:
                 proc_count = len(psutil.pids())
-                self._proc_lbl.setText(f"PROC  {proc_count}")
+                self._proc_lbl.setText(f"ПРОЦ  {proc_count}")
             except Exception:
-                self._proc_lbl.setText("PROC  --")
+                self._proc_lbl.setText("ПРОЦ  --")
 
 
     def _build_header(self) -> QWidget:
@@ -7539,7 +7539,7 @@ class MainWindow(QMainWindow):
         title.setFont(QFont("Courier New", 17, QFont.Weight.Bold))
         title.setStyleSheet(f"color: {C.PRI}; background: transparent;")
         mid.addWidget(title)
-        sub = QLabel("Lite Edition by Suryaansh Tiwari")
+        sub = QLabel("Lite Edition от Suryaansh Tiwari")
         sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
         sub.setFont(QFont("Courier New", 7))
         sub.setStyleSheet(f"color: {C.PRI_DIM}; background: transparent;")
@@ -7569,17 +7569,17 @@ class MainWindow(QMainWindow):
         if hasattr(self, "_core_lbl") and self._core_lbl is not None:
             hour = time.localtime().tm_hour
             if hour < 12:
-                greeting = "Good Morning"
+                greeting = "Доброе утро"
             elif hour < 18:
-                greeting = "Good Afternoon"
+                greeting = "Добрый день"
             else:
-                greeting = "Good Evening"
+                greeting = "Добрый вечер"
             name = os.getenv("USERNAME") or os.getenv("USER") or "Suryaansh"
             self._core_lbl.setText(f"{greeting}, {name}")
         if hasattr(self, "_core_sub_lbl") and self._core_sub_lbl is not None:
-            self._core_sub_lbl.setText("Ready to assist.")
+            self._core_sub_lbl.setText("Готов помочь.")
         if hasattr(self, "_core_status_lbl") and self._core_status_lbl is not None:
-            self._core_status_lbl.setText("Voice Echo is ready. Gemini 2.5 Flash · OpenRouter · Voice Connected · Memory Enabled")
+            self._core_status_lbl.setText("Voice Echo готов. Gemini 2.5 Flash · OpenRouter · Голос подключён · Память включена")
         if hasattr(self, "_cpu_lbl") and self._cpu_lbl is not None:
             self._cpu_lbl.setText(f"CPU {int(psutil.cpu_percent(interval=None))}%")
         if hasattr(self, "_ram_lbl") and self._ram_lbl is not None:
@@ -7623,18 +7623,18 @@ class MainWindow(QMainWindow):
         ip_lay.setContentsMargins(6, 5, 6, 5)
         ip_lay.setSpacing(3)
 
-        self._uptime_lbl = QLabel("UP  --:--")
+        self._uptime_lbl = QLabel("АПТАЙМ  --:--")
         self._uptime_lbl.setFont(QFont("Courier New", 8, QFont.Weight.Bold))
         self._uptime_lbl.setStyleSheet(f"color: {C.GREEN}; background: transparent; border: none;")
         ip_lay.addWidget(self._uptime_lbl)
 
-        self._proc_lbl = QLabel("PROC  --")
+        self._proc_lbl = QLabel("ПРОЦ  --")
         self._proc_lbl.setFont(QFont("Courier New", 8))
         self._proc_lbl.setStyleSheet(f"color: {C.TEXT_MED}; background: transparent; border: none;")
         ip_lay.addWidget(self._proc_lbl)
 
         os_name = {"Windows": "WIN", "Darwin": "macOS", "Linux": "LINUX"}.get(_OS, _OS.upper())
-        os_lbl = QLabel(f"OS  {os_name}")
+        os_lbl = QLabel(f"ОС  {os_name}")
         os_lbl.setFont(QFont("Courier New", 8))
         os_lbl.setStyleSheet(f"color: {C.ACC2}; background: transparent; border: none;")
         ip_lay.addWidget(os_lbl)
@@ -7643,7 +7643,7 @@ class MainWindow(QMainWindow):
         lay.addStretch()
 
         for txt, col in [
-            ("AI CORE\nACTIVE",     C.GREEN),
+            ("ИИ-ЯДРО\nАКТИВНО",     C.GREEN),
             ("SEC\nCLEARED",        C.PRI),
             ("PROTOCOL\nXXXVIII",   C.TEXT_DIM),
         ]:
@@ -7671,7 +7671,7 @@ class MainWindow(QMainWindow):
             l.setStyleSheet(f"color: {C.TEXT_MED}; background: transparent;")
             return l
 
-        lay.addWidget(_sec("ACTIVITY LOG"))
+        lay.addWidget(_sec("ЖУРНАЛ АКТИВНОСТИ"))
         self._log = LogWidget()
         lay.addWidget(self._log, stretch=1)
 
@@ -7679,12 +7679,12 @@ class MainWindow(QMainWindow):
         sep.setStyleSheet(f"color: {C.BORDER}; margin: 2px 0;")
         lay.addWidget(sep)
 
-        lay.addWidget(_sec("FILE UPLOAD"))
+        lay.addWidget(_sec("ЗАГРУЗКА ФАЙЛА"))
         self._drop_zone = FileDropZone()
         self._drop_zone.file_selected.connect(self._on_file_selected)
         lay.addWidget(self._drop_zone)
 
-        self._file_hint = QLabel("No file loaded â€” drop or click above to upload")
+        self._file_hint = QLabel("Файл не загружен â€” перетащите или нажмите выше, чтобы загрузить")
         self._file_hint.setFont(QFont("Courier New", 7))
         self._file_hint.setStyleSheet(f"color: {C.TEXT_MED}; background: transparent;")
         self._file_hint.setWordWrap(True)
@@ -7694,7 +7694,7 @@ class MainWindow(QMainWindow):
         sep2.setStyleSheet(f"color: {C.BORDER}; margin: 2px 0;")
         lay.addWidget(sep2)
 
-        lay.addWidget(_sec("COMMAND INPUT"))
+        lay.addWidget(_sec("ВВОД КОМАНДЫ"))
         lay.addLayout(self._build_input_row())
 
         self._mute_btn = QPushButton("ðŸŽ™  MICROPHONE ACTIVE")
@@ -7726,7 +7726,7 @@ class MainWindow(QMainWindow):
     def _build_input_row(self) -> QHBoxLayout:
         row = QHBoxLayout(); row.setSpacing(5)
         self._input = QLineEdit()
-        self._input.setPlaceholderText("Type a command or questionâ€¦")
+        self._input.setPlaceholderText("Введите команду или вопросâ€¦")
         self._input.setFont(QFont("Courier New", 9))
         self._input.setFixedHeight(30)
         self._input.setStyleSheet(f"""
@@ -7779,7 +7779,7 @@ class MainWindow(QMainWindow):
         icon, _ = _FILE_ICONS.get(cat, _FILE_ICONS["unknown"])
         size = _fmt_size(p.stat().st_size)
         if hasattr(self, "_file_chip") and self._file_chip:
-            self._file_chip.setText(f"Attached: {icon} {p.name}  â€¢  {size}")
+            self._file_chip.setText(f"Прикреплено: {icon} {p.name}  â€¢  {size}")
         self._log.append_log(f"FILE: {p.name} ({size}) loaded")
         if self.on_text_command:
             msg = (
@@ -7792,15 +7792,15 @@ class MainWindow(QMainWindow):
 
     def _browse_attachment(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, "Attach a file to Voice Echo", str(Path.home()),
-            "All Files (*.*);;"
-            "Images (*.jpg *.jpeg *.png *.gif *.webp *.bmp *.svg);;"
-            "Documents (*.pdf *.docx *.txt *.md *.pptx);;"
-            "Data (*.csv *.xlsx *.json *.xml);;"
-            "Code (*.py *.js *.ts *.html *.css *.java *.cpp *.go);;"
-            "Audio (*.mp3 *.wav *.ogg *.m4a *.aac *.flac);;"
-            "Video (*.mp4 *.avi *.mov *.mkv *.wmv *.webm);;"
-            "Archives (*.zip *.rar *.tar *.gz *.7z)",
+            self, "Выберите файл для Voice Echo", str(Path.home()),
+            "Все файлы (*.*);;"
+            "Изображения (*.jpg *.jpeg *.png *.gif *.webp *.bmp *.svg);;"
+            "Документы (*.pdf *.docx *.txt *.md *.pptx);;"
+            "Данные (*.csv *.xlsx *.json *.xml);;"
+            "Код (*.py *.js *.ts *.html *.css *.java *.cpp *.go);;"
+            "Аудио (*.mp3 *.wav *.ogg *.m4a *.aac *.flac);;"
+            "Видео (*.mp4 *.avi *.mov *.mkv *.wmv *.webm);;"
+            "Архивы (*.zip *.rar *.tar *.gz *.7z)",
         )
         if path:
             self._on_file_selected(path)
@@ -7836,7 +7836,7 @@ class MainWindow(QMainWindow):
         if not hasattr(self, "_mute_btn") or self._mute_btn is None:
             return
         if self._muted:
-            self._mute_btn.setText("Muted")
+            self._mute_btn.setText("Приглушён")
             self._mute_btn.setStyleSheet(f"""
                 QPushButton {{
                     background: #1a1010; color: {C.RED};
@@ -7844,7 +7844,7 @@ class MainWindow(QMainWindow):
                 }}
             """)
         else:
-            self._mute_btn.setText("Mic")
+            self._mute_btn.setText("Микрофон")
             self._mute_btn.setStyleSheet(f"""
                 QPushButton {{
                     background: rgba(16,16,16,235); color: {C.WHITE};
@@ -7871,7 +7871,7 @@ class MainWindow(QMainWindow):
             self._command_card.set_body(preview)
             self._command_card.hide()
         if hasattr(self, "_result_card"):
-            self._result_card.set_body("Waiting for reply...")
+            self._result_card.set_body("Ожидание ответа...")
             self._result_card.hide()
         self._restart_card_hide_timer()
         self._log_sig.emit(f"You: {txt}")
@@ -8049,22 +8049,22 @@ class MainWindow(QMainWindow):
             )
         if hasattr(self, "_task_card"):
             if state == "THINKING":
-                self._task_card.set_task("Working on it...", "Voice Echo is processing your request.", 72)
+                self._task_card.set_task("В процессе...", "Voice Echo обрабатывает ваш запрос.", 72)
             elif state == "SPEAKING":
-                self._task_card.set_task("Responding...", "Voice Echo is speaking now.", 100)
+                self._task_card.set_task("Отвечает...", "Voice Echo сейчас говорит.", 100)
             elif state == "MUTED":
-                self._task_card.set_task("Microphone muted", "Voice input is paused.", 0)
+                self._task_card.set_task("Микрофон отключён", "Голосовой ввод приостановлен.", 0)
             else:
-                self._task_card.set_task("Ready", "Voice Echo is idle and ready.", 0)
+                self._task_card.set_task("Готов", "Voice Echo готов и ожидает.", 0)
         if hasattr(self, "_result_card"):
             if state == "THINKING":
-                self._result_card.set_body("Action pending")
+                self._result_card.set_body("Действие ожидает")
             elif state == "SPEAKING":
-                self._result_card.set_body("Speaking now")
+                self._result_card.set_body("Говорит")
             elif state == "MUTED":
-                self._result_card.set_body("Voice muted")
+                self._result_card.set_body("Голос отключён")
             else:
-                self._result_card.set_body("Action completed")
+                self._result_card.set_body("Действие выполнено")
 
     def _check_config(self) -> bool:
         if not API_FILE.exists(): return False
@@ -8079,7 +8079,7 @@ class MainWindow(QMainWindow):
         if enabled:
             if self._scan_overlay is None:
                 self._scan_overlay = ScanningOverlay()
-            self._scan_overlay.show_fullscreen(text or "SCANNING SCREEN", "Analyzing display...")
+            self._scan_overlay.show_fullscreen(text or "СКАНИРОВАНИЕ ЭКРАНА", "Анализ экрана...")
         else:
             if self._scan_overlay is not None:
                 self._scan_overlay.hide_overlay()
@@ -8138,9 +8138,9 @@ class MainWindow(QMainWindow):
                 self._meeting_overlay.minimize_requested.connect(self._toggle_meeting_overlay)
                 self._meeting_overlay.close_requested.connect(self._request_stop_meeting)
             self._meeting_overlay.set_content(
-                title or "Meeting mode",
-                summary or "Watching the meeting screen.",
-                answer or "No question detected yet.",
+                title or "Режим встречи",
+                summary or "Наблюдение за экраном встречи.",
+                answer or "Вопросов пока не обнаружено.",
                 True,
                 speech,
             )
@@ -8172,8 +8172,8 @@ class MainWindow(QMainWindow):
             )
         elif action == "finish":
             target.finish_workspace(
-                data.get("result") or data.get("output") or "Done.",
-                status=data.get("status") or "Task completed.",
+                data.get("result") or data.get("output") or "Готово.",
+                status=data.get("status") or "Задача выполнена.",
                 percent=int(data.get("percent") or 100),
             )
         elif action == "clear":
@@ -8198,7 +8198,7 @@ class MainWindow(QMainWindow):
     def _request_stop_meeting(self):
         if self.on_attention_action:
             try:
-                self.on_attention_action({"kind": "meeting", "app": "Meeting mode"}, "stop")
+                self.on_attention_action({"kind": "meeting", "app": "Режим встречи"}, "stop")
             except Exception:
                 pass
 
@@ -8463,7 +8463,7 @@ class MainWindow(QMainWindow):
         title = QLabel("<span style='color:#ffb300;'>VOICE ECHO</span><br><span style='color:#ffffff;'>LITE</span>")
         title.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
         title.setStyleSheet("background: transparent;")
-        sub = QLabel("Your AI Assistant")
+        sub = QLabel("Ваш ИИ-ассистент")
         sub.setFont(QFont("Segoe UI", 9))
         sub.setStyleSheet(f"color: {C.TEXT_DIM}; background: transparent; padding-top: 2px;")
         brand_text.addWidget(title)
@@ -8475,7 +8475,7 @@ class MainWindow(QMainWindow):
         self._nav_items["dashboard"] = NavItem("Dashboard", active=True, letter="[]")
         self._nav_items["home"] = NavItem("Voice Echo Home", active=False, letter="H")
         self._nav_items["devices"] = NavItem("Devices", active=False, letter="D")
-        self._nav_items["settings"] = NavItem("System & Connect", letter="S")
+        self._nav_items["settings"] = NavItem("Система и подключение", letter="S")
         self._nav_items["dashboard"].clicked.connect(lambda: activate("dashboard"))
         self._nav_items["home"].clicked.connect(lambda: activate("home"))
         self._nav_items["devices"].clicked.connect(lambda: activate("devices"))
@@ -8522,7 +8522,7 @@ class MainWindow(QMainWindow):
         online.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
         top_row.addWidget(online)
         top_row.addStretch()
-        uptime_lbl = QLabel("Up: 0h 0m")
+        uptime_lbl = QLabel("Аптайм: 0ч 0м")
         uptime_lbl.setFont(QFont("Segoe UI", 8))
         uptime_lbl.setStyleSheet("color: rgba(255, 255, 255, 0.4);")
         top_row.addWidget(uptime_lbl)
@@ -8580,7 +8580,7 @@ class MainWindow(QMainWindow):
 
         self._command_card = SmallPanelCard("COMMAND", "hey", accent=C.WHITE)
         self._command_card.setFixedWidth(185)
-        self._result_card = SmallPanelCard("ACTION RESULT", "Action completed", accent=C.WHITE)
+        self._result_card = SmallPanelCard("РЕЗУЛЬТАТ ДЕЙСТВИЯ", "Действие выполнено", accent=C.WHITE)
         self._result_card.setFixedWidth(185)
         self._command_card.hide()
         self._result_card.hide()
@@ -8720,7 +8720,7 @@ class MainWindow(QMainWindow):
         row.setSpacing(12)
 
         self._input = QLineEdit()
-        self._input.setPlaceholderText("Ask Voice Echo anything...")
+        self._input.setPlaceholderText("Спросите Voice Echo о чём угодно...")
         self._input.setFont(QFont("Segoe UI", 10))
         self._input.setFixedHeight(50)
         self._input.setStyleSheet(f"""
@@ -8754,7 +8754,7 @@ class MainWindow(QMainWindow):
         attach = QPushButton()
         attach.setFixedSize(44, 44)
         attach.setCursor(Qt.CursorShape.PointingHandCursor)
-        attach.setToolTip("Attach file")
+        attach.setToolTip("Прикрепить файл")
         attach.setIcon(QIcon(_icon_pixmap("attach", 20)))
         attach.setIconSize(QSize(20, 20))
         attach.setStyleSheet(icon_button_style)
@@ -8764,7 +8764,7 @@ class MainWindow(QMainWindow):
         mic = QPushButton()
         mic.setFixedSize(44, 44)
         mic.setCursor(Qt.CursorShape.PointingHandCursor)
-        mic.setToolTip("Microphone")
+        mic.setToolTip("Микрофон")
         mic.setIcon(QIcon(_icon_pixmap("mic", 20)))
         mic.setIconSize(QSize(20, 20))
         mic.setStyleSheet(f"""
@@ -8838,7 +8838,7 @@ class SystemConnectivitySidebar(QFrame):
         lay.setContentsMargins(18, 18, 18, 18)
         lay.setSpacing(14)
 
-        title = QLabel("SYSTEM STATUS")
+        title = QLabel("СОСТОЯНИЕ СИСТЕМЫ")
         title.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
         title.setStyleSheet(f"color: {C.WHITE}; letter-spacing: 1px;")
         lay.addWidget(title)
@@ -8848,16 +8848,16 @@ class SystemConnectivitySidebar(QFrame):
         s_lay = QVBoxLayout(self._status_card)
         s_lay.setContentsMargins(16, 14, 16, 14)
         s_lay.setSpacing(10)
-        self._online_lbl = QLabel("ΓùÅ System Online")
+        self._online_lbl = QLabel("ΓùÅ Система онлайн")
         self._online_lbl.setStyleSheet("color: #35ff75; font-weight: 700;")
-        self._desc_lbl = QLabel("All systems are operational.")
+        self._desc_lbl = QLabel("Все системы работают нормально.")
         self._desc_lbl.setStyleSheet(f"color: {C.TEXT_MED};")
         s_lay.addWidget(self._online_lbl)
         s_lay.addWidget(self._desc_lbl)
         lay.addWidget(self._status_card)
 
         self._info_rows: dict[str, QLabel] = {}
-        for label in ("Version", "Platform", "Current AI Provider", "Last Updated"):
+        for label in ("Версия", "Платформа", "Текущий ИИ-провайдер", "Последнее обновление"):
             row = QHBoxLayout()
             row.setContentsMargins(0, 4, 0, 4)
             row.setSpacing(10)
@@ -8876,7 +8876,7 @@ class SystemConnectivitySidebar(QFrame):
             lay.addLayout(row)
             self._info_rows[label] = val_lbl
 
-        quick_title = QLabel("QUICK ACTIONS")
+        quick_title = QLabel("БЫСТРЫЕ ДЕЙСТВИЯ")
         quick_title.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
         quick_title.setStyleSheet(f"color: {C.WHITE}; letter-spacing: 1px;")
         lay.addWidget(quick_title)
@@ -8884,20 +8884,20 @@ class SystemConnectivitySidebar(QFrame):
         self._quick_actions = QVBoxLayout()
         self._quick_actions.setSpacing(10)
         lay.addLayout(self._quick_actions)
-        self._mk_quick_action("Γå╗ Restart Voice Echo", QStyle.StandardPixmap.SP_BrowserReload, self._restart)
-        self._mk_quick_action("Γƒ│ Reload Configuration", QStyle.StandardPixmap.SP_BrowserReload, self._reload)
-        self._mk_quick_action("≡ƒôü Open Data Folder", QStyle.StandardPixmap.SP_DirOpenIcon, self._open_data_folder)
-        self._mk_quick_action("≡ƒôä View Logs", QStyle.StandardPixmap.SP_FileDialogDetailedView, self._view_logs)
-        self._mk_quick_action("Γ¼ç Check for Updates", QStyle.StandardPixmap.SP_ArrowDown, self._check_updates)
+        self._mk_quick_action("Γå╗ Перезапустить Voice Echo", QStyle.StandardPixmap.SP_BrowserReload, self._restart)
+        self._mk_quick_action("Γƒ│ Перезагрузить конфигурацию", QStyle.StandardPixmap.SP_BrowserReload, self._reload)
+        self._mk_quick_action("≡ƒôü Открыть папку данных", QStyle.StandardPixmap.SP_DirOpenIcon, self._open_data_folder)
+        self._mk_quick_action("≡ƒôä Просмотреть журналы", QStyle.StandardPixmap.SP_FileDialogDetailedView, self._view_logs)
+        self._mk_quick_action("Γ¼ç Проверить обновления", QStyle.StandardPixmap.SP_ArrowDown, self._check_updates)
 
         tip = QFrame()
         tip.setStyleSheet("QFrame { background: rgba(24, 18, 8, 0.85); border: 1px solid rgba(255, 191, 0, 0.22); border-radius: 14px; }")
         tip_lay = QVBoxLayout(tip)
         tip_lay.setContentsMargins(16, 14, 16, 14)
         tip_lay.setSpacing(8)
-        tip_title = QLabel("Security Tip")
+        tip_title = QLabel("Совет по безопасности")
         tip_title.setStyleSheet("color: #ffbf00; font-weight: 700;")
-        tip_body = QLabel('"Never share your API keys with anyone."')
+        tip_body = QLabel('"Никогда не делитесь своими API-ключами с другими."')
         tip_body.setWordWrap(True)
         tip_body.setStyleSheet(f"color: {C.TEXT_MED};")
         tip_lay.addWidget(tip_title)
@@ -8967,15 +8967,15 @@ class SystemConnectivitySidebar(QFrame):
             platform_name = platform.system()
             provider = self._bridge()._win._load_app_settings().get("default_ai_provider", "Gemini")
             last_updated = time.strftime("%d %b %Y %H:%M")
-            self._info_rows["Version"].setText(version)
-            self._info_rows["Platform"].setText(platform_name)
-            self._info_rows["Current AI Provider"].setText(provider)
-            self._info_rows["Last Updated"].setText(last_updated)
+            self._info_rows["Версия"].setText(version)
+            self._info_rows["Платформа"].setText(platform_name)
+            self._info_rows["Текущий ИИ-провайдер"].setText(provider)
+            self._info_rows["Последнее обновление"].setText(last_updated)
         else:
-            self._info_rows["Version"].setText("v1.0.0")
-            self._info_rows["Platform"].setText(platform.system())
-            self._info_rows["Current AI Provider"].setText("Gemini")
-            self._info_rows["Last Updated"].setText(time.strftime("%d %b %Y %H:%M"))
+            self._info_rows["Версия"].setText("v1.0.0")
+            self._info_rows["Платформа"].setText(platform.system())
+            self._info_rows["Текущий ИИ-провайдер"].setText("Gemini")
+            self._info_rows["Последнее обновление"].setText(time.strftime("%d %b %Y %H:%M"))
 
 
 
@@ -8987,13 +8987,13 @@ class SettingsHubPage(QWidget):
         lay.setContentsMargins(40, 60, 40, 60)
         lay.setSpacing(25)
 
-        title = QLabel("Settings Hub")
+        title = QLabel("Центр настроек")
         title.setFont(QFont("Segoe UI", 32, QFont.Weight.Black))
         title.setStyleSheet(f"color: {C.WHITE}; letter-spacing: 1px;")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         lay.addWidget(title)
 
-        subtitle = QLabel("Select a section below to configure your Voice Echo environment.")
+        subtitle = QLabel("Выберите раздел ниже, чтобы настроить среду Voice Echo.")
         subtitle.setFont(QFont("Segoe UI", 12))
         subtitle.setStyleSheet(f"color: {C.TEXT_DIM};")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -9004,9 +9004,9 @@ class SettingsHubPage(QWidget):
         cards_lay.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         cards_data = [
-            ("Voice Echo Home", "Configure smart home integrations", "🏠", 1),
-            ("Devices", "Manage and control connected hardware", "🔌", 2),
-            ("System & Connect", "Configure providers and api preferences", "⚙️", 3)
+            ("Voice Echo Home", "Настройка интеграций умного дома", "🏠", 1),
+            ("Устройства", "Управление подключённым оборудованием", "🔌", 2),
+            ("Система и подключение", "Настройка провайдеров и параметров API", "⚙️", 3)
         ]
 
         for title_text, desc_text, icon_emoji, target_idx in cards_data:
@@ -9121,10 +9121,10 @@ class SystemConnectivityPage(QWidget):
         h_lay = QVBoxLayout(header)
         h_lay.setContentsMargins(0, 0, 0, 0)
         h_lay.setSpacing(6)
-        title = QLabel("SYSTEM & CONNECTIVITY")
+        title = QLabel("СИСТЕМА И ПОДКЛЮЧЕНИЯ")
         title.setFont(QFont("Segoe UI", 22, QFont.Weight.Black))
         title.setStyleSheet(f"color: {C.WHITE}; letter-spacing: 1px;")
-        sub = QLabel("Manage your AI providers, connections and application preferences.")
+        sub = QLabel("Управляйте ИИ-провайдерами, подключениями и настройками приложения.")
         sub.setFont(QFont("Segoe UI", 10))
         sub.setStyleSheet(f"color: {C.TEXT_DIM};")
         h_lay.addWidget(title)
@@ -9194,7 +9194,7 @@ class SystemConnectivityPage(QWidget):
     def _provider_key_preview(self, key: str) -> str:
         key = (key or "").strip()
         if not key:
-            return "Not set"
+            return "Не задано"
         if len(key) <= 8:
             return "ΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇó"
         return f"{key[:4]}ΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇó{key[-4:]}"
@@ -9222,12 +9222,12 @@ class SystemConnectivityPage(QWidget):
         title.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
         title.setStyleSheet(f"color: {C.WHITE}; border: none;")
         if key:
-            status = QLabel("\u2713  Already Added")
+            status = QLabel("\u2713  Уже добавлено")
             status.setStyleSheet(f"color: {C.GREEN}; border: none; font-weight: bold;")
         else:
-            status = QLabel("Not configured")
+            status = QLabel("Не настроено")
             status.setStyleSheet(f"color: {C.TEXT_DIM}; border: none;")
-        model_lbl = QLabel(f"Current model: {model}")
+        model_lbl = QLabel(f"Текущая модель: {model}")
         model_lbl.setStyleSheet(f"color: {C.TEXT_DIM}; border: none;")
         api_lbl = QLabel(self._provider_key_preview(key))
         api_lbl.setStyleSheet(f"color: {C.TEXT_MED}; border: none;")
@@ -9239,9 +9239,9 @@ class SystemConnectivityPage(QWidget):
         btn_lay = QVBoxLayout()
         btn_lay.setSpacing(8)
         if key:
-            edit = QPushButton("Edit API Key")
+            edit = QPushButton("Изменить API-ключ")
         else:
-            edit = QPushButton("Add API Key")
+            edit = QPushButton("Добавить API-ключ")
             edit.setStyleSheet("""
                 QPushButton {
                     background: rgba(255, 179, 0, 0.1);
@@ -9257,7 +9257,7 @@ class SystemConnectivityPage(QWidget):
                 }
             """)
         edit.clicked.connect(lambda: self._open_api_keys())
-        test = QPushButton("Test Connection")
+        test = QPushButton("Проверить подключение")
         test.clicked.connect(lambda: self._test_provider(setting_key))
         btn_lay.addWidget(edit)
         btn_lay.addWidget(test)
@@ -9275,31 +9275,31 @@ class SystemConnectivityPage(QWidget):
 
 
         # Instagram Connect
-        ig_card = self._card("Instagram Connect", "Connect your personal Instagram account to allow Voice Echo to manage your DMs.")
+        ig_card = self._card("Подключение Instagram", "Подключите свой личный аккаунт Instagram, чтобы Voice Echo мог управлять вашими личными сообщениями.")
         ig_lay = ig_card.layout()
 
         ig_user_row = QHBoxLayout()
-        ig_user_row.addWidget(QLabel("Username"))
+        ig_user_row.addWidget(QLabel("Имя пользователя"))
         self._ig_username = QLineEdit()
-        self._ig_username.setPlaceholderText("Instagram Username")
+        self._ig_username.setPlaceholderText("Имя пользователя Instagram")
         ig_user_row.addWidget(self._ig_username)
         ig_lay.addLayout(ig_user_row)
 
         ig_pass_row = QHBoxLayout()
-        ig_pass_row.addWidget(QLabel("Password"))
+        ig_pass_row.addWidget(QLabel("Пароль"))
         self._ig_password = QLineEdit()
         self._ig_password.setEchoMode(QLineEdit.EchoMode.Password)
-        self._ig_password.setPlaceholderText("Instagram Password")
+        self._ig_password.setPlaceholderText("Пароль Instagram")
         ig_pass_row.addWidget(self._ig_password)
         ig_lay.addLayout(ig_pass_row)
         
         ig_btns_row = QHBoxLayout()
         
-        self._ig_connect_btn = QPushButton("Connect")
+        self._ig_connect_btn = QPushButton("Подключить")
         self._ig_connect_btn.clicked.connect(self._handle_ig_connect)
         ig_btns_row.addWidget(self._ig_connect_btn)
         
-        self._ig_disconnect_btn = QPushButton("Disconnect")
+        self._ig_disconnect_btn = QPushButton("Отключить")
         self._ig_disconnect_btn.clicked.connect(self._handle_ig_disconnect)
         ig_btns_row.addWidget(self._ig_disconnect_btn)
 
@@ -9320,19 +9320,19 @@ class SystemConnectivityPage(QWidget):
 
 
         # Identity & Profile
-        identity_card = self._card("Identity & Profile", "Configure assistant identity, user profile, and behavior.")
+        identity_card = self._card("Личность и профиль", "Настройте личность помощника, профиль пользователя и поведение.")
         ilay = identity_card.layout()
         
         # Assistant Settings
         ast_row = QHBoxLayout()
-        ast_row.addWidget(QLabel("Assistant Name"))
+        ast_row.addWidget(QLabel("Имя помощника"))
         self._set_ast_name = QLineEdit(identity.get_assistant_name())
         self._set_ast_name.textChanged.connect(lambda t: identity.set_assistant_name(t.strip() or "Voice"))
         ast_row.addWidget(self._set_ast_name)
         ilay.addLayout(ast_row)
         
         app_row = QHBoxLayout()
-        app_row.addWidget(QLabel("Application Name"))
+        app_row.addWidget(QLabel("Имя приложения"))
         self._set_app_name = QLineEdit(identity.get_application_name())
         self._set_app_name.textChanged.connect(lambda t: identity.set_application_name(t.strip() or "Voice Echo"))
         app_row.addWidget(self._set_app_name)
@@ -9340,14 +9340,14 @@ class SystemConnectivityPage(QWidget):
 
         # Owner Profile
         own_row = QHBoxLayout()
-        own_row.addWidget(QLabel("Your Name"))
+        own_row.addWidget(QLabel("Ваше имя"))
         self._set_own_name = QLineEdit(identity.get_owner_name())
         self._set_own_name.textChanged.connect(lambda t: identity.set_owner_name(t.strip()))
         own_row.addWidget(self._set_own_name)
         ilay.addLayout(own_row)
 
         role_row = QHBoxLayout()
-        role_row.addWidget(QLabel("Your Role"))
+        role_row.addWidget(QLabel("Ваша роль"))
         self._set_own_role = QLineEdit(identity.get_owner_role())
         self._set_own_role.textChanged.connect(lambda t: identity.set_owner_role(t.strip()))
         role_row.addWidget(self._set_own_role)
@@ -9355,7 +9355,7 @@ class SystemConnectivityPage(QWidget):
 
         # Behavior
         beh_row = QHBoxLayout()
-        beh_row.addWidget(QLabel("Behavior Mode"))
+        beh_row.addWidget(QLabel("Режим поведения"))
         self._set_beh_mode = QComboBox()
         self._set_beh_mode.addItems(["professional", "casual", "technical", "minimal", "proactive"])
         self._set_beh_mode.setCurrentText(identity.get_behavior_mode())
@@ -9366,7 +9366,7 @@ class SystemConnectivityPage(QWidget):
         lay.addWidget(identity_card)
 
         # AI Providers
-        card = self._card("AI Providers", "Only the supported providers are shown here.")
+        card = self._card("ИИ-провайдеры", "Здесь показаны только поддерживаемые провайдеры.")
         lay1 = card.layout()
         self._api_defaults = self._load_api_defaults()
         self._gemini_row, self._gemini_status, self._gemini_key = self._provider_row(
@@ -9397,7 +9397,7 @@ class SystemConnectivityPage(QWidget):
             self._default_provider.setCurrentText("OpenRouter")
             
         self._default_provider.currentTextChanged.connect(self._set_default_provider)
-        controls.addWidget(QLabel("Default AI Provider"))
+        controls.addWidget(QLabel("Основной ИИ-провайдер"))
         controls.addWidget(self._default_provider, 1)
         lay1.addLayout(controls)
         
@@ -9407,14 +9407,14 @@ class SystemConnectivityPage(QWidget):
         local_lay.setContentsMargins(0, 0, 0, 0)
         
         url_row = QHBoxLayout()
-        url_row.addWidget(QLabel("Local Server URL"))
+        url_row.addWidget(QLabel("URL локального сервера"))
         self._local_url_input = QLineEdit(self._load_app_settings().get("local_ai_url", "http://localhost:11434/v1"))
         self._local_url_input.textChanged.connect(lambda t: self._set_setting("local_ai_url", t))
         url_row.addWidget(self._local_url_input, 1)
         local_lay.addLayout(url_row)
         
         model_row = QHBoxLayout()
-        model_row.addWidget(QLabel("Local Model Name"))
+        model_row.addWidget(QLabel("Название локальной модели"))
         self._local_model_input = QLineEdit(self._load_app_settings().get("local_ai_model", "llama3.2"))
         self._local_model_input.textChanged.connect(lambda t: self._set_setting("local_ai_model", t))
         model_row.addWidget(self._local_model_input, 1)
@@ -9427,12 +9427,12 @@ class SystemConnectivityPage(QWidget):
 
         # Local offline voice (STT + TTS, no Google)
         local_voice_card = self._card(
-            "Local Voice Engine",
-            "Offline speech-to-text (Vosk/sherpa) and text-to-speech (Piper). No Google involved.",
+            "Локальный голосовой движок",
+            "Автономное распознавание речи (Vosk/sherpa) и синтез речи (Piper). Без Google.",
         )
         lvl = local_voice_card.layout()
         self._local_voice_btn = self._mk_toggle(
-            "Use offline voice (Vosk + Piper)",
+            "Использовать офлайн-голос (Vosk + Piper)",
             bool(self._load_app_settings().get("local_voice_engine", True)),
             self._toggle_local_voice,
         )
@@ -9440,10 +9440,10 @@ class SystemConnectivityPage(QWidget):
         lay.addWidget(local_voice_card)
 
         # Network Proxy
-        proxy_card = self._card("Network Proxy", "Route all external HTTP/HTTPS/WebSocket connections through this proxy.")
+        proxy_card = self._card("Сетевой прокси", "Направляйте все внешние HTTP/HTTPS/WebSocket-подключения через этот прокси.")
         proxy_lay = proxy_card.layout()
         proxy_row = QHBoxLayout()
-        proxy_row.addWidget(QLabel("Proxy URL"))
+        proxy_row.addWidget(QLabel("URL прокси"))
         self._proxy_url_input = QLineEdit()
         self._proxy_url_input.setEchoMode(QLineEdit.EchoMode.Password)
         self._proxy_url_input.setPlaceholderText("http://user:pass@host:port")
@@ -9451,35 +9451,35 @@ class SystemConnectivityPage(QWidget):
         self._proxy_url_input.textChanged.connect(self._sync_proxy_url)
         proxy_row.addWidget(self._proxy_url_input, 1)
         proxy_lay.addLayout(proxy_row)
-        self._proxy_status = QLabel("Proxy is not configured")
+        self._proxy_status = QLabel("Прокси не настроен")
         self._proxy_status.setStyleSheet(f"color: {C.TEXT_DIM};")
         proxy_lay.addWidget(self._proxy_status)
         proxy_btns = QHBoxLayout()
-        self._proxy_save_btn = QPushButton("Save & Restart")
+        self._proxy_save_btn = QPushButton("Сохранить и перезапустить")
         self._proxy_save_btn.clicked.connect(self._save_proxy_and_restart)
         proxy_btns.addWidget(self._proxy_save_btn)
         proxy_lay.addLayout(proxy_btns)
         lay.addWidget(proxy_card)
 
-        self._auto_switch_btn = self._mk_toggle("Automatically switch if a provider fails", bool(self._load_app_settings().get("auto_provider_switch", True)), self._toggle_auto_provider_switch)
+        self._auto_switch_btn = self._mk_toggle("Автоматически переключаться при сбое провайдера", bool(self._load_app_settings().get("auto_provider_switch", True)), self._toggle_auto_provider_switch)
         lay1.addWidget(self._auto_switch_btn)
         lay.addWidget(card)
 
         # Mobile connect
-        mobile = self._card("Mobile Connect", "Connect your phone and control Voice Echo remotely.")
+        mobile = self._card("Мобильное подключение", "Подключите телефон и управляйте Voice Echo удалённо.")
         ml = mobile.layout()
-        self._mobile_status = QLabel("Connection Status: Ready")
-        self._mobile_phone = QLabel("Phone Name: Not connected")
-        self._mobile_last = QLabel("Last Connected: Never")
+        self._mobile_status = QLabel("Статус подключения: Готов")
+        self._mobile_phone = QLabel("Телефон: Не подключён")
+        self._mobile_last = QLabel("Последнее подключение: Никогда")
         for lbl in (self._mobile_status, self._mobile_phone, self._mobile_last):
             lbl.setStyleSheet(f"color: {C.TEXT_MED};")
             ml.addWidget(lbl)
         row = QHBoxLayout()
-        self._mobile_connect_btn = QPushButton("Connect Device")
+        self._mobile_connect_btn = QPushButton("Подключить устройство")
         self._mobile_connect_btn.clicked.connect(self._connect_mobile)
-        self._mobile_disconnect_btn = QPushButton("Disconnect")
+        self._mobile_disconnect_btn = QPushButton("Отключить")
         self._mobile_disconnect_btn.clicked.connect(self._disconnect_mobile)
-        self._mobile_qr_btn = QPushButton("Generate QR Code")
+        self._mobile_qr_btn = QPushButton("Создать QR-код")
         self._mobile_qr_btn.clicked.connect(self._show_qr_code)
         row.addWidget(self._mobile_connect_btn)
         row.addWidget(self._mobile_disconnect_btn)
@@ -9488,15 +9488,15 @@ class SystemConnectivityPage(QWidget):
         lay.addWidget(mobile)
 
         # Attention prompts
-        attention = self._card("Attention Prompts", "Control incoming message and call alerts.")
+        attention = self._card("Уведомления о внимании", "Управление оповещениями о входящих сообщениях и звонках.")
         al = attention.layout()
         self._attention_message_btn = self._mk_toggle(
-            "Show incoming message prompts",
+            "Показывать уведомления о входящих сообщениях",
             bool(self._load_app_settings().get("attention_message_prompts", True)),
             self._toggle_attention_message_prompts,
         )
         self._attention_call_btn = self._mk_toggle(
-            "Show incoming call prompts",
+            "Показывать уведомления о входящих звонках",
             bool(self._load_app_settings().get("attention_call_prompts", True)),
             self._toggle_attention_call_prompts,
         )
@@ -9505,26 +9505,26 @@ class SystemConnectivityPage(QWidget):
         lay.addWidget(attention)
 
         # Startup
-        startup = self._card("Startup", "Use Voice Echo with Windows startup preferences.")
+        startup = self._card("Автозапуск", "Настройки Voice Echo при запуске Windows.")
         sl = startup.layout()
-        self._startup_launch_btn = self._mk_toggle("Launch Voice Echo when Windows starts", bool(self._load_app_settings().get("show_workspace_on_startup", False)), self._toggle_startup_from_page)
-        self._startup_minimized_btn = self._mk_toggle("Launch Minimized", bool(self._load_app_settings().get("launch_minimized", False)), self._toggle_launch_minimized)
-        self._startup_updates_btn = self._mk_toggle("Check for updates on startup", bool(self._load_app_settings().get("check_updates_on_startup", True)), self._toggle_update_check)
+        self._startup_launch_btn = self._mk_toggle("Запускать Voice Echo при старте Windows", bool(self._load_app_settings().get("show_workspace_on_startup", False)), self._toggle_startup_from_page)
+        self._startup_minimized_btn = self._mk_toggle("Запуск в свёрнутом окне", bool(self._load_app_settings().get("launch_minimized", False)), self._toggle_launch_minimized)
+        self._startup_updates_btn = self._mk_toggle("Проверять обновления при запуске", bool(self._load_app_settings().get("check_updates_on_startup", True)), self._toggle_update_check)
         sl.addWidget(self._startup_launch_btn)
         sl.addWidget(self._startup_minimized_btn)
         sl.addWidget(self._startup_updates_btn)
         lay.addWidget(startup)
 
         # Shortcuts & Pinning
-        shortcuts = self._card("Shortcuts & Pinning", "Create shortcuts and pin Voice Echo to your Windows system.")
+        shortcuts = self._card("Ярлыки и закрепление", "Создавайте ярлыки и закрепляйте Voice Echo в системе Windows.")
         shl = shortcuts.layout()
         
         btn_row = QHBoxLayout()
         btn_row.setSpacing(12)
         
-        self._desktop_shortcut_btn = QPushButton("Create Desktop Shortcut")
+        self._desktop_shortcut_btn = QPushButton("Создать ярлык на рабочем столе")
         self._desktop_shortcut_btn.clicked.connect(self._handle_create_desktop_shortcut)
-        self._taskbar_pin_btn = QPushButton("Pin to Taskbar")
+        self._taskbar_pin_btn = QPushButton("Закрепить на панели задач")
         self._taskbar_pin_btn.clicked.connect(self._handle_pin_to_taskbar)
         
         btn_row.addWidget(self._desktop_shortcut_btn, 1)
@@ -9533,12 +9533,12 @@ class SystemConnectivityPage(QWidget):
         lay.addWidget(shortcuts)
 
         # App Theme
-        theme_card = self._card("App Theme", "Select the primary color theme for Voice Echo.")
+        theme_card = self._card("Тема приложения", "Выберите основной цвет темы для Voice Echo.")
         tl = theme_card.layout()
         theme_row = QHBoxLayout()
-        theme_row.addWidget(QLabel("Primary Color:"))
+        theme_row.addWidget(QLabel("Основной цвет:"))
         
-        self._pick_theme_btn = QPushButton("Pick Color Palette")
+        self._pick_theme_btn = QPushButton("Выбрать цветовую палитру")
         self._pick_theme_btn.clicked.connect(self._pick_theme_color)
         
         current_theme = "Gold"
@@ -9558,18 +9558,18 @@ class SystemConnectivityPage(QWidget):
         lay.addWidget(theme_card)
 
         # Startup animation
-        anim = self._card("Startup Animation", "Control how the boot sequence behaves.")
+        anim = self._card("Анимация запуска", "Управление поведением заставки при запуске.")
         al = anim.layout()
-        self._startup_anim_enable_btn = self._mk_toggle("Enable Startup Animation", bool(self._startup_animation_enabled()), self._toggle_startup_animation_from_page)
+        self._startup_anim_enable_btn = self._mk_toggle("Включить анимацию запуска", bool(self._startup_animation_enabled()), self._toggle_startup_animation_from_page)
         al.addWidget(self._startup_anim_enable_btn)
         speed_row = QHBoxLayout()
-        speed_row.addWidget(QLabel("Animation Speed"))
+        speed_row.addWidget(QLabel("Скорость анимации"))
         self._anim_speed = QComboBox()
         self._anim_speed.addItems(["Fast", "Normal", "Slow"])
         self._anim_speed.setCurrentText(self._load_app_settings().get("startup_anim_speed", "Normal"))
         speed_row.addWidget(self._anim_speed, 1)
         al.addLayout(speed_row)
-        self._anim_preview_btn = QPushButton("Preview Animation")
+        self._anim_preview_btn = QPushButton("Предпросмотр анимации")
         self._anim_preview_btn.clicked.connect(self._preview_animation)
         al.addWidget(self._anim_preview_btn)
         self._preview_progress = QProgressBar()
@@ -9582,29 +9582,29 @@ class SystemConnectivityPage(QWidget):
         lay.addWidget(anim)
 
         # Discord bot
-        discord = self._card("Discord Bot", "Mirror Voice Echo between the app and your server.")
+        discord = self._card("Discord Bot", "Синхронизируйте Voice Echo между приложением и вашим сервером.")
         dl = discord.layout()
         self._discord_defaults = self._load_discord_settings()
-        self._discord_status = QLabel("Bot Status: Offline")
+        self._discord_status = QLabel("Статус бота: Офлайн")
         dl.addWidget(self._discord_status)
         self._discord_token = QLineEdit()
         self._discord_token.setEchoMode(QLineEdit.EchoMode.Password)
-        self._discord_token.setPlaceholderText("Bot Token")
+        self._discord_token.setPlaceholderText("Токен бота")
         self._discord_token.setText((self._discord_defaults.get("bot_token") or "").strip())
         self._discord_token.setCursorPosition(0)
         dl.addWidget(self._discord_token)
-        self._discord_reveal = QPushButton("Reveal")
+        self._discord_reveal = QPushButton("Показать")
         self._discord_reveal.setCheckable(True)
         self._discord_reveal.clicked.connect(self._toggle_discord_reveal)
         dl.addWidget(self._discord_reveal)
         self._discord_channel = QLineEdit()
-        self._discord_channel.setPlaceholderText("Optional Channel ID")
+        self._discord_channel.setPlaceholderText("ID канала (необязательно)")
         self._discord_channel.setText((self._discord_defaults.get("channel_id") or "").strip())
         dl.addWidget(self._discord_channel)
         db = QHBoxLayout()
-        self._discord_save = QPushButton("Save")
-        self._discord_test = QPushButton("Test Connection")
-        self._discord_restart = QPushButton("Restart Bot")
+        self._discord_save = QPushButton("Сохранить")
+        self._discord_test = QPushButton("Проверить подключение")
+        self._discord_restart = QPushButton("Перезапустить бота")
         self._discord_save.clicked.connect(self._save_discord_from_page)
         self._discord_test.clicked.connect(self._test_discord_from_page)
         self._discord_restart.clicked.connect(self._restart_discord_from_page)
@@ -9617,15 +9617,15 @@ class SystemConnectivityPage(QWidget):
         dl.addWidget(self._discord_msg)
         lay.addWidget(discord)
 
-        about = self._card("About Voice Echo", "Voice Echo information only.")
+        about = self._card("О Voice Echo", "Информация о Voice Echo.")
         ab = about.layout()
         about_grid = QGridLayout()
         about_grid.setHorizontalSpacing(22)
         about_grid.setVerticalSpacing(8)
         entries = [
-            ("Version", "v1.0.0"),
-            ("Build Number", "2026.06.29"),
-            ("Release Date", "29 Jun 2026"),
+            ("Версия", "v1.0.0"),
+            ("Номер сборки", "2026.06.29"),
+            ("Дата выпуска", "29 Июн 2026"),
         ]
         self._about_values: dict[str, QLabel] = {}
         for idx, (label, value) in enumerate(entries):
@@ -9662,10 +9662,10 @@ class SystemConnectivityPage(QWidget):
             stop_daemon()
             
             from PyQt6.QtWidgets import QMessageBox
-            QMessageBox.information(self, "Disconnected", "Instagram account disconnected.")
+            QMessageBox.information(self, "Отключено", "Аккаунт Instagram отключён.")
         except Exception as e:
             from PyQt6.QtWidgets import QMessageBox
-            QMessageBox.critical(self, "Error", f"Error disconnecting Instagram: {e}")
+            QMessageBox.critical(self, "Ошибка", f"Не удалось отключить Instagram: {e}")
 
     class IGLoginWorker(__import__('PyQt6').QtCore.QThread):
         finished_success = __import__('PyQt6').QtCore.pyqtSignal()
@@ -9697,7 +9697,7 @@ class SystemConnectivityPage(QWidget):
                     self.request_challenge.emit()
                     self.code_event.wait()
                     if not self.code:
-                        raise Exception("Challenge code not provided.")
+                        raise Exception("Код подтверждения не предоставлен.")
                     cl.challenge_resolve(self.code)
                 cl.dump_settings("config/ig_session.json")
                 from actions.instagram_chat import stop_daemon, start_daemon
@@ -9715,11 +9715,11 @@ class SystemConnectivityPage(QWidget):
         import json
         
         if not username or not password:
-            QMessageBox.warning(self, "Error", "Please enter both username and password.")
+            QMessageBox.warning(self, "Ошибка", "Введите имя пользователя и пароль.")
             return
             
         self._ig_connect_btn.setEnabled(False)
-        self._ig_connect_btn.setText("Connecting...")
+        self._ig_connect_btn.setText("Подключение...")
         
         # Save credentials temporarily
         try:
@@ -9743,19 +9743,19 @@ class SystemConnectivityPage(QWidget):
 
     def _ig_login_success(self):
         self._ig_connect_btn.setEnabled(True)
-        self._ig_connect_btn.setText("Connect")
+        self._ig_connect_btn.setText("Подключить")
         from PyQt6.QtWidgets import QMessageBox
-        QMessageBox.information(self, "Success", "Instagram login successful and daemon started!")
+        QMessageBox.information(self, "Успех", "Вход в Instagram выполнен, демон запущен!")
 
     def _ig_login_error(self, err_msg):
         self._ig_connect_btn.setEnabled(True)
-        self._ig_connect_btn.setText("Connect")
+        self._ig_connect_btn.setText("Подключить")
         from PyQt6.QtWidgets import QMessageBox
-        QMessageBox.critical(self, "Error", f"Instagram login failed: {err_msg}")
+        QMessageBox.critical(self, "Ошибка", f"Не удалось войти в Instagram: {err_msg}")
 
     def _ig_login_2fa(self):
         from PyQt6.QtWidgets import QInputDialog
-        code, ok = QInputDialog.getText(self, "2-Factor Authentication", "Enter the 6-digit code sent to your device:")
+        code, ok = QInputDialog.getText(self, "Двухфакторная аутентификация", "Введите 6-значный код, отправленный на ваше устройство:")
         if ok and code:
             self._ig_worker.code = code
         else:
@@ -9764,7 +9764,7 @@ class SystemConnectivityPage(QWidget):
 
     def _ig_login_challenge(self):
         from PyQt6.QtWidgets import QInputDialog
-        code, ok = QInputDialog.getText(self, "Challenge Required", "Enter the verification code sent to your email/phone:")
+        code, ok = QInputDialog.getText(self, "Требуется подтверждение", "Введите код подтверждения, отправленный на email/телефон:")
         if ok and code:
             self._ig_worker.code = code
         else:
@@ -9772,7 +9772,7 @@ class SystemConnectivityPage(QWidget):
         self._ig_worker.code_event.set()
 
     def _pick_theme_color(self):
-        color = QColorDialog.getColor(QColor(C.PRI), self, "Select App Theme Color")
+        color = QColorDialog.getColor(QColor(C.PRI), self, "Выберите цвет темы приложения")
         if color.isValid():
             self._change_theme(color.name())
 
@@ -9795,7 +9795,7 @@ class SystemConnectivityPage(QWidget):
             print(f"Error saving theme: {e}")
         import subprocess
         import sys
-        QMessageBox.information(self, "Restart Required", "The application will now restart to apply the new theme.")
+        QMessageBox.information(self, "Требуется перезапуск", "Приложение будет перезапущено для применения новой темы.")
         subprocess.Popen([sys.executable, "main.py"])
         QApplication.quit()
 
@@ -9809,11 +9809,11 @@ class SystemConnectivityPage(QWidget):
         return card
 
     def _build_status_box(self):
-        box = self._card("System Status", "")
+        box = self._card("Состояние системы", "")
         lay = box.layout()
-        self._sys_online = QLabel("≡ƒƒó System Online")
+        self._sys_online = QLabel("≡ƒƒó Система онлайн")
         self._sys_online.setStyleSheet("color: #35ff75; font-weight: 700;")
-        self._sys_note = QLabel("All systems are operational.")
+        self._sys_note = QLabel("Все системы работают нормально.")
         self._sys_note.setStyleSheet(f"color: {C.TEXT_MED};")
         lay.addWidget(self._sys_online)
         lay.addWidget(self._sys_note)
@@ -9821,7 +9821,7 @@ class SystemConnectivityPage(QWidget):
         self._sys_platform = QLabel(platform.system())
         self._sys_provider = QLabel("Gemini")
         self._sys_updated = QLabel(time.strftime("%d %b %Y %H:%M"))
-        for label, val in (("Version", self._sys_version), ("Platform", self._sys_platform), ("Current AI Provider", self._sys_provider), ("Last Updated", self._sys_updated)):
+        for label, val in (("Версия", self._sys_version), ("Платформа", self._sys_platform), ("Текущий ИИ-провайдер", self._sys_provider), ("Последнее обновление", self._sys_updated)):
             row = QHBoxLayout()
             row.addWidget(QLabel(label))
             row.addStretch(1)
@@ -9830,14 +9830,14 @@ class SystemConnectivityPage(QWidget):
         return box
 
     def _build_quick_actions_box(self):
-        box = self._card("Quick Actions", "")
+        box = self._card("Быстрые действия", "")
         lay = box.layout()
         actions = [
-            ("Restart Voice Echo", QStyle.StandardPixmap.SP_BrowserReload, self._restart_app),
-            ("Reload Configuration", QStyle.StandardPixmap.SP_BrowserReload, self._reload_config),
-            ("Open Data Folder", QStyle.StandardPixmap.SP_DirOpenIcon, self._open_data_folder),
-            ("View Logs", QStyle.StandardPixmap.SP_FileDialogDetailedView, self._view_logs),
-            ("Check for Updates", QStyle.StandardPixmap.SP_ArrowDown, self._check_updates),
+            ("Перезапустить Voice Echo", QStyle.StandardPixmap.SP_BrowserReload, self._restart_app),
+            ("Перезагрузить конфигурацию", QStyle.StandardPixmap.SP_BrowserReload, self._reload_config),
+            ("Открыть папку данных", QStyle.StandardPixmap.SP_DirOpenIcon, self._open_data_folder),
+            ("Просмотреть журналы", QStyle.StandardPixmap.SP_FileDialogDetailedView, self._view_logs),
+            ("Проверить обновления", QStyle.StandardPixmap.SP_ArrowDown, self._check_updates),
         ]
         for text, icon_kind, slot in actions:
             btn = QPushButton(text)
@@ -9853,9 +9853,9 @@ class SystemConnectivityPage(QWidget):
         lay = QVBoxLayout(box)
         lay.setContentsMargins(16, 14, 16, 14)
         lay.setSpacing(8)
-        title = QLabel("Security Tip")
+        title = QLabel("Совет по безопасности")
         title.setStyleSheet("color: #ffbf00; font-weight: 700;")
-        body = QLabel('"Never share your API keys with anyone."')
+        body = QLabel('"Никогда не делитесь своими API-ключами с другими."')
         body.setWordWrap(True)
         body.setStyleSheet(f"color: {C.TEXT_MED};")
         lay.addWidget(title)
@@ -9898,9 +9898,9 @@ class SystemConnectivityPage(QWidget):
 
     def _test_provider(self, setting_key: str):
         if setting_key == "gemini":
-            msg = "Google Gemini key detected." if self._load_api_defaults().get("gemini_api_key") else "Google Gemini key missing."
+            msg = "Ключ Google Gemini найден." if self._load_api_defaults().get("gemini_api_key") else "Ключ Google Gemini отсутствует."
         else:
-            msg = "OpenRouter key detected." if self._load_api_defaults().get("openrouter_api_key") else "OpenRouter key missing."
+            msg = "Ключ OpenRouter найден." if self._load_api_defaults().get("openrouter_api_key") else "Ключ OpenRouter отсутствует."
         if self._ctrl() and hasattr(self._ctrl(), "write_log"):
             self._ctrl().write_log(f"SYS: {msg}")
         self.refresh()
@@ -9915,16 +9915,16 @@ class SystemConnectivityPage(QWidget):
         elif hasattr(ctrl, "_win") and hasattr(ctrl._win, "_show_remote_connect"):
             target = ctrl._win
         if target is not None:
-            self._mobile_connect_btn.setText("Connecting...")
+            self._mobile_connect_btn.setText("Подключение...")
             target._show_remote_connect()
-            QTimer.singleShot(1100, lambda: self._mobile_connect_btn.setText("Connect Device"))
+            QTimer.singleShot(1100, lambda: self._mobile_connect_btn.setText("Подключить устройство"))
 
     def _disconnect_mobile(self):
         if self._ctrl() and hasattr(self._ctrl(), "write_log"):
             self._ctrl().write_log("SYS: Mobile Connect session closed.")
-        self._mobile_status.setText("Connection Status: Disconnected")
-        self._mobile_phone.setText("Phone Name: Not connected")
-        self._mobile_last.setText("Last Connected: Never")
+        self._mobile_status.setText("Статус подключения: Отключено")
+        self._mobile_phone.setText("Телефон: Не подключён")
+        self._mobile_last.setText("Последнее подключение: Никогда")
 
     def _show_qr_code(self):
         ctrl = self._ctrl()
@@ -9984,17 +9984,17 @@ class SystemConnectivityPage(QWidget):
         except Exception:
             pass
         if text and text.strip():
-            self._proxy_status.setText("Proxy will be applied on restart")
+            self._proxy_status.setText("Прокси будет применён после перезапуска")
             self._proxy_status.setStyleSheet(f"color: {C.PRI};")
         else:
-            self._proxy_status.setText("Proxy is not configured")
+            self._proxy_status.setText("Прокси не настроен")
             self._proxy_status.setStyleSheet(f"color: {C.TEXT_DIM};")
 
     def _save_proxy_and_restart(self):
         try:
             set_proxy_url(self._proxy_url_input.text())
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Failed to save proxy configuration: {e}")
+            QMessageBox.critical(self, "Ошибка", f"Не удалось сохранить конфигурацию прокси: {e}")
             return
         if self._ctrl() and hasattr(self._ctrl(), "write_log"):
             self._ctrl().write_log("SYS: Proxy configuration saved, restarting...")
@@ -10040,7 +10040,7 @@ class SystemConnectivityPage(QWidget):
             self._ctrl()._win._discord_token_input = self._discord_token
             self._ctrl()._win._discord_channel_input = self._discord_channel
             self._ctrl()._win._save_discord_token()
-            self._discord_status.setText("Bot Status: Saved")
+            self._discord_status.setText("Статус бота: Сохранено")
             self.refresh()
 
     def _test_discord_from_page(self):
@@ -10048,14 +10048,14 @@ class SystemConnectivityPage(QWidget):
         if self._ctrl() and hasattr(self._ctrl(), "_win"):
             self._ctrl()._win._start_discord_bot()
             self._ctrl()._win._stop_discord_bot()
-            self._discord_status.setText("Bot Status: Test sent")
-            self._discord_msg.setText("Connected as Voice Echo#9649" if self._discord_token.text().strip() else "Bot Offline")
+            self._discord_status.setText("Статус бота: Тест отправлен")
+            self._discord_msg.setText("Подключён как Voice Echo#9649" if self._discord_token.text().strip() else "Бот офлайн")
 
     def _restart_discord_from_page(self):
         if self._ctrl() and hasattr(self._ctrl(), "_win"):
             self._ctrl()._win._stop_discord_bot()
             self._ctrl()._win._start_discord_bot()
-            self._discord_status.setText("Bot Status: Restarted")
+            self._discord_status.setText("Статус бота: Перезапущен")
 
     def _restart_app(self):
         if self._ctrl() and hasattr(self._ctrl(), "_restart_app"):
@@ -10116,8 +10116,8 @@ class SystemConnectivityPage(QWidget):
             if widget is not None:
                 widget.blockSignals(True)
         try:
-            self._gemini_status.setText("Connected" if api.get("gemini_api_key") else "Not connected")
-            self._or_status.setText("Connected" if api.get("openrouter_api_key") else "Not connected")
+            self._gemini_status.setText("Подключено" if api.get("gemini_api_key") else "Не подключено")
+            self._or_status.setText("Подключено" if api.get("openrouter_api_key") else "Не подключено")
             self._gemini_key.setText(self._provider_key_preview(api.get("gemini_api_key", "")))
             self._or_key.setText(self._provider_key_preview(api.get("openrouter_api_key", "")))
             self._default_provider.setCurrentText("Google Gemini" if app.get("default_ai_provider", "Gemini") == "Gemini" else "OpenRouter")
@@ -10152,14 +10152,14 @@ class SystemConnectivityPage(QWidget):
         enabled = bool(discord.get("enabled", False))
         token = (discord.get("bot_token") or "").strip()
         if enabled and token:
-            self._discord_status.setText("Bot Status: Online")
-            self._discord_msg.setText("Connected as Voice Echo#9649")
+            self._discord_status.setText("Статус бота: Онлайн")
+            self._discord_msg.setText("Подключён как Voice Echo#9649")
         elif token:
-            self._discord_status.setText("Bot Status: Offline")
-            self._discord_msg.setText("Bot Offline")
+            self._discord_status.setText("Статус бота: Офлайн")
+            self._discord_msg.setText("Бот офлайн")
         else:
-            self._discord_status.setText("Bot Status: Offline")
-            self._discord_msg.setText("Token required")
+            self._discord_status.setText("Статус бота: Офлайн")
+            self._discord_msg.setText("Требуется токен")
         if self._ctrl() and hasattr(self._ctrl(), "_win"):
             self._sys_provider.setText("Gemini" if app.get("default_ai_provider", "Gemini") == "Gemini" else "OpenRouter")
 
@@ -10168,24 +10168,24 @@ class SystemConnectivityPage(QWidget):
         if success:
             QMessageBox.information(
                 self, 
-                "Success", 
-                f"Desktop shortcut created successfully at:\n{path_or_err}"
+                "Успех", 
+                f"Ярлык на рабочем столе успешно создан:\n{path_or_err}"
             )
         else:
             QMessageBox.warning(
                 self, 
-                "Error", 
-                f"Failed to create desktop shortcut:\n{path_or_err}"
+                "Ошибка", 
+                f"Не удалось создать ярлык на рабочем столе:\n{path_or_err}"
             )
 
     def _handle_pin_to_taskbar(self):
         success, msg = self._pin_app_to_taskbar_logic()
         if success:
-            QMessageBox.information(self, "Success", msg)
+            QMessageBox.information(self, "Успех", msg)
         else:
             QMessageBox.warning(
                 self, 
-                "Taskbar Pinning", 
+                "Закрепление на панели задач", 
                 msg
             )
 
@@ -10275,11 +10275,11 @@ class SystemConnectivityPage(QWidget):
             # Ensure desktop shortcut exists first
             success, path_or_err = self._create_desktop_shortcut_logic()
             if not success:
-                return False, f"Failed to create desktop shortcut first: {path_or_err}"
+                return False, f"Сначала создайте ярлык на рабочем столе: {path_or_err}"
                 
             shortcut_path = Path(path_or_err)
             if not shortcut_path.exists():
-                return False, "Shortcut file does not exist."
+                return False, "Файл ярлыка не существует."
                 
             powershell_exe = shutil.which("powershell.exe") or "powershell"
             
@@ -10301,11 +10301,11 @@ class SystemConnectivityPage(QWidget):
             )
             
             if res.returncode == 0:
-                return True, "Voice Echo has been pinned to your Taskbar!"
+                return True, "Voice Echo закреплён на панели задач!"
             else:
-                return False, "Windows restricts programmatic taskbar pinning. Please right-click the 'Voice Echo - Premium.lnk' shortcut on your Desktop and select 'Pin to taskbar', or drag it directly onto your taskbar."
+                return False, "Windows ограничивает программное закрепление на панели задач. Щёлкните правой кнопкой по ярлыку «Voice Echo - Premium.lnk» на рабочем столе и выберите «Закрепить на панели задач», либо перетащите его прямо на панель задач."
         except Exception as e:
-            return False, f"Error pinning to taskbar: {e}"
+            return False, f"Ошибка закрепления на панели задач: {e}"
 
 class SmartDevicesSection(QFrame):
     def __init__(self, controller=None, parent=None):
@@ -10337,17 +10337,17 @@ class SmartDevicesSection(QFrame):
         header.setSpacing(8)
         title_box = QVBoxLayout()
         title_box.setSpacing(1)
-        self._title_lbl = QLabel("SMART DEVICES")
+        self._title_lbl = QLabel("УМНЫЕ УСТРОЙСТВА")
         self._title_lbl.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
         self._title_lbl.setStyleSheet(f"color: {C.WHITE}; letter-spacing: 1px;")
-        self._subtitle_lbl = QLabel("Quick access to your connected home devices.")
+        self._subtitle_lbl = QLabel("Быстрый доступ к подключённым домашним устройствам.")
         self._subtitle_lbl.setFont(QFont("Segoe UI", 8))
         self._subtitle_lbl.setStyleSheet(f"color: {C.TEXT_DIM};")
         title_box.addWidget(self._title_lbl)
         title_box.addWidget(self._subtitle_lbl)
         header.addLayout(title_box, 1)
 
-        self._count_chip = QLabel("0 devices")
+        self._count_chip = QLabel("0 устройств")
         self._count_chip.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._count_chip.setStyleSheet(
             f"QLabel {{ background: rgba(255,255,255,0.03); color: {C.PRI}; border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 4px 10px; }}"
@@ -10372,7 +10372,7 @@ class SmartDevicesSection(QFrame):
         self._refresh_btn.clicked.connect(lambda: self.refresh(force=True))
         header.addWidget(self._refresh_btn)
 
-        self._open_home_btn = QPushButton("Add Device")
+        self._open_home_btn = QPushButton("Добавить устройство")
         self._open_home_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._open_home_btn.setStyleSheet(f"""
             QPushButton {{
@@ -10396,16 +10396,16 @@ class SmartDevicesSection(QFrame):
         empty_lay = QVBoxLayout(self._empty_card)
         empty_lay.setContentsMargins(6, 4, 6, 4)
         empty_lay.setSpacing(6)
-        empty_title = QLabel("No Smart Devices Connected")
+        empty_title = QLabel("Нет подключённых умных устройств")
         empty_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         empty_title.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
         empty_title.setStyleSheet(f"color: {C.WHITE}; border: none;")
-        empty_desc = QLabel("Connect your first smart device to control it directly from your dashboard.")
+        empty_desc = QLabel("Подключите первое умное устройство, чтобы управлять им прямо с панели управления.")
         empty_desc.setWordWrap(True)
         empty_desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
         empty_desc.setFont(QFont("Segoe UI", 8))
         empty_desc.setStyleSheet(f"color: {C.TEXT_DIM};")
-        empty_btn = QPushButton("Open Voice Echo Home")
+        empty_btn = QPushButton("Открыть Voice Echo Home")
         empty_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         empty_btn.setFixedWidth(160)
         empty_btn.setStyleSheet(f"""
@@ -10489,7 +10489,7 @@ class SmartDevicesSection(QFrame):
 
         panel_top = QHBoxLayout()
         panel_top.setSpacing(6)
-        self._panel_name = QLabel("Device")
+        self._panel_name = QLabel("Устройство")
         self._panel_name.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
         self._panel_name.setStyleSheet(f"color: {C.WHITE};")
         panel_top.addWidget(self._panel_name, 1)
@@ -10702,26 +10702,26 @@ class SmartDevicesSection(QFrame):
 
             self._panel_name.setText(name)
             self._panel_meta.setText(
-                f"Room: {room or 'Unassigned'}\nType: {device_type.title()}\nManufacturer: {device.get('manufacturer', '')}\nConnection: Connected"
+                f"Комната: {room or 'Без комнаты'}\nТип: {device_type.title()}\nПроизводитель: {device.get('manufacturer', '')}\nПодключение: Подключено"
             )
-            self._panel_status.setText("ON" if is_on else "OFF")
-            self._panel_hint.setText("Click outside the panel to close.")
+            self._panel_status.setText("ВКЛ" if is_on else "ВЫКЛ")
+            self._panel_hint.setText("Нажмите за пределами панели, чтобы закрыть.")
 
-            power_btn = QPushButton("Power")
+            power_btn = QPushButton("Питание")
             power_btn.clicked.connect(lambda: self._apply_tile_action(str(device.get("id", "")), "power", {"is_on": not is_on}))
             self._panel_actions.addWidget(power_btn)
 
-            forget_btn = QPushButton("Forget")
+            forget_btn = QPushButton("Забыть")
             forget_btn.clicked.connect(lambda: self._forget_device(str(device.get("id", ""))))
             self._panel_actions.addWidget(forget_btn)
 
-            rename_btn = QPushButton("Rename")
+            rename_btn = QPushButton("Переименовать")
             rename_btn.clicked.connect(lambda: self._rename_device(str(device.get("id", "")), name))
             self._panel_actions.addWidget(rename_btn)
 
             if device_type == "fan":
                 speed = int(traits.get("speed", 4) or 4)
-                lbl = QLabel(f"Speed {speed}")
+                lbl = QLabel(f"Скорость {speed}")
                 lbl.setStyleSheet(f"color: {C.TEXT_MED};")
                 self._panel_controls.addWidget(lbl)
                 slider = QSlider(Qt.Orientation.Horizontal)
@@ -10731,7 +10731,7 @@ class SmartDevicesSection(QFrame):
                 self._panel_controls.addWidget(slider)
             elif device_type == "light":
                 brightness = int(traits.get("brightness", 75) or 75)
-                lbl = QLabel(f"Brightness {brightness}%")
+                lbl = QLabel(f"Яркость {brightness}%")
                 lbl.setStyleSheet(f"color: {C.TEXT_MED};")
                 self._panel_controls.addWidget(lbl)
                 slider = QSlider(Qt.Orientation.Horizontal)
@@ -10739,12 +10739,12 @@ class SmartDevicesSection(QFrame):
                 slider.setValue(brightness)
                 slider.valueChanged.connect(lambda value: self._apply_tile_action(str(device.get("id", "")), "brightness", {"brightness": value}))
                 self._panel_controls.addWidget(slider)
-                color_btn = QPushButton("Color")
+                color_btn = QPushButton("Цвет")
                 color_btn.clicked.connect(lambda: self._pick_color(device))
                 self._panel_controls.addWidget(color_btn)
             elif device_type == "ac":
                 temperature = int(traits.get("temperature", 24) or 24)
-                lbl = QLabel(f"Temperature {temperature}")
+                lbl = QLabel(f"Температура {temperature}")
                 lbl.setStyleSheet(f"color: {C.TEXT_MED};")
                 self._panel_controls.addWidget(lbl)
                 slider = QSlider(Qt.Orientation.Horizontal)
@@ -10754,7 +10754,7 @@ class SmartDevicesSection(QFrame):
                 self._panel_controls.addWidget(slider)
             elif device_type in ("tv", "speaker"):
                 volume = int(traits.get("volume", 18) or 18)
-                lbl = QLabel(f"Volume {volume}")
+                lbl = QLabel(f"Громкость {volume}")
                 lbl.setStyleSheet(f"color: {C.TEXT_MED};")
                 self._panel_controls.addWidget(lbl)
                 slider = QSlider(Qt.Orientation.Horizontal)
@@ -10764,11 +10764,11 @@ class SmartDevicesSection(QFrame):
                 self._panel_controls.addWidget(slider)
             elif device_type == "plug":
                 usage = traits.get("energy_usage", traits.get("power_usage", "N/A"))
-                lbl = QLabel(f"Energy usage: {usage}")
+                lbl = QLabel(f"Энергопотребление: {usage}")
                 lbl.setStyleSheet(f"color: {C.TEXT_MED};")
                 self._panel_controls.addWidget(lbl)
             else:
-                lbl = QLabel("Primary controls are available from the card below.")
+                lbl = QLabel("Основные элементы управления доступны на карточке ниже.")
                 lbl.setWordWrap(True)
                 lbl.setStyleSheet(f"color: {C.TEXT_MED};")
                 self._panel_controls.addWidget(lbl)
@@ -10776,12 +10776,12 @@ class SmartDevicesSection(QFrame):
             return
 
     def _pick_color(self, device: dict[str, object]):
-        color = QColorDialog.getColor(QColor(C.PRI), self, "Pick Light Color")
+        color = QColorDialog.getColor(QColor(C.PRI), self, "Выберите цвет лампы")
         if color.isValid():
             self._apply_tile_action(str(device.get("id", "")), "color", {"color": color.name()})
 
     def _rename_device(self, device_id: str, current_name: str):
-        new_name, ok = QInputDialog.getText(self, "Rename Device", "New name:", text=current_name)
+        new_name, ok = QInputDialog.getText(self, "Переименовать устройство", "Новое имя:", text=current_name)
         if ok and new_name.strip():
             try:
                 self._service.rename_device(device_id, new_name.strip())
@@ -10983,9 +10983,9 @@ class VoiceUI:
             workspace = str(settings.get("developer_mode_workspace", "")).strip()
             if hasattr(self._win, "_developer_card") and hasattr(self._win, "_developer_status_lbl"):
                 if enabled:
-                    workspace_text = workspace or "No folder selected"
+                    workspace_text = workspace or "Папка не выбрана"
                     self._win._developer_status_lbl.setText(
-                        f"Developer mode is on ΓÇó {workspace_text}"
+                        f"Режим разработчика включён ΓÇó {workspace_text}"
                     )
                     self._win._developer_card.show()
                     self._win._developer_card.raise_()
@@ -10997,12 +10997,12 @@ class VoiceUI:
     def _sync_launcher_state(self, state: str):
         state = (state or "idle").strip().lower()
         detail = {
-            "listening": "Ready",
-            "thinking": "Thinking...",
-            "processing": "Executing task...",
-            "speaking": "Speaking",
-            "muted": "Muted",
-        }.get(state, "Ready")
+            "listening": "Готов",
+            "thinking": "Думает...",
+            "processing": "Выполнение задачи...",
+            "speaking": "Говорит",
+            "muted": "Приглушён",
+        }.get(state, "Готов")
         try:
             self._launcher.set_state(state, detail)
         except Exception:
@@ -11044,15 +11044,15 @@ class VoiceUI:
         enabled = bool(getattr(self, "_discord_enabled", False))
         if note:
             status = note
-            color = C.PRI if "error" in note.lower() or "missing" in note.lower() else C.TEXT_MED
+            color = C.PRI if "error" in note.lower() or "missing" in note.lower() or "ошибка" in note.lower() else C.TEXT_MED
         elif not token:
-            status = "Token required"
+            status = "Требуется токен"
             color = C.PRI
         elif enabled:
-            status = "Bot enabled"
+            status = "Бот включён"
             color = C.GREEN
         else:
-            status = "Bot disabled"
+            status = "Бот отключён"
             color = C.TEXT_MED
         self._discord_status_lbl.setText(status)
         self._discord_status_lbl.setStyleSheet(f"color: {color}; background: transparent;")
@@ -11061,7 +11061,7 @@ class VoiceUI:
         if hasattr(self, "_discord_stop_btn"):
             self._discord_stop_btn.setEnabled(True)
         if hasattr(self, "_discord_save_btn"):
-            self._discord_save_btn.setText("Save Settings")
+            self._discord_save_btn.setText("Сохранить настройки")
 
     def _startup_animation_enabled(self) -> bool:
         if platform.system() != "Windows":
@@ -11083,13 +11083,13 @@ class VoiceUI:
         if not hasattr(self, "_startup_anim_btn"):
             return
         if platform.system() != "Windows":
-            self._startup_anim_btn.setText("Startup Animation (Windows only)")
+            self._startup_anim_btn.setText("Анимация запуска (только Windows)")
             self._startup_anim_btn.setEnabled(False)
             return
         if self._startup_animation_enabled():
-            self._startup_anim_btn.setText("Disable Startup Animation")
+            self._startup_anim_btn.setText("Отключить анимацию запуска")
         else:
-            self._startup_anim_btn.setText("Enable Startup Animation")
+            self._startup_anim_btn.setText("Включить анимацию запуска")
 
     def _toggle_startup_animation(self):
         if platform.system() != "Windows":
@@ -11186,17 +11186,17 @@ class VoiceUI:
             }}
         """)
 
-        open_app_action = menu.addAction("Open App")
-        open_action = menu.addAction("Open Workspace")
-        close_action = menu.addAction("Close Workspace")
-        startup_action = menu.addAction("Show Workspace On Startup")
+        open_app_action = menu.addAction("Открыть приложение")
+        open_action = menu.addAction("Открыть рабочее пространство")
+        close_action = menu.addAction("Закрыть рабочее пространство")
+        startup_action = menu.addAction("Показывать рабочее пространство при запуске")
         startup_action.setCheckable(True)
         startup_action.setChecked(bool(self._load_app_settings().get("show_workspace_on_startup", False)))
-        show_icon_action = menu.addAction("Show Floating Icon")
-        hide_icon_action = menu.addAction("Hide Floating Icon")
+        show_icon_action = menu.addAction("Показывать плавающую иконку")
+        hide_icon_action = menu.addAction("Скрыть плавающую иконку")
         menu.addSeparator()
-        restart_action = menu.addAction("Restart")
-        quit_action = menu.addAction("Quit")
+        restart_action = menu.addAction("Перезапустить")
+        quit_action = menu.addAction("Выйти")
 
         open_app_action.triggered.connect(self.show_main)
         open_action.triggered.connect(self._show_workspace_sidebar)
@@ -11355,14 +11355,14 @@ class VoiceUI:
         if not enabled or not token:
             self._discord_service.stop()
             if not token:
-                self._win.discord_status_changed.emit("Token required")
+                self._win.discord_status_changed.emit("Требуется токен")
             else:
-                self._win.discord_status_changed.emit("Discord bot disabled")
+                self._win.discord_status_changed.emit("Бот Discord отключён")
             return
         try:
             self._discord_service.start(token)
         except Exception as exc:
-            msg = f"Discord error: {exc}"
+            msg = f"Ошибка Discord: {exc}"
             self._win.discord_status_changed.emit(msg)
             self._win._log_sig.emit(f"ERR: {msg}")
 
@@ -11500,11 +11500,11 @@ class VoiceUI:
             payload["source"] = source or "local"
         self._win._task_workspace_sig.emit(payload)
 
-    def finish_task_workspace(self, result: str, status: str = "Task completed.", percent: int = 100):
+    def finish_task_workspace(self, result: str, status: str = "Задача выполнена.", percent: int = 100):
         self._win._task_workspace_sig.emit({
             "action": "finish",
-            "result": result or "Done.",
-            "status": status or "Task completed.",
+            "result": result or "Готово.",
+            "status": status or "Задача выполнена.",
             "percent": percent,
         })
 
@@ -11583,7 +11583,7 @@ class _ConnectDeviceCard(QFrame):
             info.append(str(device.get("device_type")))
         if device.get("ip"):
             info.append(str(device.get("ip")))
-        self._info_lbl = QLabel(" ┬╖ ".join(info) if info else "Connected device")
+        self._info_lbl = QLabel(" ┬╖ ".join(info) if info else "Подключённое устройство")
         self._info_lbl.setFont(QFont("Segoe UI", 8))
         self._info_lbl.setStyleSheet("color: rgba(255,255,255,0.45);")
         self._info_lbl.setWordWrap(True)
@@ -11598,10 +11598,10 @@ class _ConnectDeviceCard(QFrame):
         actions_layout.setContentsMargins(8, 8, 8, 8)
         actions_layout.setSpacing(8)
 
-        self._rename_btn = QPushButton("Rename")
-        self._disconnect_btn = QPushButton("Disconnect")
-        self._forget_btn = QPushButton("Remove")
-        self._pin_btn = QPushButton("Set PIN")
+        self._rename_btn = QPushButton("Переименовать")
+        self._disconnect_btn = QPushButton("Отключить")
+        self._forget_btn = QPushButton("Удалить")
+        self._pin_btn = QPushButton("Задать PIN")
 
         actions_layout.addWidget(self._pin_btn)
         actions_layout.addWidget(self._rename_btn)
@@ -11700,10 +11700,10 @@ class VoiceConnectDevicesPage(QFrame):
         header.setSpacing(10)
         title_box = QVBoxLayout()
         title_box.setSpacing(2)
-        self._title = QLabel("DEVICES")
+        self._title = QLabel("УСТРОЙСТВА")
         self._title.setFont(QFont("Segoe UI", 18, QFont.Weight.Black))
         self._title.setStyleSheet("color: #ffffff; letter-spacing: 2px;")
-        self._subtitle = QLabel("Everything connected to Voice.")
+        self._subtitle = QLabel("Всё, что подключено к Voice.")
         self._subtitle.setFont(QFont("Segoe UI", 9))
         self._subtitle.setStyleSheet("color: rgba(255,255,255,0.62);")
         title_box.addWidget(self._title)
@@ -11714,12 +11714,12 @@ class VoiceConnectDevicesPage(QFrame):
         status_wrap.setSpacing(4)
         top_row = QHBoxLayout()
         top_row.setSpacing(8)
-        self._gateway_pill = QLabel("ΓùÅ Gateway Online")
+        self._gateway_pill = QLabel("ΓùÅ Шлюз онлайн")
         self._gateway_pill.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
         self._gateway_pill.setStyleSheet("color: #35ff75; background: rgba(53,255,117,0.06); border: 1px solid rgba(53,255,117,0.16); border-radius: 12px; padding: 5px 10px;")
         top_row.addWidget(self._gateway_pill)
         top_row.addStretch(1)
-        self._add_btn = QPushButton("+ Add Device")
+        self._add_btn = QPushButton("+ Добавить устройство")
         self._add_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._add_btn.setFixedHeight(34)
         self._add_btn.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
@@ -11739,7 +11739,7 @@ class VoiceConnectDevicesPage(QFrame):
         self._add_btn.clicked.connect(self._trigger_add_device)
         top_row.addWidget(self._add_btn)
         status_wrap.addLayout(top_row)
-        self._gateway_meta = QLabel("Port: 8765  ┬╖  Devices: 0")
+        self._gateway_meta = QLabel("Порт: 8765  ┬╖  Устройств: 0")
         self._gateway_meta.setAlignment(Qt.AlignmentFlag.AlignRight)
         self._gateway_meta.setFont(QFont("Segoe UI", 8))
         self._gateway_meta.setStyleSheet("color: rgba(255,255,255,0.42);")
@@ -11758,7 +11758,7 @@ class VoiceConnectDevicesPage(QFrame):
         ov_lay.setContentsMargins(0, 10, 0, 0)
         ov_lay.setSpacing(12)
         
-        self._my_devices_lbl = QLabel("MY DEVICES")
+        self._my_devices_lbl = QLabel("МОИ УСТРОЙСТВА")
         self._my_devices_lbl.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
         self._my_devices_lbl.setStyleSheet("color: #ffffff; letter-spacing: 1px;")
         ov_lay.addWidget(self._my_devices_lbl)
@@ -11786,12 +11786,12 @@ class VoiceConnectDevicesPage(QFrame):
         self._empty_page = QWidget()
         empty_lay = QVBoxLayout(self._empty_page)
         empty_lay.addStretch(1)
-        empty_lbl = QLabel("No devices connected yet.")
+        empty_lbl = QLabel("Устройства пока не подключены.")
         empty_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         empty_lbl.setFont(QFont("Segoe UI", 12))
         empty_lbl.setStyleSheet("color: rgba(255,255,255,0.5);")
         empty_lay.addWidget(empty_lbl)
-        empty_btn = QPushButton("+ ADD DEVICE")
+        empty_btn = QPushButton("+ ДОБАВИТЬ УСТРОЙСТВО")
         empty_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         empty_btn.setFixedSize(160, 40)
         empty_btn.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
@@ -11823,7 +11823,7 @@ class VoiceConnectDevicesPage(QFrame):
         det_lay.setContentsMargins(0, 10, 0, 0)
         det_lay.setSpacing(16)
         
-        back_btn = QPushButton("ΓåÉ Back to Devices")
+        back_btn = QPushButton("ΓåÉ К устройствам")
         back_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         back_btn.setFixedSize(140, 32)
         back_btn.setFont(QFont("Segoe UI", 9))
@@ -11873,7 +11873,7 @@ class VoiceConnectDevicesPage(QFrame):
         self._action_box.setStyleSheet("QFrame { background: rgba(10, 12, 18, 220); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; }")
         action_lay = QVBoxLayout(self._action_box)
         action_lay.setContentsMargins(16, 16, 16, 16)
-        action_title = QLabel("CONTROLS")
+        action_title = QLabel("УПРАВЛЕНИЕ")
         action_title.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
         action_title.setStyleSheet("color: #ffffff; letter-spacing: 1px;")
         action_lay.addWidget(action_title)
@@ -11887,15 +11887,15 @@ class VoiceConnectDevicesPage(QFrame):
         manage_box.setStyleSheet("QFrame { background: rgba(10, 12, 18, 220); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; }")
         manage_lay = QVBoxLayout(manage_box)
         manage_lay.setContentsMargins(16, 16, 16, 16)
-        manage_title = QLabel("MANAGE")
+        manage_title = QLabel("ДОСТУП")
         manage_title.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
         manage_title.setStyleSheet("color: #ffffff; letter-spacing: 1px;")
         manage_lay.addWidget(manage_title)
         
-        self._btn_rename = QPushButton("Rename Device")
-        self._btn_disconnect = QPushButton("Disconnect")
-        self._btn_reconnect = QPushButton("Reconnect")
-        self._btn_forget = QPushButton("Forget Device")
+        self._btn_rename = QPushButton("Переименовать устройство")
+        self._btn_disconnect = QPushButton("Отключить")
+        self._btn_reconnect = QPushButton("Переподключить")
+        self._btn_forget = QPushButton("Забыть устройство")
         self._btn_forget.setStyleSheet("QPushButton { color: #ff5555; } QPushButton:hover { background: rgba(255, 85, 85, 0.1); border-color: #ff5555; }")
         
         manage_grid = QGridLayout()
@@ -11948,7 +11948,7 @@ class VoiceConnectDevicesPage(QFrame):
         w0 = QWidget()
         w0_lay = QVBoxLayout(w0)
         w0_lay.addStretch(1)
-        w0_title = QLabel("SELECT DEVICE TYPE")
+        w0_title = QLabel("ВЫБЕРИТЕ ТИП УСТРОЙСТВА")
         w0_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         w0_title.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
         w0_title.setStyleSheet("color: #ffffff; letter-spacing: 2px;")
@@ -11968,7 +11968,7 @@ class VoiceConnectDevicesPage(QFrame):
         self._cs_android_btn.clicked.connect(self._cinema_select_android)
         w0_row.addWidget(self._cs_android_btn)
         
-        self._cs_pc_btn = QPushButton("PC\n(Coming Soon)")
+        self._cs_pc_btn = QPushButton("ПК\n(скоро)")
         self._cs_pc_btn.setFixedSize(140, 80)
         self._cs_pc_btn.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
         self._cs_pc_btn.setEnabled(False)
@@ -11983,7 +11983,7 @@ class VoiceConnectDevicesPage(QFrame):
         w1 = QWidget()
         w1_lay = QVBoxLayout(w1)
         w1_lay.addStretch(1)
-        w1_title = QLabel("SCAN TO CONNECT")
+        w1_title = QLabel("СКАНИРУЙТЕ ДЛЯ ПОДКЛЮЧЕНИЯ")
         w1_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         w1_title.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
         w1_title.setStyleSheet("color: #ffffff; letter-spacing: 2px;")
@@ -12007,7 +12007,7 @@ class VoiceConnectDevicesPage(QFrame):
         self._onb_code_lbl.setStyleSheet("color: #ffb300; letter-spacing: 6px;")
         w1_lay.addWidget(self._onb_code_lbl)
         
-        self._onb_status_lbl = QLabel("WAITING FOR CONNECTION")
+        self._onb_status_lbl = QLabel("ОЖИДАНИЕ ПОДКЛЮЧЕНИЯ")
         self._onb_status_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._onb_status_lbl.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
         self._onb_status_lbl.setStyleSheet("color: rgba(255,255,255,0.5); letter-spacing: 1px;")
@@ -12015,7 +12015,7 @@ class VoiceConnectDevicesPage(QFrame):
         
         w1_ctrl = QHBoxLayout()
         w1_ctrl.addStretch(1)
-        w1_ref = QPushButton("Refresh Code")
+        w1_ref = QPushButton("Обновить код")
         w1_ref.setCursor(Qt.CursorShape.PointingHandCursor)
         w1_ref.setFixedSize(120, 32)
         w1_ref.setStyleSheet("""
@@ -12033,7 +12033,7 @@ class VoiceConnectDevicesPage(QFrame):
         w2 = QWidget()
         w2_lay = QVBoxLayout(w2)
         w2_lay.addStretch(1)
-        self._onb_success_title = QLabel("DEVICE CONNECTED")
+        self._onb_success_title = QLabel("УСТРОЙСТВО ПОДКЛЮЧЕНО")
         self._onb_success_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._onb_success_title.setFont(QFont("Segoe UI", 16, QFont.Weight.Black))
         self._onb_success_title.setStyleSheet("color: #35ff75; letter-spacing: 2px;")
@@ -12078,7 +12078,7 @@ class VoiceConnectDevicesPage(QFrame):
         if service is None:
             self._onboarding_offer = {}
             self._onb_code_lbl.setText("------")
-            self._onb_status_lbl.setText("GATEWAY UNAVAILABLE")
+            self._onb_status_lbl.setText("ШЛЮЗ НЕДОСТУПЕН")
             return
         try:
             import io
@@ -12087,7 +12087,7 @@ class VoiceConnectDevicesPage(QFrame):
             self._onboarding_offer = dict(service.create_pairing_offer(device_name="Voice Connect", platform="gateway"))
             code = str(self._onboarding_offer.get("pairing_code") or "------")
             self._onb_code_lbl.setText(code)
-            self._onb_status_lbl.setText("WAITING FOR CONNECTION")
+            self._onb_status_lbl.setText("ОЖИДАНИЕ ПОДКЛЮЧЕНИЯ")
             
             payload = self._onboarding_offer
             text = json.dumps(payload, sort_keys=True, ensure_ascii=False)
@@ -12124,7 +12124,7 @@ class VoiceConnectDevicesPage(QFrame):
         try:
             remaining = max(0, int(expires))
             if remaining <= 0 and self._onboarding_offer:
-                self._onb_status_lbl.setText("CODE EXPIRED. REFRESH TO CONTINUE.")
+                self._onb_status_lbl.setText("КОД ИСТЁК. ОБНОВИТЕ ДЛЯ ПРОДОЛЖЕНИЯ.")
         except Exception:
             pass
             
@@ -12197,7 +12197,7 @@ class VoiceConnectDevicesPage(QFrame):
             
         devices = service.list_devices()
         port = getattr(service, "port", 8765)
-        self._gateway_meta.setText(f"Port: {port}  ┬╖  Devices: {len(devices)}")
+        self._gateway_meta.setText(f"Порт: {port}  ┬╖  Устройств: {len(devices)}")
         
         # If we are in Add Device or Detail page, keep it there
         if self._main_stack.currentIndex() not in (0,) and not force:
@@ -12256,7 +12256,7 @@ class VoiceConnectDevicesPage(QFrame):
         QTimer.singleShot(200, lambda: self.refresh(force=True))
 
     def _rename_device(self, device_id: str, current_name: str):
-        new_name, ok = QInputDialog.getText(self, "Rename Device", "New name:", text=current_name)
+        new_name, ok = QInputDialog.getText(self, "Переименовать устройство", "Новое имя:", text=current_name)
         if ok and new_name.strip():
             service = self._service_obj()
             if service:
@@ -12268,7 +12268,7 @@ class VoiceConnectDevicesPage(QFrame):
             self.refresh(force=True)
 
     def _set_device_pin(self, device_id: str):
-        pin, ok = QInputDialog.getText(self, "Set Device PIN", "Enter device PIN:", QLineEdit.EchoMode.Password)
+        pin, ok = QInputDialog.getText(self, "Задать PIN устройства", "Введите PIN устройства:", QLineEdit.EchoMode.Password)
         if ok and pin.strip():
             try:
                 settings = {}
@@ -12483,9 +12483,9 @@ class VoiceUI:
             workspace = str(settings.get("developer_mode_workspace", "")).strip()
             if hasattr(self._win, "_developer_card") and hasattr(self._win, "_developer_status_lbl"):
                 if enabled:
-                    workspace_text = workspace or "No folder selected"
+                    workspace_text = workspace or "Папка не выбрана"
                     self._win._developer_status_lbl.setText(
-                        f"Developer mode is on ΓÇó {workspace_text}"
+                        f"Режим разработчика включён ΓÇó {workspace_text}"
                     )
                     self._win._developer_card.show()
                     self._win._developer_card.raise_()
@@ -12497,12 +12497,12 @@ class VoiceUI:
     def _sync_launcher_state(self, state: str):
         state = (state or "idle").strip().lower()
         detail = {
-            "listening": "Ready",
-            "thinking": "Thinking...",
-            "processing": "Executing task...",
-            "speaking": "Speaking",
-            "muted": "Muted",
-        }.get(state, "Ready")
+            "listening": "Готов",
+            "thinking": "Думает...",
+            "processing": "Выполнение задачи...",
+            "speaking": "Говорит",
+            "muted": "Приглушён",
+        }.get(state, "Готов")
         try:
             self._launcher.set_state(state, detail)
         except Exception:
@@ -12544,15 +12544,15 @@ class VoiceUI:
         enabled = bool(getattr(self, "_discord_enabled", False))
         if note:
             status = note
-            color = C.PRI if "error" in note.lower() or "missing" in note.lower() else C.TEXT_MED
+            color = C.PRI if "error" in note.lower() or "missing" in note.lower() or "ошибка" in note.lower() else C.TEXT_MED
         elif not token:
-            status = "Token required"
+            status = "Требуется токен"
             color = C.PRI
         elif enabled:
-            status = "Bot enabled"
+            status = "Бот включён"
             color = C.GREEN
         else:
-            status = "Bot disabled"
+            status = "Бот отключён"
             color = C.TEXT_MED
         self._discord_status_lbl.setText(status)
         self._discord_status_lbl.setStyleSheet(f"color: {color}; background: transparent;")
@@ -12561,7 +12561,7 @@ class VoiceUI:
         if hasattr(self, "_discord_stop_btn"):
             self._discord_stop_btn.setEnabled(True)
         if hasattr(self, "_discord_save_btn"):
-            self._discord_save_btn.setText("Save Settings")
+            self._discord_save_btn.setText("Сохранить настройки")
 
     def _startup_animation_enabled(self) -> bool:
         if platform.system() != "Windows":
@@ -12583,13 +12583,13 @@ class VoiceUI:
         if not hasattr(self, "_startup_anim_btn"):
             return
         if platform.system() != "Windows":
-            self._startup_anim_btn.setText("Startup Animation (Windows only)")
+            self._startup_anim_btn.setText("Анимация запуска (только Windows)")
             self._startup_anim_btn.setEnabled(False)
             return
         if self._startup_animation_enabled():
-            self._startup_anim_btn.setText("Disable Startup Animation")
+            self._startup_anim_btn.setText("Отключить анимацию запуска")
         else:
-            self._startup_anim_btn.setText("Enable Startup Animation")
+            self._startup_anim_btn.setText("Включить анимацию запуска")
 
     def _toggle_startup_animation(self):
         if platform.system() != "Windows":
@@ -12686,17 +12686,17 @@ class VoiceUI:
             }}
         """)
 
-        open_app_action = menu.addAction("Open App")
-        open_action = menu.addAction("Open Workspace")
-        close_action = menu.addAction("Close Workspace")
-        startup_action = menu.addAction("Show Workspace On Startup")
+        open_app_action = menu.addAction("Открыть приложение")
+        open_action = menu.addAction("Открыть рабочее пространство")
+        close_action = menu.addAction("Закрыть рабочее пространство")
+        startup_action = menu.addAction("Показывать рабочее пространство при запуске")
         startup_action.setCheckable(True)
         startup_action.setChecked(bool(self._load_app_settings().get("show_workspace_on_startup", False)))
-        show_icon_action = menu.addAction("Show Floating Icon")
-        hide_icon_action = menu.addAction("Hide Floating Icon")
+        show_icon_action = menu.addAction("Показывать плавающую иконку")
+        hide_icon_action = menu.addAction("Скрыть плавающую иконку")
         menu.addSeparator()
-        restart_action = menu.addAction("Restart")
-        quit_action = menu.addAction("Quit")
+        restart_action = menu.addAction("Перезапустить")
+        quit_action = menu.addAction("Выйти")
 
         open_app_action.triggered.connect(self.show_main)
         open_action.triggered.connect(self._show_workspace_sidebar)
@@ -12836,15 +12836,15 @@ class VoiceUI:
         from PyQt6.QtWidgets import QMessageBox
         reply = QMessageBox.question(
             self._win,
-            "Update Detected!",
-            f"A new update is available on GitHub!\n\nDo you want to apply the update and restart the app?",
+            "Найдено обновление!",
+            f"На GitHub доступна новая версия!\n\nПрименить обновление и перезапустить приложение?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.Yes
         )
         if reply == QMessageBox.StandardButton.Yes:
             from core.updater import apply_update_and_restart
             # Show a simple overlay while updating
-            self._win._set_status("Applying update from GitHub...")
+            self._win._set_status("Применение обновления из GitHub...")
             import threading
             threading.Thread(target=apply_update_and_restart, daemon=True).start()
 
@@ -12871,14 +12871,14 @@ class VoiceUI:
         if not enabled or not token:
             self._discord_service.stop()
             if not token:
-                self._win.discord_status_changed.emit("Token required")
+                self._win.discord_status_changed.emit("Требуется токен")
             else:
-                self._win.discord_status_changed.emit("Discord bot disabled")
+                self._win.discord_status_changed.emit("Бот Discord отключён")
             return
         try:
             self._discord_service.start(token)
         except Exception as exc:
-            msg = f"Discord error: {exc}"
+            msg = f"Ошибка Discord: {exc}"
             self._win.discord_status_changed.emit(msg)
             self._win._log_sig.emit(f"ERR: {msg}")
 
@@ -13016,11 +13016,11 @@ class VoiceUI:
             payload["source"] = source or "local"
         self._win._task_workspace_sig.emit(payload)
 
-    def finish_task_workspace(self, result: str, status: str = "Task completed.", percent: int = 100):
+    def finish_task_workspace(self, result: str, status: str = "Задача выполнена.", percent: int = 100):
         self._win._task_workspace_sig.emit({
             "action": "finish",
-            "result": result or "Done.",
-            "status": status or "Task completed.",
+            "result": result or "Готово.",
+            "status": status or "Задача выполнена.",
             "percent": percent,
         })
 

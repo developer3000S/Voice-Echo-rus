@@ -1,27 +1,26 @@
-# Voice Trademark Notice
+# Уведомление о товарном знаке Voice
 
-`Voice`, `Voice AI`, `Voice AI - Lite`, the Voice logo, and any related
-brand assets are trademarks or trade dress associated with Suryaansh Tiwari.
+`Voice`, `Voice AI`, `Voice AI - Lite`, логотип Voice и любые связанные
+бренд-активы являются товарными знаками или коммерческим обозначением, связанным с Suryaansh Tiwari.
 
-## What this means
+## Что это означает
 
-- You may use the software under the license in this repository.
-- You may not rename the project and release it as a new assistant branded as
-  your own.
-- You may not remove Voice branding and present a fork as an original product.
-- You may not use the Voice name or logo in a way that suggests endorsement,
-  sponsorship, or partnership without written permission.
+- Вы можете использовать программное обеспечение в соответствии с лицензией в этом репозитории.
+- Вы не можете переименовать проект и выпустить его как новый ассистент под вашим собственным брендом.
+- Вы не можете удалить бренд Voice и представить форк как оригинальный продукт.
+- Вы не можете использовать имя или логотип Voice способом, подразумевающим одобрение,
+  спонсорство или партнёрство без письменного разрешения.
 
-## Allowed uses
+## Разрешённое использование
 
-- Referring to the project by its official name.
-- Describing compatible integrations or forks in a factual way.
-- Showing the project name in documentation, demos, and discussions.
+- Упоминание проекта под его официальным именем.
+- Описание совместимых интеграций или форков на основе фактов.
+- Отображение имени проекта в документации, демонстрациях и обсуждениях.
 
-## Not allowed without permission
+## Запрещено без разрешения
 
-- Rebranding the software under a different assistant name.
-- Shipping a fork that hides or replaces Voice identity elements.
-- Using the logo, name, or visual identity as your own product branding.
+- Переименование программного обеспечения под другим именем ассистента.
+- Выпуск форка, скрывающего или заменяющего элементы идентичности Voice.
+- Использование логотипа, имени или визуальной идентичности в качестве собственного брендового оформления.
 
-For permission requests, contact the copyright holder directly.
+Для запросов разрешений обращайтесь напрямую к обладателю авторских прав.

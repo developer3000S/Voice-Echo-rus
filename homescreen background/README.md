@@ -1,48 +1,48 @@
 # Voice Orb UI
 
-An interactive holographic orb interface built with **Next.js**, **Three.js**, and **MediaPipe** hand tracking.
+Интерактивный интерфейс голографической сферы, построенный на **Next.js**, **Three.js** и отслеживании рук **MediaPipe**.
 
-## Getting started
+## Быстрый старт
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Откройте [http://localhost:3000](http://localhost:3000).
 
-## Controls
+## Управление
 
-### Mouse / touch
+### Мышь / касание
 
-| Input | Action |
+| Ввод | Действие |
 | --- | --- |
-| Drag | Spin the orb |
-| Scroll / pinch | Zoom in & out |
+| Перетаскивание | Вращение сферы |
+| Прокрутка / сжатие | Приближение и отдаление |
 
-### Hand gestures (webcam)
+### Жесты рук (веб-камера)
 
-Click **GESTURES OFF** (or press `G`) and allow camera access, then:
+Нажмите **GESTURES OFF** (или `G`) и предоставьте доступ к камере, затем:
 
-| Gesture | Action |
+| Жест | Действие |
 | --- | --- |
-| Pinch (thumb + index) one hand and move it | Spin the orb |
-| Pinch with **both** hands, spread apart / bring together | Zoom in / out |
+| Щелчок пальцами (большой + указательный) одной рукой и движение | Вращение сферы |
+| Щелчок пальцами **обеими** руками, разведение / сведение | Приближение / отдаление |
 
-### Keyboard
+### Клавиатура
 
-| Key | Action |
+| Клавиша | Действие |
 | --- | --- |
-| `G` | Toggle hand gestures |
-| `R` | Reset the view |
-| `+` / `-` | Zoom in / out |
+| `G` | Включение/выключение жестов рук |
+| `R` | Сброс вида |
+| `+` / `-` | Приближение / отдаление |
 
-## How it works
+## Как это работает
 
-- **`lib/orbScene.ts`** builds the Three.js scene, visual effects, and camera controls.
-- **`lib/handTracker.ts`** runs MediaPipe HandLandmarker on the webcam feed.
-- **`components/VoiceOrb.tsx`** connects the scene, the tracker, and user input.
+- **`lib/orbScene.ts`** создаёт сцену Three.js, визуальные эффекты и управление камерой.
+- **`lib/handTracker.ts`** запускает MediaPipe HandLandmarker на потоке веб-камеры.
+- **`components/VoiceOrb.tsx`** связывает сцену, трекер и ввод пользователя.
 
-## License
+## Лицензия
 
 MIT

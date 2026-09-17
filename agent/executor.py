@@ -30,7 +30,7 @@ def _run_generated_code(description: str, speak: Callable | None = None) -> str:
     import google.generativeai as genai
 
     if speak:
-        speak("Writing custom code for this task, sir.")
+        speak("Пишу собственный код для этой задачи.")
 
     home      = Path.home()
     desktop   = home / "Desktop"
@@ -95,10 +95,10 @@ def _run_generated_code(description: str, speak: Callable | None = None) -> str:
         if result.returncode == 0 and output:
             return output
         elif result.returncode == 0:
-            return "Task completed successfully."
+            return "Задача успешно выполнена."
         elif error:
             raise RuntimeError(f"Code error: {error[:400]}")
-        return "Completed."
+        return "Выполнено."
 
     except subprocess.TimeoutExpired:
         raise RuntimeError("Generated code timed out after 120 seconds.")
@@ -118,7 +118,7 @@ def _inject_context(params: dict, tool: str, step_results: dict, goal: str = "")
         if not content or len(content) < 50:
             all_results = [
                 v for v in step_results.values()
-                if v and len(v) > 100 and v not in ("Done.", "Completed.")
+                if v and len(v) > 100 and v not in ("Готово.", "Выполнено.")
             ]
             if all_results:
                 combined = "\n\n---\n\n".join(all_results)
@@ -175,25 +175,25 @@ def _call_tool(tool: str, parameters: dict, speak: Callable | None) -> str:
 
     if tool == "open_app":
         from actions.open_app import open_app
-        return open_app(parameters=parameters, player=None) or "Done."
+        return open_app(parameters=parameters, player=None) or "Готово."
 
     elif tool == "web_search":
         from actions.web_search import web_search
-        return web_search(parameters=parameters, player=None) or "Done."
+        return web_search(parameters=parameters, player=None) or "Готово."
     elif tool == "game_updater":
         from actions.game_updater import game_updater
-        return game_updater(parameters=parameters, player=None, speak=speak) or "Done."
+        return game_updater(parameters=parameters, player=None, speak=speak) or "Готово."
     elif tool == "browser_control":
         from actions.browser_control import browser_control
-        return browser_control(parameters=parameters, player=None) or "Done."
+        return browser_control(parameters=parameters, player=None) or "Готово."
 
     elif tool == "file_controller":
         from actions.file_controller import file_controller
-        return file_controller(parameters=parameters, player=None) or "Done."
+        return file_controller(parameters=parameters, player=None) or "Готово."
 
     elif tool == "cmd_control":
         from actions.cmd_control import cmd_control
-        return cmd_control(parameters=parameters, player=None) or "Done."
+        return cmd_control(parameters=parameters, player=None) or "Готово."
 
     elif tool == "claude_code":
         from actions.claude_code_bridge import run_developer_mode_request
@@ -204,40 +204,40 @@ def _call_tool(tool: str, parameters: dict, speak: Callable | None) -> str:
     elif tool == "screen_process":
         from actions.screen_processor import screen_process
         screen_process(parameters=parameters, player=None)
-        return "Screen captured and analyzed."
+        return "Скриншот сделан и проанализирован."
 
     elif tool == "send_message":
         from actions.send_message import send_message
-        return send_message(parameters=parameters, player=None) or "Done."
+        return send_message(parameters=parameters, player=None) or "Готово."
 
     elif tool == "reminder":
         from actions.reminder import reminder
-        return reminder(parameters=parameters, player=None) or "Done."
+        return reminder(parameters=parameters, player=None) or "Готово."
 
     elif tool == "youtube_video":
         from actions.youtube_video import youtube_video
-        return youtube_video(parameters=parameters, player=None) or "Done."
+        return youtube_video(parameters=parameters, player=None) or "Готово."
 
     elif tool == "weather_report":
         from actions.weather_report import weather_action
-        return weather_action(parameters=parameters, player=None) or "Done."
+        return weather_action(parameters=parameters, player=None) or "Готово."
 
     elif tool == "computer_settings":
         from actions.computer_settings import computer_settings
-        return computer_settings(parameters=parameters, player=None) or "Done."
+        return computer_settings(parameters=parameters, player=None) or "Готово."
 
     elif tool == "desktop_control":
         from actions.desktop import desktop_control
-        return desktop_control(parameters=parameters, player=None) or "Done."
+        return desktop_control(parameters=parameters, player=None) or "Готово."
 
     elif tool == "computer_control":
         from actions.computer_control import computer_control
-        return computer_control(parameters=parameters, player=None) or "Done."
+        return computer_control(parameters=parameters, player=None) or "Готово."
 
     elif tool == "generated_code":
         description = parameters.get("description", "")
         if not description:
-            raise ValueError("generated_code requires a 'description' parameter.")
+            raise ValueError("Для generated_code требуется параметр 'description'.")
         from actions.claude_code_bridge import run_developer_mode_request
         return run_developer_mode_request(
             {"description": description, "workspace_path": str(Path.cwd())},
@@ -246,42 +246,42 @@ def _call_tool(tool: str, parameters: dict, speak: Callable | None) -> str:
 
     elif tool == "flight_finder":
         from actions.flight_finder import flight_finder
-        return flight_finder(parameters=parameters, player=None, speak=speak) or "Done."
+        return flight_finder(parameters=parameters, player=None, speak=speak) or "Готово."
 
     elif tool in ("spotify_controller", "spotify", "music"):
         from actions.spotify_controller import spotify_controller
-        return spotify_controller(parameters=parameters, player=None, speak=speak) or "Done."
+        return spotify_controller(parameters=parameters, player=None, speak=speak) or "Готово."
 
     elif tool in ("calendar_scheduler", "calendar", "schedule"):
         from actions.calendar_scheduler import calendar_scheduler
-        return calendar_scheduler(parameters=parameters, player=None, speak=speak) or "Done."
+        return calendar_scheduler(parameters=parameters, player=None, speak=speak) or "Готово."
 
     elif tool in ("daily_briefing", "briefing"):
         from actions.daily_briefing import daily_briefing
-        return daily_briefing(parameters=parameters, player=None, speak=speak) or "Done."
+        return daily_briefing(parameters=parameters, player=None, speak=speak) or "Готово."
 
     elif tool in ("code_helper", "code_agent"):
         from actions.code_helper import code_helper
-        return code_helper(parameters=parameters, player=None, speak=speak) or "Done."
+        return code_helper(parameters=parameters, player=None, speak=speak) or "Готово."
 
     elif tool == "calorie_counter":
         from actions.calorie_counter import run as run_calorie_counter
-        return run_calorie_counter(parameters=parameters, player=None) or "Done."
+        return run_calorie_counter(parameters=parameters, player=None) or "Готово."
 
     elif tool == "pushup_counter":
         from actions.pushup_counter import run as run_pushup_counter
-        return run_pushup_counter(parameters=parameters, player=None) or "Done."
+        return run_pushup_counter(parameters=parameters, player=None) or "Готово."
 
     elif tool == "system_monitor":
         from actions.system_monitor import run as run_system_monitor
-        return run_system_monitor(parameters=parameters, player=None) or "Done."
+        return run_system_monitor(parameters=parameters, player=None) or "Готово."
 
     elif tool == "upload_video":
         from actions.upload_video import run as run_upload_video
-        return run_upload_video(parameters=parameters, player=None) or "Done."
+        return run_upload_video(parameters=parameters, player=None) or "Готово."
     else:
         print(f"[Executor] ⚠️ Unknown tool '{tool}' — no developer fallback is configured")
-        return f"Unknown action: {tool}"
+        return f"Неизвестное действие: {tool}"
 
 class AgentExecutor:
 
@@ -304,7 +304,7 @@ class AgentExecutor:
             steps = plan.get("steps", [])
 
             if not steps:
-                msg = "I couldn't create a valid plan for this task, sir."
+                msg = "Не удалось создать корректный план для этой задачи."
                 if speak: speak(msg)
                 return msg
 
@@ -314,8 +314,8 @@ class AgentExecutor:
 
             for step in steps:
                 if cancel_flag and cancel_flag.is_set():
-                    if speak: speak("Task cancelled, sir.")
-                    return "Task cancelled."
+                    if speak: speak("Задача отменена.")
+                    return "Задача отменена."
 
                 step_num = step.get("step", "?")
                 tool     = step.get("tool", "generated_code")
@@ -363,7 +363,7 @@ class AgentExecutor:
                             break
 
                         elif decision == ErrorDecision.ABORT:
-                            msg = f"Task aborted, sir. {recovery.get('reason', '')}"
+                            msg = f"Задача прервана. {recovery.get('reason', '')}"
                             if speak: speak(msg)
                             return msg
 
@@ -372,7 +372,7 @@ class AgentExecutor:
                             if fix_suggestion and tool != "generated_code":
                                 try:
                                     fixed_step = generate_fix(step, error_msg, fix_suggestion)
-                                    if speak: speak("Trying an alternative approach, sir.")
+                                    if speak: speak("Пробую альтернативный подход.")
                                     res = _call_tool(
                                         fixed_step["tool"],
                                         fixed_step["parameters"],
@@ -402,27 +402,27 @@ class AgentExecutor:
                 return self._summarize(goal, completed_steps, speak)
 
             if replan_attempts >= self.MAX_REPLAN_ATTEMPTS:
-                msg = f"Task failed after {replan_attempts} replan attempts, sir."
+                msg = f"Задача не выполнена после {replan_attempts} попыток перепланирования."
                 if speak: speak(msg)
                 return msg
 
-            if speak: speak("Adjusting my approach, sir.")
+            if speak: speak("Корректирую свой подход.")
 
             replan_attempts += 1
             plan = replan(goal, completed_steps, failed_step, failed_error)
 
     def _summarize(self, goal: str, completed_steps: list, speak: Callable | None) -> str:
-        fallback = f"All done, sir. Completed {len(completed_steps)} steps for: {goal[:60]}."
+        fallback = f"Готово. Выполнено шагов: {len(completed_steps)}. Задача: {goal[:60]}."
         try:
             import google.generativeai as genai
             genai.configure(api_key=_get_api_key())
             model     = genai.GenerativeModel(model_name="gemini-2.5-flash-lite")
             steps_str = "\n".join(f"- {s.get('description', '')}" for s in completed_steps)
             prompt    = (
-                f'User goal: "{goal}"\n'
-                f"Completed steps:\n{steps_str}\n\n"
-                "Write a single natural sentence summarizing what was accomplished. "
-                "Address the user as 'sir'. Be direct and positive."
+                f'Цель пользователя: "{goal}"\n'
+                f"Выполненные шаги:\n{steps_str}\n\n"
+                "Напиши одно естественное предложение, резюмирующее, что было выполнено. "
+                "Обращайся к пользователю на «ты». Будь кратким и позитивным."
             )
             response = model.generate_content(prompt)
             summary  = response.text.strip()

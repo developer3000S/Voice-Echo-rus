@@ -1,28 +1,28 @@
 # Voice Connect
 
-Voice Connect is the local multi-device transport layer for Voice AI.
+Voice Connect — это локальный мульти-устройственный транспортный слой для Voice AI.
 
-It keeps the AI brain inside the existing Voice desktop app and adds a
-gateway that can pair with companion devices on the local network.
+Он сохраняет «мозг» ИИ внутри существующего настольного приложения Voice и добавляет
+шлюз, который может сопрягаться с сопутствующими устройствами в локальной сети.
 
-## Included foundation
+## Включённая основа
 
-- FastAPI and WebSocket gateway scaffold
-- Persistent device registry
-- Temporary pairing offers with expiring codes
-- Device capability tracking
-- Command routing skeleton
-- Optional mDNS discovery via Zeroconf when installed
-- JSON protocol definitions with required message fields
+- Каркас шлюза на FastAPI и WebSocket
+- Постоянный реестр устройств
+- Временные предложения сопряжения с истекающими кодами
+- Отслеживание возможностей устройств
+- Каркас маршрутизации команд
+- Факультативное обнаружение mDNS через Zeroconf при установке
+- Определения протокола JSON с обязательными полями сообщений
 
-## Protocol
+## Протокол
 
-Every message includes:
+Каждое сообщение содержит:
 
 - `type`
 - `request_id`
 - `timestamp`
 - `payload`
 
-See [`agents/PROTOCOL.md`](agents/PROTOCOL.md) for the message contract and the
-initial handshake flow.
+Смотрите [`agents/PROTOCOL.md`](agents/PROTOCOL.md) для контракта сообщений и
+начального процесса рукопожатия.

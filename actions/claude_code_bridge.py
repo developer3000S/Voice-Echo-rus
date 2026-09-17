@@ -75,7 +75,7 @@ def run_developer_mode_request(parameters: dict[str, Any], speak=None) -> str:
     workspace = _selected_workspace(params)
 
     if not workspace:
-        return "Developer mode needs a selected workspace folder first."
+        return "Для режима разработчика сначала нужно выбрать рабочую папку."
 
     params["workspace_path"] = workspace
     params["output_dir"] = workspace

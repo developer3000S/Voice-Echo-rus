@@ -1,27 +1,27 @@
-# Code of Conduct
+# Кодекс поведения
 
-## Our Pledge
+## Наше обязательство
 
-We as contributors and maintainers pledge to make participation in this project a harassment-free experience for everyone, regardless of age, body size, visible or invisible disability, ethnicity, sex characteristics, gender identity and expression, level of experience, education, socio-economic status, nationality, personal appearance, race, caste, color, religion, or sexual identity and orientation.
+Мы, участники и сопровождающие проекта, берём на себя обязательство сделать участие в этом проектом свободным от домогательств для каждого, независимо от возраста, телосложения, видимых или невидимых недугов, этнической принадлежности, половых характеристик, гендерной идентичности и самовыражения, уровня опыта, образования, социально-экономического статуса, национальности, внешности, расы, касты, цвета кожи, религии или сексуальной идентичности и ориентации.
 
-## Expected Behavior
+## Ожидаемое поведение
 
-- Be respectful and constructive.
-- Keep feedback focused on the work, not the person.
-- Assume good intent and ask questions when something is unclear.
-- Respect privacy, safety, and security.
+- Будьте уважительными и конструктивными.
+- Сосредотачивайте обратную связь на работе, а не на личности.
+- Исходите из добрых намерений и задавайте вопросы, когда что-то непонятно.
+- Уважайте частную жизнь, безопасность и конфиденциальность.
 
-## Unacceptable Behavior
+## Неприемлемое поведение
 
-- Harassment, threats, or abusive language
-- Doxxing, stalking, or personal attacks
-- Hate speech or discriminatory content
-- Publishing secrets, tokens, or private data
+- Домогательства, угрозы или оскорбительная речь
+- Публичное раскрытие личных данных, преследование или личные нападки
+- Речь ненависти или дискриминационный контент
+- Публикация секретов, токенов или приватных данных
 
-## Enforcement
+## Применение
 
-Project maintainers may remove, edit, or reject contributions that violate this code of conduct.
+Сопровождающие проекта могут удалять, редактировать или отклонять вклады, нарушающие этот кодекс поведения.
 
-## Scope
+## Область применения
 
-This code of conduct applies to project spaces, issue threads, pull requests, discussions, and any associated community channels.
+Этот кодекс поведения распространяется на пространства проекта, ветки задач, pull request'ы, обсуждения и все связанные каналы сообщества.

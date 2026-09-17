@@ -104,23 +104,30 @@ def compile_daily_briefing(category: str = "all") -> str:
     Compiles a complete daily briefing.
     """
     now = datetime.datetime.now()
-    time_str = now.strftime("%I:%M %p").lstrip("0")
-    date_str = now.strftime("%A, %B %d")
+    hour_24 = now.strftime("%H")
+    minute = now.strftime("%M")
+    time_str = f"{int(hour_24)}:{minute}"
+    russian_days = ["понедельник", "вторник", "среда", "четверг", "пятница", "суббота", "воскресенье"]
+    russian_months = [
+        "января", "февраля", "марта", "апреля", "мая", "июня",
+        "июля", "августа", "сентября", "октября", "ноября", "декабря",
+    ]
+    date_str = f"{russian_days[now.weekday()]}, {now.day} {russian_months[now.month - 1]}"
 
-    greeting = "Good morning"
+    greeting = "Доброе утро"
     if now.hour >= 12 and now.hour < 17:
-        greeting = "Good afternoon"
+        greeting = "Добрый день"
     elif now.hour >= 17:
-        greeting = "Good evening"
+        greeting = "Добрый вечер"
 
-    parts = [f"{greeting}, sir. Today is {date_str}, and the time is {time_str}."]
+    parts = [f"{greeting}. Сегодня {date_str}, сейчас {time_str}."]
 
     # 1. Schedule check
     today_events = _get_today_schedule()
     if today_events:
-        parts.append(f"On your schedule today, you have: {', '.join(today_events)}.")
+        parts.append(f"На сегодня у вас запланировано: {', '.join(today_events)}.")
     else:
-        parts.append("You have no calendar events scheduled for today.")
+        parts.append("На сегодня у вас нет запланированных событий в календаре.")
 
     # 2. Previous session context
     try:
@@ -128,7 +135,7 @@ def compile_daily_briefing(category: str = "all") -> str:
         s = store()
         summary = s._get_state("last_session_summary")
         if summary:
-            parts.append(f"From our last session: {summary}")
+            parts.append(f"Из прошлой сессии: {summary}")
             s._set_state("last_session_summary", "")
     except Exception:
         pass
@@ -137,9 +144,9 @@ def compile_daily_briefing(category: str = "all") -> str:
     headlines = _get_top_headlines(category=category, limit=3)
     if headlines:
         headline_text = " • " + " • ".join([f"{h}" for h in headlines])
-        parts.append(f"Here are the latest headlines: {headline_text}")
+        parts.append(f"Последние новости: {headline_text}")
     else:
-        parts.append("All systems are operational and I'm ready for your instructions.")
+        parts.append("Все системы в норме, готов к вашим поручениям.")
 
     return " ".join(parts)
 

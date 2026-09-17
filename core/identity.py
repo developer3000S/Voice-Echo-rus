@@ -24,7 +24,7 @@ class IdentityService:
             "assistant": {
                 "name": "Voice",
                 "application_name": "Voice Echo",
-                "title": "Personal AI Assistant"
+                "title": "Персональный ИИ-ассистент"
             },
             "behavior": {
                 "mode": "professional",
@@ -78,7 +78,7 @@ class IdentityService:
         self.save()
 
     def get_assistant_title(self) -> str:
-        return self.data["assistant"].get("title", "Personal AI Assistant")
+        return self.data["assistant"].get("title", "Персональный ИИ-ассистент")
         
     def set_assistant_title(self, title: str):
         self.data["assistant"]["title"] = title

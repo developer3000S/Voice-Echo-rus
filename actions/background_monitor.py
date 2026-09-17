@@ -37,9 +37,9 @@ def _run_check(m_id, m):
         if m['type'] == 'system':
             health = get_system_health()
             if m['target'] == 'ram' and health['ram_usage_percent'] > m['threshold']:
-                alert_msg = f"Alert: RAM usage has exceeded {m['threshold']}%. Currently at {health['ram_usage_percent']}%."
+                alert_msg = f"Оперативная память превысила {m['threshold']}%. Текущее использование: {health['ram_usage_percent']}%."
             elif m['target'] == 'cpu' and health['cpu_usage_percent'] > m['threshold']:
-                alert_msg = f"Alert: CPU usage has exceeded {m['threshold']}%. Currently at {health['cpu_usage_percent']}%."
+                alert_msg = f"Загрузка процессора превысила {m['threshold']}%. Текущая загрузка: {health['cpu_usage_percent']}%."
                 
         elif m['type'] == 'crypto':
             # Target should be a coin id like 'bitcoin'
@@ -49,17 +49,17 @@ def _run_check(m_id, m):
                 price = resp[m['target']]['usd']
                 # Condition: "above" or "below"
                 if m['condition'] == 'above' and price > m['threshold']:
-                    alert_msg = f"Alert: {m['target'].capitalize()} has gone above ${m['threshold']}. Current price is ${price}."
+                    alert_msg = f"{m['target'].capitalize()} вырос выше ${m['threshold']}. Текущая цена: ${price}."
                 elif m['condition'] == 'below' and price < m['threshold']:
-                    alert_msg = f"Alert: {m['target'].capitalize()} has dropped below ${m['threshold']}. Current price is ${price}."
+                    alert_msg = f"{m['target'].capitalize()} упал ниже ${m['threshold']}. Текущая цена: ${price}."
                     
         elif m['type'] == 'website':
             try:
                 resp = requests.get(m['target'], timeout=5)
                 if resp.status_code >= 400:
-                    alert_msg = f"Alert: Website {m['target']} is returning status code {resp.status_code}."
+                    alert_msg = f"Сайт {m['target']} вернул код ошибки {resp.status_code}."
             except Exception:
-                alert_msg = f"Alert: Website {m['target']} appears to be down or unreachable."
+                alert_msg = f"Сайт {m['target']} недоступен или не отвечает."
 
         if alert_msg:
             # Alert triggered! Remove monitor and speak.
@@ -84,12 +84,12 @@ def add_monitor(monitor_type: str, target: str, threshold: float, condition: str
             "interval": interval_sec,
             "last_check": time.time()
         }
-    return f"Started monitoring {monitor_type} ({target}) every {interval_sec} seconds."
+    return f"Мониторинг {monitor_type} ({target}) запущен с интервалом {interval_sec} секунд."
 
 def get_monitors() -> str:
     with _monitor_lock:
         if not _monitors:
-            return "No active background monitors."
+            return "Нет активных фоновых мониторингов."
         return json.dumps(_monitors, indent=2)
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
@@ -104,7 +104,7 @@ def run(parameters: dict, player=None, session_memory=None) -> str:
     interval = parameters.get("interval", 60)
     
     if not m_type or not target:
-        return "You must provide a 'type' (system/crypto/website) and a 'target' (ram/cpu/bitcoin/url)."
+        return "Необходимо указать 'type' (system/crypto/website) и 'target' (ram/cpu/bitcoin/url)."
         
     res = add_monitor(m_type, target, float(threshold), condition, int(interval))
     if player:
