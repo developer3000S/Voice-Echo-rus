@@ -16,10 +16,9 @@ Voice Echo — это open-source настольный ИИ-ассистент �
 - Слушание ключевого слова пробуждения («Voice Echo») и отзывчивая активация ассистента
 - Динамический осмотр экрана для контекстных ответов
 - **Офлайновый локальный голос** (Vosk/sherpa STT + Piper TTS, без зависимости от Google)
-- **Единый Gemini Native Voice** для всех системных оповещений и ежедневных брифингов
+- **Локальный ИИ** — текст и зрение генерируются локальной моделью Ollama, облачные провайдеры удалены
 - **Настоящее прерывание (Barge-in)** с динамическим шумоподавлением
 - **Проактивный движок** для спонтанного, контекстного взаимодействия в режиме ожидания
-- ИИ на базе Gemini с устойчивым резервированием через OpenRouter
 
 ### Продуктивность и автоматизация
 
@@ -43,7 +42,6 @@ Voice Echo — это open-source настольный ИИ-ассистент �
 
 - Мост Instagram Direct для чтения и автоответа на сообщения
 - Мост Discord для дистанционных команд и совместной работы
-- Резервирование OpenRouter для непрерывного доступа к ИИ
 - Настраиваемые параметры голоса, интерфейса, запуска и уведомлений
 - Voice Connect для обнаружения устройств и маршрутизации команд
 
@@ -53,13 +51,11 @@ Voice Echo — это open-source настольный ИИ-ассистент �
 |---|---|
 | Язык | Python 3.11/3.12 |
 | Фреймворк UI | PyQt6 (кастомная гласмorfic тёмная тема) |
-| Основной ИИ | Google Gemini 2.5 Flash (Native Audio) |
-| Резервный ИИ | OpenRouter (40+ бесплатных моделей) |
-| Локальный ИИ | Ollama/LM Studio через совместимый с OpenAI API |
+| ИИ (текст) | Локальная модель `minicpm5-2b` через нативный API Ollama (`/api/chat`) |
+| ИИ (зрение) | Мультимодальная модель `minicpmv` через Ollama |
 | Автоматизация браузера | Playwright |
 | Умный дом | TP-Link Kasa, Philips Hue, LG ThinQ, Daikin, Tuya, Nest, SmartThings, Atomberg |
-| Голос (онлайн) | sounddevice + PyAudio, Gemini Live Audio |
-| Голос (офлайн) | Vosk/sherpa-onnx (STT) + Piper (TTS) через `local_voice.py` |
+| Голос | Vosk/sherpa-onnx (STT) + Piper (TTS) через `local_voice.py` — полностью офлайн |
 | Буфер обмена | pyperclip |
 | Захват экрана | mss + OpenCV + MediaPipe |
 | Управление рабочим столом | pyautogui, pygetwindow, psutil, comtypes, pycaw |
@@ -77,10 +73,10 @@ Voice-Echo-rus/
 ├── ui.py                    # Qt desktop interface (12933 lines)
 ├── local_voice.py           # Offline STT/TTS engine (Vosk/sherpa + Piper) and voice loop
 ├── download_voice_models.py # Fetches offline models into config/models/
+├── models/                  # Local LLM bundle (minicpm5-2b GGUF + Modelfile) for Ollama
 ├── smart_home_page_new.py   # Smart home dashboard page
 ├── discord_bot.py           # Discord bridge service
-├── llm_client.py            # Unified AI client (Local/OpenRouter)
-├── or_client.py             # OpenRouter client with fallback pool
+├── llm_client.py            # Unified local AI client (Ollama native API)
 ├── plugin_manager.py        # Plugin loader with hook dispatch
 ├── updater.py               # GitHub fast-forward updater
 ├── gesture_utils.py         # Gesture detection for camera
@@ -163,12 +159,11 @@ Voice-Echo-rus/
 
 ## Основная архитектура
 
-### VoiceLive (main.py:1449)
+### VoiceLive (main.py)
 
 Центральный класс оркестрации. Обеспечивает:
-- Голосовой ввод через `sounddevice` (отправка 16 кГц, приём 24 кГц)
-- Gemini Native Voice LLM с резервированием через OpenRouter
-- **Офлайновый голосовой цикл**: когда `local_voice_engine` включён в настройках, пропускает цикл подключения Gemini Live и запускает `LocalVoiceEngine` (sherpa/Vosk STT → маршрутизатор команд) с Piper TTS для всех голосовых ответов
+- **Локальный ИИ** — все ответы генерируются через `llm_client.client` (Ollama, `minicpm5-2b`)
+- **Офлайновый голосовой цикл**: `local_voice_engine` включён в настройках по умолчанию; запускается `LocalVoiceEngine` (sherpa/Vosk STT → маршрутизатор команд) с Piper TTS для всех голосовых ответов; облачные speech-сервисы не используются
 - Маршрутизация команд к обработчикам инструментов
 - Извлечение памяти и построение контекста
 - Генерацию плана задач для каждого типа запроса
@@ -205,22 +200,14 @@ Voice-Echo-rus/
 
 ### UnifiedAIClient (llm_client.py)
 
-Независимый от провайдера ИИ-клиент:
-- `chat()` — текстовое дополнение с маршрутизацией Local/OpenRouter
-- `chat_json()` — структурированный вывод JSON
-- `vision()` — анализ изображений из base64
+Единый ИИ-клиент, всегда обращается к локальному Ollama (никаких облачных провайдеров):
+- `chat()` — текстовое дополнение через нативный API Ollama (`/api/chat`, `think: false` для быстрых ответов)
+- `chat_json()` — структурированный вывод JSON (нативный формат Ollama `"json"`, не OpenAI-овский `"json_object"`)
+- `vision()` — анализ изображений из base64 через мультимодальную модель (`local_vision_model`)
 - `vision_from_file()` — анализ изображений по пути к файлу
 - `multi_turn()` — поддержка истории разговора
-- Резервирование через OpenRouter при сбое локального ИИ
-
-### OpenRouterClient (or_client.py)
-
-Клиент API OpenRouter с:
-- 30+ текстовыми моделями + 9 моделями зрения в пуле резервирования
-- Отслеживание лимита запросов с 60-секундным периодом восстановления
-- Логикой повторных попыток (2 попытки на модель, задержка 2 с)
-- Режимом JSON с удалением разметки
-- `vision_from_file()` для анализа изображений из файлов
+- `ensure_local_model()` — идемпортный импорт GGUF-бандла из `models/minicpm5-2b/` в Ollama (`/api/blobs` + `/api/create`)
+- `_model_exists()` — проверка установленных моделей через `/api/tags`
 
 ### Система плагинов
 
@@ -253,8 +240,8 @@ python setup.py
 
 - **Монолитная архитектура**: Основная логика находится в `main.py` и `ui.py` (крупные файлы, намеренно объединённые)
 - **Инструменто-ориентированный дизайн**: Всегда вызывайте соответствующий инструмент, а не имитируйте результаты
-- **Цепочка резервирования Gemini**: Gemini Native Audio → текстовый Gemini → OpenRouter → локальный ИИ
-- **Офлайновый голос по умолчанию**: при `local_voice_engine: true` в `config/app_settings.json` голосовой цикл полностью локальный (Vosk/sherpa + Piper), и Gemini никогда не используется для распознавания речи
+- **Только локальный ИИ**: проект не содержит облачных провайдеров; единственный путь вывода — Ollama (`minicpm5-2b` + `minicpmv`) через `llm_client.client`
+- **Офлайновый голос по умолчанию**: при `local_voice_engine: true` в `config/app_settings.json` голосовой цикл полностью локальный (Vosk/sherpa + Piper)
 - **JSON-конфигурация**: Все настройки хранятся в `config/*.json` (секреты исключены из git)
 - **Без коммита секретов**: `config/api_keys.json` и `config/discord_bot.json` находятся в `.gitignore`
 - **Виртуальное окружение**: Требуется для всей разработки и выполнения (`.venv/` в `.gitignore`)
@@ -266,11 +253,12 @@ python setup.py
 
 | Файл | Назначение |
 |---|---|
-| `config/api_keys.json` | Ключи API Gemini и OpenRouter |
-| `config/app_settings.json` | Параметры голоса, интерфейса, запуска и автоматизации |
+| `config/api_keys.json` | Учётные данные интеграций (Instagram); облачные ИИ-ключи удалены |
+| `config/app_settings.json` | Параметры голоса, интерфейса, запуска и автоматизации (`local_ai_url`, `local_ai_model`, `local_vision_model`) |
 | `config/voice_connect.json` | Настройки сопряжения устройств, шлюза и обнаружения |
 | `config/discord_bot.json` | Учётные данные моста Discord (исключены из git) |
 | `config/models/` | Офлайновые голосовые модели (Piper + Vosk/sherpa, исключены из git) |
+| `models/minicpm5-2b/` | Локальная ИИ-модель: GGUF-бандл + Modelfile (импортируется в Ollama) |
 | `core/prompt.txt` | Шаблон системного промпта, загружаемый при запуске |
 | `core/identity.py` | Динамическая вставка идентификации (имя ассистента, владелец, роль, режим) |
 
@@ -278,7 +266,7 @@ python setup.py
 
 - **Крупные файлы**: `main.py` (3,4 тыс. строк) и `ui.py` (12,9 тыс. строк) намеренно объединённые; рефакторинг в меньшие модули не входит в_SCOPE, если это не запрошено явно
 - **Зависимость от Windows**: `start_voice.vbs`, `bootstrap.ps1` и некоторые пути в `ui.py` предполагают Windows; поддержка Linux/macOS ограничена
-- **Требуется ключ API Gemini**: Основной провайдер ИИ; OpenRouter используется только как резервирование без Gemini
+- **Требуется Ollama**: единственный провайдер ИИ — локальная модель `minicpm5-2b` (`minicpmv` для зрения); облачные ключи API не нужны и не поддерживаются
 - **Браузеры Playwright**: Необходимо запустить `playwright install` после `pip install -r requirements.txt`
 
 ## Сообщество и поддержка

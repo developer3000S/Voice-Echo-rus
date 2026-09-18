@@ -9,7 +9,7 @@
   <p>
     <a href="#overview"><img src="https://img.shields.io/badge/experience-open%20source-blue?style=for-the-badge" alt="Open Source" /></a>
     <a href="#getting-started"><img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey?style=for-the-badge" alt="Platforms" /></a>
-    <a href="#features"><img src="https://img.shields.io/badge/tech-Gemini%20%2B%20OpenRouter-green?style=for-the-badge" alt="Gemini + OpenRouter" /></a>
+    <a href="#features"><img src="https://img.shields.io/badge/tech-Local%20AI%20%28Ollama%29-green?style=for-the-badge" alt="Local AI (Ollama)" /></a>
     <a href="#offline-voice"><img src="https://img.shields.io/badge/voice-offline%20%28Vosk%20%2B%20Piper%29-orange?style=for-the-badge" alt="Offline Voice" /></a>
   </p>
 
@@ -40,7 +40,7 @@ Voice Echo — это премиальный настольный ассисте
 | Основная возможность | Почему это важно |
 |---|---|
 | Голосовой ассистент | Говорите команды естественно и работайте свободно |
-| Gemini + OpenRouter | Быстрые ответы с устойчивой поддержкой резервирования |
+| Локальный ИИ (Ollama) | Текст и зрение генерируются локальной моделью, без облака |
 | Офлайновый локальный голос | STT (Vosk/sherpa) и TTS (Piper) работают на 100% локально |
 | Контекст экрана | Задавайте вопросы о видимых окнах и содержимом экрана |
 | Автоматизация документов | Создавайте презентации, документы, таблицы и PDF |
@@ -49,7 +49,7 @@ Voice Echo — это премиальный настольный ассисте
 ## Основные преимущества
 
 - Поддержка ключевого слова пробуждения «Voice Echo» и отзывчивая активация ассистента
-- ИИ на базе Gemini 2.5 Flash с устойчивым резервированием через OpenRouter
+- **Локальный ИИ на базе Ollama** — вывод текста и зрения полностью офлайн, без облачных провайдеров
 - **Полностью офлайновый голосовой движок** (Vosk/sherpa STT + Piper TTS), не требующий облачных сервисов
 - Утончённый интерфейс на Qt с индикаторами состояния и карточками рабочих процессов
 - Модульная архитектура действий для чистого расширения и автоматизации
@@ -62,12 +62,11 @@ Voice Echo — это премиальный настольный ассисте
 
 - Единая обработка голосовых и текстовых команд
 - Слушание ключевого слова пробуждения и отзывчивая активация ассистента
-- Динамический осмотр экрана для контекстных ответов
+- **Динамический осмотр экрана** для контекстных ответов
 - **Офлайновый локальный голос** (распознавание речи и синтез речи) без зависимости от Google
-- **Единый Gemini Native Voice** для всех системных оповещений и ежедневных брифингов
+- **Локальный ИИ** — все ответы генерируются моделью Ollama на этой машине
 - **Настоящее прерывание (Barge-in)** с динамическим шумоподавлением
 - **Проактивный движок** для спонтанного, контекстного взаимодействия в режиме ожидания
-- ИИ на базе Gemini с устойчивым резервированием через OpenRouter
 
 ### Продуктивность и автоматизация
 
@@ -91,13 +90,12 @@ Voice Echo — это премиальный настольный ассисте
 
 - Мост Instagram Direct для чтения и автоответа на сообщения
 - Мост Discord для дистанционных команд и совместной работы
-- Резервирование OpenRouter для непрерывного доступа к ИИ
 - Настраиваемые параметры голоса, интерфейса, запуска и уведомлений
 - Voice Connect для обнаружения устройств и маршрутизации команд
 
 ## Офлайновый голос
 
-По умолчанию Voice Echo использует **полностью офлайновый голосовой движок** — обращение к Google/Gemini для распознавания речи не выполняется. Это исключает ошибки «Gemini недоступен» в сетях, где сервисы Google заблокированы или недоступны.
+По умолчанию Voice Echo использует **полностью офлайновый голосовой движок** — обращение к облачным сервисам для распознавания речи не выполняется. Это исключает ошибки «сервис недоступен» в сетях, где они заблокированы или недоступны.
 
 - **Распознавание речи:** streaming Zipformer на базе sherpa-onnx, движок, лежащий в основе современных streaming-моделей Vosk (`sherpa-onnx-streaming-zipformer-small-ru-vosk`). Распознавание в реальном времени с микрофона с обнаружением тишины/конца фразы и поддержкой ключевого слова пробуждения.
 - **Синтез речи:** Piper с русским нейронным голосом `ru_RU-irina-medium`.
@@ -115,9 +113,36 @@ config/models/sherpa-ru/  Vosk/sherpa STT model (encoder/decoder/joiner, tokens,
 .venv/bin/python download_voice_models.py
 ```
 
-Функция управляется через **Настройки → Система и подключения → Локальный голосовой движок** (`local_voice_engine` в `config/app_settings.json`, включена по умолчанию). Отключите её, чтобы вернуться к облачному пути Gemini Native Voice; в любом случае потребуется перезапуск.
+Функция управляется через **Настройки → Система и подключения → Локальный голосовой движок** (`local_voice_engine` в `config/app_settings.json`, включена по умолчанию). Голосовой цикл полностью локален; для применения изменений требуется перезапуск.
 
-**Требования:** `sherpa-onnx` и `piper-tts` входят в `requirements.txt`. Если файл модели или пакет отсутствует, приложение корректно возвращается к предыдущему онлайн-поведению вместо аварийного завершения.
+**Требования:** `sherpa-onnx` и `piper-tts` входят в `requirements.txt`. Если файл модели или пакет отсутствует, приложение корректно возвращается к текстовому режиму вместо аварийного завершения.
+
+## Локальный ИИ
+
+Voice Echo не использует облачные провайдеры ИИ. Все текстовые ответы и анализ изображений выполняются **локально через Ollama**:
+
+- **Текст:** модель `minicpm5-2b` (MiniCPM5-2B, Q4_K_M, контекст 4096) — быстрые ответы на русском языке
+- **Зрение:** мультимодальная модель `minicpmv` — анализ изображений и снимков экрана
+
+Модели хранятся в `models/`:
+
+```
+models/minicpm5-2b/   GGUF-бандл MiniCPM5-2B + Modelfile для импорта в Ollama
+```
+
+Приложение само импортирует бандл в Ollama при первом запуске (через `/api/blobs` + `/api/create`), если модель ещё не установлена.
+
+Параметры настраиваются в `config/app_settings.json`:
+
+```json
+{
+  "local_ai_url": "http://localhost:11434",
+  "local_ai_model": "minicpm5-2b",
+  "local_vision_model": "minicpmv"
+}
+```
+
+**Требования:** установите [Ollama](https://ollama.com/download) и убедитесь, что сервис запущен (`ollama serve` или системный демон). Никаких ключей API не требуется.
 
 ## Быстрый старт
 
@@ -126,8 +151,7 @@ config/models/sherpa-ru/  Vosk/sherpa STT model (encoder/decoder/joiner, tokens,
 - Windows 10/11, macOS 12+ или современный дистрибутив Linux
 - Python 3.11 или Python 3.12
 - Установленный Git
-- Ключ API Gemini
-- Ключ API OpenRouter (необязательно, но рекомендуется)
+- Установленный и запущенный [Ollama](https://ollama.com/download)
 
 > **Примечания для Linux:** звук/аудио использует `sounddevice` (PortAudio). Установите его через менеджер пакетов (например, `sudo apt install libportaudio2`). Экранные функции, использующие `pyautogui`, требуют активной сессии X11/Wayland. Автозапуск на рабочем столе доступен только в Windows; на Linux/macOS запускайте через команды ниже.
 
@@ -161,6 +185,7 @@ pip install -r requirements.txt
 pip install -r requirements-optional.txt   # optional: gesture camera (mediapipe)
 playwright install
 python download_voice_models.py            # offline voice models (Piper + Vosk/sherpa)
+ollama pull minicpmv                       # optional: local vision model
 ```
 
 > `mediapipe` (используется только для камеры жестов и отслеживания отжиманий) публикует
@@ -170,32 +195,24 @@ python download_voice_models.py            # offline voice models (Piper + Vosk/
 > В Python 3.14 (например, macOS Intel) mediapipe не имеет сборки; используйте Python 3.11 или
 > 3.12, если вам нужны жесты.
 
-### 4. Настройте учётные данные API
+### 4. Проверьте локальную модель
 
-Создайте `config/api_keys.json` с вашими ключами:
+Приложение само импортирует модель `minicpm5-2b` из `models/minicpm5-2b/` в Ollama при первом запуске — вручную ничего скачивать не нужно. Убедитесь, что Ollama установлена и запущена:
 
-```json
-{
-  "gemini_api_key": "YOUR_GEMINI_API_KEY",
-  "openrouter_api_key": "YOUR_OPENROUTER_API_KEY",
-  "instagram_username": "YOUR_IG_USERNAME",
-  "instagram_password": "YOUR_IG_PASSWORD"
-}
+```bash
+ollama serve        # или запуск как системного демона
+ollama list         # после первого старта здесь появится minicpm5-2b
 ```
 
-#### Ключ API Gemini
+Для анализа изображений (снимки экрана, картинки) дополнительно вытяните мультимодальную модель:
 
-1. Создайте аккаунт Google Cloud или Gemini.
-2. Включите доступ к Gemini API для вашего проекта.
-3. Добавьте сгенерированный ключ в `gemini_api_key`.
+```bash
+ollama pull minicpmv
+```
 
-> Voice Echo работает на актуальном SDK `google.genai`. Устаревший пакет `google.generativeai` больше не используется и не устанавливается.
+Ключи API облачных ИИ-провайдеров больше не требуются — Voice Echo работает полностью локально.
 
-#### Ключ API OpenRouter
-
-1. Зарегистрируйтесь на https://openrouter.ai.
-2. Сгенерируйте ключ API с префиксом `sk-or-`.
-3. Добавьте ключ в `openrouter_api_key`.
+> Если вы используете интеграцию Instagram, учётные данные всё ещё указываются в `config/api_keys.json`.
 
 ### 5. Опционально: настройте интеграцию с Discord
 
@@ -223,17 +240,19 @@ start_voice.vbs
 
 Основные файлы конфигурации:
 
-- `config/api_keys.json` — учётные данные Gemini и OpenRouter
+- `config/api_keys.json` — учётные данные интеграций (Instagram)
 - `config/app_settings.json` — параметры голоса, интерфейса, запуска и автоматизации
 - `config/voice_connect.json` — настройки сопряжения устройств, шлюза и обнаружения
 - `config/discord_bot.json` — конфигурация моста Discord
 - `config/models/` — офлайновые голосовые модели (Piper TTS + Vosk/sherpa STT)
+- `models/minicpm5-2b/` — локальная ИИ-модель (GGUF-бандл для Ollama)
 
 ## Структура проекта
 
 - `main.py` — запуск приложения, оркестрация ИИ и маршрутизация команд
 - `local_voice.py` — офлайновый движок STT/TTS (Vosk/sherpa + Piper) и голосовой цикл
 - `download_voice_models.py` — загрузка файлов офлайновых голосовых моделей в `config/models/`
+- `llm_client.py` — единый клиент локального ИИ (Ollama): текст, JSON, зрение
 - `ui.py` — настольный интерфейс на Qt и элементы управления ассистентом
 - `actions/` — модульные инструменты автоматизации, документов и ассистента
 - `voice_connect/` — локальный шлюз, сопряжение и дистанционная маршрутизация

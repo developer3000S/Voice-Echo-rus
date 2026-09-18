@@ -20,12 +20,7 @@ except Exception:
     pass
 
 import os
-import sounddevice as sd
-from google import genai
-from google.genai import types
 from ui import VoiceUI
-from proxy_manager import get_httpx_client, set_proxy_url as _set_proxy
-from proxy_manager import get_proxy_url
 from memory.memory_manager import (
     load_memory, update_memory, format_memory_for_prompt,
     should_extract_memory, extract_memory
@@ -69,7 +64,7 @@ except Exception:
     LocalVoiceEngine = None
     voice_setting_enabled = lambda: False
 # from actions.daily_briefing import compile_daily_briefing
-from llm_client import client as openrouter_client
+from llm_client import client as llm
 from workspace_store import store as workspace_store
 from smart_home.service import SmartHomeService
 from plugin_manager import PluginManager
@@ -101,17 +96,10 @@ BASE_DIR        = get_base_dir()
 API_CONFIG_PATH = BASE_DIR / "config" / "api_keys.json"
 PROMPT_PATH     = BASE_DIR / "core" / "prompt.txt"
 STARTUP_LOG     = Path(os.environ.get("LOCALAPPDATA", str(BASE_DIR))) / "Voice Echo" / "startup.log"
-LIVE_MODEL          = "models/gemini-2.5-flash-native-audio-preview-12-2025"
 CHANNELS            = 1
 SEND_SAMPLE_RATE    = 16000
 RECEIVE_SAMPLE_RATE = 24000
 CHUNK_SIZE          = 1024
-LIVE_CONNECT_TIMEOUT = 12
-
-
-def _get_api_key() -> str:
-    with open(API_CONFIG_PATH, "r", encoding="utf-8") as f:
-        return json.load(f)["gemini_api_key"]
 
 
 def _is_port_in_use(port: int, host: str = "127.0.0.1") -> bool:
@@ -250,46 +238,12 @@ def _speak_daily_briefing(ui=None) -> None:
     except Exception as e:
         print(f"[DailyBriefing] Error: {e}")
     
-def _extract_gemini_text(response) -> str:
-    text_parts: list[str] = []
-    try:
-        for candidate in getattr(response, "candidates", []) or []:
-            content = getattr(candidate, "content", None)
-            if not content:
-                continue
-            for part in getattr(content, "parts", []) or []:
-                part_text = getattr(part, "text", None)
-                if part_text:
-                    text_parts.append(part_text)
-    except Exception:
-        pass
-
-    text = "".join(text_parts).strip()
-    if text:
-        return text
-
-    try:
-        return (getattr(response, "text", "") or "").strip()
-    except Exception:
-        return ""
+def _local_text_reply(prompt: str, system: str, temperature: float = 0.6) -> str:
+    """Генерация ответа локальной моделью (Ollama)."""
+    return llm.chat(prompt, system=system, temperature=temperature)
 
 
-def _gemini_text_reply(prompt: str) -> str:
-    client = _get_gemini_client()
-    system_prompt = (
-        "Ты — Voice Echo, краткий и полезный настольный ассистент. "
-        "Отвечай естественно, кратко и всегда на русском языке. "
-        "Не упоминай внутренние детали реализации."
-    )
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=f"{system_prompt}\n\nUser: {prompt}",
-        config={"temperature": 0.6},
-    )
-    return _extract_gemini_text(response)
-
-
-def _ig_gemini_reply(username: str, text: str) -> str:
+def _ig_local_reply(username: str, text: str) -> str:
     system_prompt = (
         "Ты — Voice Echo, ИИ-личный ассистент, действующий от имени своего пользователя. "
         "Ты ведёшь их чат в Instagram с разрешения пользователя. "
@@ -297,58 +251,24 @@ def _ig_gemini_reply(username: str, text: str) -> str:
         "Не звучи как бот. Держи ответы короче двух предложений."
     )
     prompt = f"Instagram DM from {username}: {text}"
-    
     try:
-        client = genai.Client(
-            api_key=_get_api_key(),
-            http_options={"api_version": "v1beta"},
-        )
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=f"{system_prompt}\n\nUser: {prompt}",
-            config={"temperature": 0.6},
-        )
-        return _extract_gemini_text(response)
+        return _local_text_reply(prompt, system_prompt)
     except Exception as e:
-        if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e) or _is_gemini_limit_error(e):
-            print("[InstagramChat] Gemini Rate Limit hit, falling back to OpenRouter...")
-            try:
-                from llm_client import client as openrouter_client
-                return openrouter_client.chat(prompt, system=system_prompt)
-            except Exception as or_e:
-                print(f"[InstagramChat] OpenRouter fallback failed: {or_e}")
-                return "Hey, I'm currently busy. I will get back to you later!"
-        print(f"[InstagramChat] Gemini Reply Error: {e}")
-        return "Hey, I'm currently busy. I will get back to you later!"
+        print(f"[InstagramChat] Reply Error: {e}")
+        return "Привет, я сейчас занят. Ответю чуть позже!"
 
 
-def _clipboard_gemini_reply(text: str) -> str:
+def _clipboard_local_reply(text: str) -> str:
     system_prompt = (
         "Ты — Voice Echo, остроумный и полезный ИИ-ассистент. "
         "Пользователь только что скопировал в буфер обмена следующий текст. "
         "Сделай очень короткий, интересный или полезный комментарий или вопрос об этом (одно предложение). "
         "Не предлагай «помощь» и не спрашивай «чем помочь» — просто дай самостоятельное остроумное наблюдение или краткую суть на русском языке."
     )
-    prompt = text
     try:
-        client = genai.Client(
-            api_key=_get_api_key(),
-            http_options={"api_version": "v1beta"},
-        )
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=f"{system_prompt}\n\nClipboard Text: {prompt}",
-            config={"temperature": 0.8},
-        )
-        return _extract_gemini_text(response)
-    except Exception as e:
-        if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e) or _is_gemini_limit_error(e):
-            try:
-                from llm_client import client as openrouter_client
-                return openrouter_client.chat(prompt, system=system_prompt)
-            except Exception:
-                pass
-        return "Interesting stuff you copied there!"
+        return _local_text_reply(text, system_prompt, temperature=0.8)
+    except Exception:
+        return "Интересный текст в буфере обмена!"
 
 
 def _looks_like_code_request(text: str) -> bool:
@@ -380,23 +300,8 @@ def _looks_like_website_request(text: str) -> bool:
     return any(word in low for word in website_words)
 
 
-def _is_gemini_limit_error(exc: Exception) -> bool:
-    msg = str(exc).lower()
-    return any(token in msg for token in (
-        "429",
-        "resource_exhausted",
-        "quota",
-        "rate limit",
-        "too many requests",
-        "exceeded",
-        "1008",
-        "access denied",
-        "permission denied",
-    ))
-
-
 def _is_network_unreachable(exc: Exception) -> bool:
-    """Return True for network errors that won't recover by retrying (DNS/proxy/host misconfiguration)."""
+    """Return True for network errors that won't recover by retrying (DNS/host misconfiguration)."""
     msg = str(exc).lower()
     return any(token in msg for token in (
         "no route to host",
@@ -529,10 +434,9 @@ def _update_memory_async(user_text: str, voice_text: str) -> None:
     _last_memory_input = user_text
 
     try:
-        api_key = _get_api_key()
-        if not should_extract_memory(user_text, voice_text, api_key):
+        if not should_extract_memory(user_text, voice_text):
             return
-        data = extract_memory(user_text, voice_text, api_key)
+        data = extract_memory(user_text, voice_text)
         if data:
             update_memory(data)
             print(f"[Memory] ✅ {list(data.keys())}")
@@ -547,944 +451,13 @@ def _memory_context_for_request(text: str) -> str:
         return ""
 
 
-TOOL_DECLARATIONS = [
-    {
-        "name": "computer_settings",
-        "description": (
-            "Controls the computer's OS-level settings and hardware. Use this to change brightness, "
-            "toggle Wi-Fi, change volume, lock the screen, sleep the display, or shut down/restart the computer. "
-            "Also handles keyboard inputs (scrolling, typing, taking screenshots, window snapping)."
-        ),
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "action": {
-                    "type": "STRING",
-                    "description": "Specific action if known (e.g., 'volume_up', 'volume_set', 'brightness_down', 'lock_screen', 'shutdown')"
-                },
-                "description": {
-                    "type": "STRING",
-                    "description": "Natural language description of what to do (e.g., 'turn the volume to 50%', 'put the computer to sleep')"
-                },
-                "value": {
-                    "type": "STRING",
-                    "description": "Any value associated with the action (e.g., '50' for volume level)"
-                },
-                "confirmed": {
-                    "type": "STRING",
-                    "description": "Pass 'yes' if the user explicitly confirmed a dangerous action like 'shutdown' or 'restart'."
-                }
-            },
-            "required": []
-        }
-    },
-    {
-        "name": "dev_agent",
-        "description": (
-            "An autonomous coding agent that builds full projects, writes code, installs dependencies, "
-            "runs the project, and automatically fixes errors. Use this when the user asks you to 'write a script', "
-            "'build an app', 'code a program', or 'run a project'."
-        ),
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "description": {
-                    "type": "STRING",
-                    "description": "A very detailed description of what the project should do."
-                },
-                "language": {
-                    "type": "STRING",
-                    "description": "The programming language to use (e.g., 'python', 'javascript')"
-                },
-                "project_name": {
-                    "type": "STRING",
-                    "description": "A short, snake_case name for the project folder."
-                }
-            },
-            "required": ["description"]
-        }
-    },
-    {
-        "name": "background_monitor",
-        "description": (
-            "Sets up a background monitor to check crypto prices, system RAM/CPU, or website uptime. "
-            "Use this when the user asks to be alerted when a condition is met (e.g., 'tell me if RAM goes over 90%' or 'alert me if bitcoin drops below 50000')."
-        ),
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "action": {
-                    "type": "STRING",
-                    "description": "'add' to create a monitor (default), 'list' to see active monitors."
-                },
-                "type": {
-                    "type": "STRING",
-                    "description": "One of: 'system', 'crypto', 'website'"
-                },
-                "target": {
-                    "type": "STRING",
-                    "description": "What to monitor (e.g. 'ram', 'cpu', 'bitcoin', 'https://example.com')"
-                },
-                "threshold": {
-                    "type": "NUMBER",
-                    "description": "The threshold value (e.g. 90 for 90%, 50000 for $50k)"
-                },
-                "condition": {
-                    "type": "STRING",
-                    "description": "'above' or 'below'"
-                },
-                "interval": {
-                    "type": "INTEGER",
-                    "description": "How often to check in seconds (default 60)"
-                }
-            },
-            "required": []
-        }
-    },
-    {
-        "name": "system_manager",
-        "description": (
-            "Checks the system health (CPU, RAM, disk, battery) and lists top resource-hogging apps. "
-            "Can also be used to forcefully close or kill frozen or heavy applications."
-        ),
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "action": {
-                    "type": "STRING",
-                    "description": "What to do: 'status' to check system health (default), or 'kill' to close an app."
-                },
-                "process_name": {
-                    "type": "STRING",
-                    "description": "The exact name of the process to kill (if action is 'kill'), e.g. 'chrome.exe' or 'Spotify'"
-                },
-                "pid": {
-                    "type": "INTEGER",
-                    "description": "The PID of the process to kill (if action is 'kill')"
-                }
-            },
-            "required": []
-        }
-    },
-    {
-        "name": "check_instagram_messages",
-        "description": (
-            "Checks your Instagram inbox for any recent unread or direct messages. "
-            "Use this when the user asks 'do I have any messages', 'check my instagram', or similar."
-        ),
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {},
-            "required": []
-        }
-    },
-    {
-        "name": "clipboard_processor",
-        "description": (
-            "Instantly reads the current text copied to the user's Windows clipboard. "
-            "Use this whenever the user asks you to read, analyze, or fix what they just copied to their clipboard."
-        ),
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {},
-            "required": []
-        }
-    },
-    {
-        "name": "instagram_reply",
-        "description": "Replies to a pending Instagram message or takes over the Instagram chat in auto-mode.",
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "action": {
-                    "type": "STRING",
-                    "description": "Must be 'take_over' to handle it automatically, or 'manual_reply' to send a specific text message."
-                },
-                "reply_text": {
-                    "type": "STRING",
-                    "description": "The exact message to send to the user if action is 'manual_reply'."
-                }
-            },
-            "required": ["action"]
-        }
-    },
-    {
-        "name": "open_app",
-        "description": (
-            "Opens any application on the Windows computer. "
-            "Use this whenever the user asks to open, launch, or start any app, "
-            "website, or program. Always call this tool — never just say you opened it."
-        ),
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "app_name": {
-                    "type": "STRING",
-                    "description": "Exact name of the application (e.g. 'WhatsApp', 'Chrome', 'Spotify')"
-                }
-            },
-            "required": ["app_name"]
-        }
-    },
-    {
-        "name": "web_search",
-        "description": "Searches the web for any information.",
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "query":  {"type": "STRING", "description": "Search query"},
-                "mode":   {"type": "STRING", "description": "search (default) or compare"},
-                "items":  {"type": "ARRAY", "items": {"type": "STRING"}, "description": "Items to compare"},
-                "aspect": {"type": "STRING", "description": "price | specs | reviews"}
-            },
-            "required": ["query"]
-        }
-    },
-    {
-        "name": "weather_report",
-        "description": "Gives the weather report to user",
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "city": {"type": "STRING", "description": "City name"}
-            },
-            "required": ["city"]
-        }
-    },
-    {
-        "name": "send_message",
-        "description": "Sends a text message via WhatsApp, Telegram, Instagram DMs, or other messaging platform. Can also upload media to Instagram when mode=upload and media_path is supplied.",
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "receiver":     {"type": "STRING", "description": "Recipient contact name for DMs"},
-                "message_text": {"type": "STRING", "description": "The message to send or Instagram caption"},
-                "platform":     {"type": "STRING", "description": "Platform: WhatsApp, Telegram, Instagram, etc."},
-                "mode":         {"type": "STRING", "description": "dm | upload (Instagram only; default: dm)"},
-                "media_path":   {"type": "STRING", "description": "Optional image/video path for Instagram uploads"}
-            },
-            "required": ["platform"]
-        }
-    },
-    {
-        "name": "reminder",
-        "description": "Sets a timed reminder using Windows Task Scheduler.",
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "date":    {"type": "STRING", "description": "Date in YYYY-MM-DD format"},
-                "time":    {"type": "STRING", "description": "Time in HH:MM format (24h)"},
-                "message": {"type": "STRING", "description": "Reminder message text"}
-            },
-            "required": ["date", "time", "message"]
-        }
-    },
-    {
-        "name": "youtube_video",
-        "description": (
-            "Controls YouTube. Use for: playing videos, summarizing a video's content, "
-            "getting video info, or showing trending videos."
-        ),
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "action": {"type": "STRING", "description": "play | summarize | get_info | trending (default: play)"},
-                "query":  {"type": "STRING", "description": "Search query for play action"},
-                "save":   {"type": "BOOLEAN", "description": "Save summary to Notepad (summarize only)"},
-                "region": {"type": "STRING", "description": "Country code for trending e.g. TR, US"},
-                "url":    {"type": "STRING", "description": "Video URL for get_info action"},
-            },
-            "required": []
-        }
-    },
-    {
-        "name": "screen_process",
-        "description": (
-            "Captures and analyzes the screen or webcam image. "
-            "MUST be called when user asks what is on screen, what you see, "
-            "analyze my screen, look at camera, etc. "
-            "You have NO visual ability without this tool. "
-            "After calling this tool, stay SILENT — the vision module speaks directly."
-        ),
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "angle": {"type": "STRING", "description": "'screen' to capture display, 'camera' for webcam. Default: 'screen'"},
-                "text":  {"type": "STRING", "description": "The question or instruction about the captured image"}
-            },
-            "required": ["text"]
-        }
-    },
-    {
-        "name": "computer_settings",
-        "description": (
-            "Controls the computer: volume, brightness, window management, keyboard shortcuts, "
-            "typing text on screen, closing apps, fullscreen, dark mode, WiFi, restart, shutdown, "
-            "scrolling, tab management, zoom, screenshots, lock screen, refresh/reload page. "
-            "Use for ANY single computer control command. NEVER route to agent_task."
-        ),
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "action":      {"type": "STRING", "description": "The action to perform"},
-                "description": {"type": "STRING", "description": "Natural language description of what to do"},
-                "value":       {"type": "STRING", "description": "Optional value: volume level, text to type, etc."}
-            },
-            "required": []
-        }
-    },
-    {
-        "name": "smart_home_control",
-        "description": (
-            "Controls connected smart-home devices such as Atomberg fans and TP-Link Kasa lights/plugs. "
-            "Use when the user asks to turn devices on or off, set fan speed, change brightness, or control a room."
-        ),
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "command": {"type": "STRING", "description": "Natural language smart-home command"}
-            },
-            "required": ["command"]
-        }
-    },
-    {
-        "name": "connect_list_devices",
-        "description": (
-            "Lists devices connected to Voice Connect. Use when the user asks what devices are connected, "
-            "what is online, or wants a simple inventory of paired devices."
-        ),
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {},
-            "required": []
-        }
-    },
-    {
-        "name": "connect_get_device",
-        "description": (
-            "Gets the details for one connected device by name, id, or natural reference such as my phone, "
-            "my laptop, my PC, or my tablet."
-        ),
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "device": {"type": "STRING", "description": "Device name, id, or natural reference"},
-                "target": {"type": "STRING", "description": "Alias for device"},
-                "device_id": {"type": "STRING", "description": "Exact device id"},
-                "name": {"type": "STRING", "description": "Exact device name"},
-                "query": {"type": "STRING", "description": "Search query"},
-            },
-            "required": ["device"]
-        }
-    },
-    {
-        "name": "connect_get_capabilities",
-        "description": (
-            "Returns the capabilities and permissions reported by a connected device. "
-            "Use before trying any device command."
-        ),
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "device": {"type": "STRING", "description": "Device name, id, or natural reference"},
-                "target": {"type": "STRING", "description": "Alias for device"},
-                "device_id": {"type": "STRING", "description": "Exact device id"},
-                "name": {"type": "STRING", "description": "Exact device name"},
-                "query": {"type": "STRING", "description": "Search query"},
-            },
-            "required": ["device"]
-        }
-    },
-    {
-        "name": "connect_execute",
-        "description": (
-            "Routes a Voice Connect command to a paired device through the gateway. "
-            "Use for actions such as launch_app, open_url, get_battery, capture_screen, take_photo, "
-            "clipboard_get, clipboard_set, send_file, receive_file, media_play, media_pause, volume_set, "
-            "notification_list, get_device_info, close_app, mouse_move, keyboard_type, unlock_phone, file_list, file_read, file_write, file_delete."
-            "Do not execute device operations directly anywhere else."
-        ),
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "device": {"type": "STRING", "description": "Target device name, id, or natural reference"},
-                "target": {"type": "STRING", "description": "Alias for device"},
-                "device_id": {"type": "STRING", "description": "Exact device id"},
-                "name": {"type": "STRING", "description": "Exact device name"},
-                "query": {"type": "STRING", "description": "Search query"},
-                "action": {"type": "STRING", "description": "Command to execute on the device"},
-                "parameters": {"type": "OBJECT", "description": "Action parameters"},
-            },
-            "required": ["device", "action"]
-        }
-    },
-    {
-        "name": "unlock_device",
-        "description": "Unlocks a paired Android device using its saved PIN.",
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "target": {"type": "STRING", "description": "Device name or ID to unlock"}
-            },
-            "required": ["target"]
-        }
-    },
-    {
-        "name": "connect_pair_device",
-        "description": (
-            "Creates or approves Voice Connect pairing. Use to generate a QR code / pairing code for a new device, "
-            "or to approve a pending pairing request."
-        ),
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "device_name": {"type": "STRING", "description": "Optional device name shown in the pairing flow"},
-                "platform": {"type": "STRING", "description": "android | windows | ios | tablet | other"},
-                "pending_id": {"type": "STRING", "description": "Pending request id to approve"},
-            },
-            "required": []
-        }
-    },
-    {
-        "name": "connect_disconnect_device",
-        "description": (
-            "Disconnects a device from Voice Connect and marks it offline. "
-            "Use when the user asks to disconnect, log out, or stop a paired device."
-        ),
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "device": {"type": "STRING", "description": "Target device name, id, or natural reference"},
-                "target": {"type": "STRING", "description": "Alias for device"},
-                "device_id": {"type": "STRING", "description": "Exact device id"},
-                "name": {"type": "STRING", "description": "Exact device name"},
-                "query": {"type": "STRING", "description": "Search query"},
-                "reason": {"type": "STRING", "description": "Optional reason for disconnect"},
-            },
-            "required": ["device"]
-        }
-    },
-    {
-        "name": "browser_control",
-        "description": (
-            "Controls the web browser. Use for: opening websites, searching the web, "
-            "navigating pages, clicking elements, filling forms, scrolling, tabs, back/forward, "
-            "refreshing, and any web-based task."
-        ),
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "action":      {"type": "STRING", "description": "go_to | navigate | search | click | type | scroll | fill_form | smart_click | smart_type | get_text | press | back | forward | refresh | open_tab | new_tab | switch_tab | list_tabs | close"},
-                "url":         {"type": "STRING", "description": "URL for go_to action"},
-                "query":       {"type": "STRING", "description": "Search query for search action"},
-                "selector":    {"type": "STRING", "description": "CSS selector for click/type"},
-                "text":        {"type": "STRING", "description": "Text to click or type"},
-                "description": {"type": "STRING", "description": "Element description for smart_click/smart_type"},
-                "direction":   {"type": "STRING", "description": "up or down for scroll"},
-                "key":         {"type": "STRING", "description": "Key name for press action"},
-                "tab":         {"type": "INTEGER", "description": "1-based tab index for switch_tab"},
-                "incognito":   {"type": "BOOLEAN", "description": "Open in private/incognito mode"},
-            },
-            "required": ["action"]
-        }
-    },
-    {
-        "name": "file_controller",
-        "description": (
-            "Manages files and folders: open, close, list, create, delete, move, copy, rename, read, write, find, disk usage, "
-            "and organizing a desktop or any folder into subfolders by type/date. Can also be used to explore and manage files on a connected Android phone."
-        ),
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "action":      {"type": "STRING", "description": "open | close | list | create_file | create_folder | delete | move | copy | rename | read | write | find | largest | disk_usage | organize_desktop | organize_folder | info"},
-                "path":        {"type": "STRING", "description": "File/folder path or shortcut: desktop, downloads, documents, home. For android, use paths like downloads, documents, photos, movies, root."},
-                "target":      {"type": "STRING", "description": "If operating on an Android device, provide the device name or ID. Leave empty for PC local files."},
-                "destination": {"type": "STRING", "description": "Destination path for move/copy"},
-                "new_name":    {"type": "STRING", "description": "New name for rename"},
-                "content":     {"type": "STRING", "description": "Content for create_file/write"},
-                "name":        {"type": "STRING", "description": "File name to search for"},
-                "extension":   {"type": "STRING", "description": "File extension to search (e.g. .pdf)"},
-                "count":       {"type": "INTEGER", "description": "Number of results for largest"},
-                "mode":        {"type": "STRING", "description": "by_type or by_date for organize actions"},
-            },
-            "required": ["action"]
-        }
-    },
-    {
-        "name": "desktop_control",
-        "description": "Controls the desktop: wallpaper, organize, clean, list, stats.",
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "action": {"type": "STRING", "description": "wallpaper | wallpaper_url | organize | clean | list | stats | task"},
-                "path":   {"type": "STRING", "description": "Image path for wallpaper"},
-                "url":    {"type": "STRING", "description": "Image URL for wallpaper_url"},
-                "mode":   {"type": "STRING", "description": "by_type or by_date for organize"},
-                "task":   {"type": "STRING", "description": "Natural language desktop task"},
-            },
-            "required": ["action"]
-        }
-    },
-    {
-        "name": "agent_task",
-        "description": (
-            "Executes complex multi-step tasks requiring multiple different tools. "
-            "Examples: 'research X and save to file', 'find and organize files'. "
-            "DO NOT use for single commands. NEVER use for Steam/Epic — use game_updater."
-        ),
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "goal":     {"type": "STRING", "description": "Complete description of what to accomplish"},
-                "priority": {"type": "STRING", "description": "low | normal | high (default: normal)"}
-            },
-            "required": ["goal"]
-        }
-    },
-    {
-        "name": "computer_control",
-        "description": "Direct computer control: type, click, hotkeys, scroll, move mouse, screenshots, find elements on screen.",
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "action":      {"type": "STRING", "description": "type | smart_type | click | double_click | right_click | hotkey | press | scroll | move | copy | paste | screenshot | wait | clear_field | focus_window | screen_find | screen_click | random_data | user_data"},
-                "text":        {"type": "STRING", "description": "Text to type or paste"},
-                "x":           {"type": "INTEGER", "description": "X coordinate"},
-                "y":           {"type": "INTEGER", "description": "Y coordinate"},
-                "keys":        {"type": "STRING", "description": "Key combination e.g. 'ctrl+c'"},
-                "key":         {"type": "STRING", "description": "Single key e.g. 'enter'"},
-                "direction":   {"type": "STRING", "description": "up | down | left | right"},
-                "amount":      {"type": "INTEGER", "description": "Scroll amount (default: 3)"},
-                "seconds":     {"type": "NUMBER",  "description": "Seconds to wait"},
-                "title":       {"type": "STRING",  "description": "Window title for focus_window"},
-                "description": {"type": "STRING",  "description": "Element description for screen_find/screen_click"},
-                "type":        {"type": "STRING",  "description": "Data type for random_data"},
-                "field":       {"type": "STRING",  "description": "Field for user_data: name|email|city"},
-                "clear_first": {"type": "BOOLEAN", "description": "Clear field before typing (default: true)"},
-                "path":        {"type": "STRING",  "description": "Save path for screenshot"},
-            },
-            "required": ["action"]
-        }
-    },
-    {
-        "name": "game_updater",
-        "description": (
-            "THE ONLY tool for ANY Steam or Epic Games request. "
-            "Use for: installing, downloading, updating games, listing installed games, "
-            "checking download status, scheduling updates. "
-            "ALWAYS call directly for any Steam/Epic/game request. "
-            "NEVER use agent_task, browser_control, or web_search for Steam/Epic."
-        ),
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "action":    {"type": "STRING",  "description": "update | install | list | download_status | schedule | cancel_schedule | schedule_status (default: update)"},
-                "platform":  {"type": "STRING",  "description": "steam | epic | both (default: both)"},
-                "game_name": {"type": "STRING",  "description": "Game name (partial match supported)"},
-                "app_id":    {"type": "STRING",  "description": "Steam AppID for install (optional)"},
-                "hour":      {"type": "INTEGER", "description": "Hour for scheduled update 0-23 (default: 3)"},
-                "minute":    {"type": "INTEGER", "description": "Minute for scheduled update 0-59 (default: 0)"},
-                "shutdown_when_done": {"type": "BOOLEAN", "description": "Shut down PC when download finishes"},
-            },
-            "required": []
-        }
-    },
-    {
-        "name": "flight_finder",
-        "description": "Searches Google Flights and speaks the best options.",
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "origin":      {"type": "STRING",  "description": "Departure city or airport code"},
-                "destination": {"type": "STRING",  "description": "Arrival city or airport code"},
-                "date":        {"type": "STRING",  "description": "Departure date (any format)"},
-                "return_date": {"type": "STRING",  "description": "Return date for round trips"},
-                "passengers":  {"type": "INTEGER", "description": "Number of passengers (default: 1)"},
-                "cabin":       {"type": "STRING",  "description": "economy | premium | business | first"},
-                "save":        {"type": "BOOLEAN", "description": "Save results to Notepad"},
-            },
-            "required": ["origin", "destination", "date"]
-        }
-    },
-    {
-        "name": "file_processor",
-        "description": (
-            "Processes any file that the user has uploaded or dropped onto the interface. "
-        "Use this when the user refers to an uploaded file and wants an action on it. "
-        "Supports: images (describe/ocr/resize/compress/convert), "
-        "PDFs (summarize/extract_text/to_word), "
-            "text files (summarize/fix/reformat/translate), "
-        "CSV/Excel (analyze/stats/filter/sort/convert), "
-        "JSON/XML (validate/format/analyze), "
-        "code files (explain/review/fix/optimize/run/document/test), "
-        "audio (transcribe/trim/convert/info), "
-        "video (trim/extract_audio/extract_frame/compress/transcribe/info), "
-        "archives (list/extract), "
-        "presentations (summarize/extract_text). "
-            "ALWAYS call this tool when a non-Word file has been uploaded and the user gives a command about it. "
-        "If the user's command is ambiguous, pick the most logical action for that file type."
-    ),
-    "parameters": {
-        "type": "OBJECT",
-        "properties": {
-            "file_path": {
-                "type": "STRING",
-                "description": "Full path to the uploaded file. Leave empty to use the currently uploaded file."
-            },
-            "action": {
-                "type": "STRING",
-                "description": (
-                    "What to do with the file. Examples by type:\n"
-                    "image: describe | ocr | resize | compress | convert | info\n"
-                    "pdf: summarize | extract_text | to_word | info\n"
-                    "docx via word_document; txt: summarize | fix | reformat | translate_hint | word_count | to_bullet\n"
-                    "csv/excel: analyze | stats | filter | sort | convert | info\n"
-                    "json: validate | format | analyze | to_csv\n"
-                    "code: explain | review | fix | optimize | run | document | test\n"
-                    "audio: transcribe | trim | convert | info\n"
-                    "video: trim | extract_audio | extract_frame | compress | transcribe | info | convert\n"
-                    "archive: list | extract\n"
-                    "pptx: summarize | extract_text | analyze"
-                )
-            },
-            "instruction": {
-                "type": "STRING",
-                "description": "Free-form instruction if action doesn't cover it. E.g. 'translate this to Turkish', 'find all email addresses'"
-            },
-            "format": {
-                "type": "STRING",
-                "description": "Target format for conversion. E.g. 'mp3', 'pdf', 'csv', 'png'"
-            },
-            "width":     {"type": "INTEGER", "description": "Target width for image resize"},
-            "height":    {"type": "INTEGER", "description": "Target height for image resize"},
-            "scale":     {"type": "NUMBER",  "description": "Scale factor for image resize (e.g. 0.5)"},
-            "quality":   {"type": "INTEGER", "description": "Quality 1-100 for image/video compress"},
-            "start":     {"type": "STRING",  "description": "Start time for trim: seconds or HH:MM:SS"},
-            "end":       {"type": "STRING",  "description": "End time for trim: seconds or HH:MM:SS"},
-            "timestamp": {"type": "STRING",  "description": "Timestamp for video frame extraction HH:MM:SS"},
-            "column":    {"type": "STRING",  "description": "Column name for CSV filter/sort"},
-            "value":     {"type": "STRING",  "description": "Filter value for CSV filter"},
-            "condition": {"type": "STRING",  "description": "Filter condition: equals|contains|gt|lt"},
-            "ascending": {"type": "BOOLEAN", "description": "Sort order for CSV sort (default: true)"},
-            "save":      {"type": "BOOLEAN", "description": "Save result to file (default: true)"},
-            "destination": {"type": "STRING", "description": "Output folder for archive extract"},
-        },
-        "required": []
-        }
-    },
-    {
-        "name": "presentation_builder",
-        "description": (
-            "Creates editable PowerPoint presentations (.pptx) from a structured slide outline. "
-            "Voice Echo automatically infers the best visual style from the topic, searches for a matching online template when available, "
-            "reuses cached templates, and falls back to the built-in designer if no suitable template is found. "
-            "Use when the user asks for a deck, slideshow, presentation, pitch deck, or report slides."
-        ),
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "title": {"type": "STRING", "description": "Presentation title"},
-                "subtitle": {"type": "STRING", "description": "Optional subtitle or audience line"},
-                "theme": {
-                    "type": "STRING",
-                    "description": "Optional presentation theme or visual direction such as neon, corporate, luxury, academic, sunset, or creative. If omitted, Voice Echo infers the best style automatically."
-                },
-                "outline": {
-                    "type": "STRING",
-                    "description": "Slide-by-slide outline. Use blank lines to separate slides if slides array is omitted."
-                },
-                "slides": {
-                    "type": "ARRAY",
-                    "items": {
-                        "type": "OBJECT",
-                        "properties": {
-                            "title": {"type": "STRING", "description": "Slide title"},
-                            "kicker": {"type": "STRING", "description": "Short all-caps kicker"},
-                            "bullets": {
-                                "type": "ARRAY",
-                                "items": {"type": "STRING"},
-                                "description": "Bullet points for the slide"
-                            },
-                            "notes": {"type": "STRING", "description": "Optional speaker note or footnote"}
-                        },
-                        "required": ["title"]
-                    },
-                    "description": "Structured slides. Preferred when the model can format the deck directly."
-                },
-                "output_path": {"type": "STRING", "description": "Optional output path for the .pptx"},
-                "auto_open": {"type": "BOOLEAN", "description": "Open the file after creating it (default: true)"},
-            },
-            "required": ["title"]
-        }
-    },
-    {
-        "name": "spreadsheet_builder",
-        "description": (
-            "Creates editable Excel workbooks (.xlsx) from structured sheet data. "
-            "Use for trackers, tables, analysis workbooks, budgets, planners, and other spreadsheet requests."
-        ),
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "title": {"type": "STRING", "description": "Workbook title"},
-                "worksheets": {
-                    "type": "ARRAY",
-                    "items": {
-                        "type": "OBJECT",
-                        "properties": {
-                            "name": {"type": "STRING", "description": "Worksheet name"},
-                            "title": {"type": "STRING", "description": "Optional sheet title row"},
-                            "headers": {
-                                "type": "ARRAY",
-                                "items": {"type": "STRING"},
-                                "description": "Column headers"
-                            },
-                            "rows": {
-                                "type": "ARRAY",
-                                "items": {
-                                    "type": "ARRAY",
-                                    "items": {"type": "STRING"},
-                                },
-                                "description": "Data rows"
-                            },
-                            "chart": {
-                                "type": "OBJECT",
-                                "properties": {
-                                    "type": {"type": "STRING", "description": "bar | line | pie"},
-                                    "title": {"type": "STRING", "description": "Chart title"},
-                                    "anchor": {"type": "STRING", "description": "Cell anchor such as E2"},
-                                    "x_axis": {"type": "STRING", "description": "Optional x-axis title"},
-                                    "y_axis": {"type": "STRING", "description": "Optional y-axis title"},
-                                }
-                            }
-                        },
-                        "required": ["name"]
-                    },
-                    "description": "One or more worksheets to create."
-                },
-                "output_path": {"type": "STRING", "description": "Optional output path for the .xlsx"},
-                "auto_open": {"type": "BOOLEAN", "description": "Open the file after creating it (default: true)"},
-            },
-            "required": ["title"]
-        }
-    },
-    {
-        "name": "word_document",
-        "description": (
-            "Creates, edits, reads, summarizes, extracts text from, and opens editable Word documents (.docx). "
-            "Use for Word document requests, letters, reports, headings, bullets, formatting edits, and preserving existing formatting."
-        ),
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "action": {
-                    "type": "STRING",
-                    "description": "create | create_letter | create_report | read | summarize | extract_text | append | replace_text | add_heading | add_bullets | reformat | open"
-                },
-                "file_path": {"type": "STRING", "description": "Existing .docx file path for read/edit/open actions"},
-                "output_path": {"type": "STRING", "description": "Optional output path for the saved .docx"},
-                "title": {"type": "STRING", "description": "Document title"},
-                "doc_type": {"type": "STRING", "description": "letter | report | generic"},
-                "content": {"type": "STRING", "description": "Main body content or text to append"},
-                "body": {"type": "STRING", "description": "Body text for letter/report creation"},
-                "paragraphs": {"type": "ARRAY", "items": {"type": "STRING"}, "description": "Paragraphs to add"},
-                "bullets": {"type": "ARRAY", "items": {"type": "STRING"}, "description": "Bullet items to add"},
-                "numbered": {"type": "ARRAY", "items": {"type": "STRING"}, "description": "Numbered items to add"},
-                "sections": {"type": "ARRAY", "items": {"type": "OBJECT"}, "description": "Structured sections with heading/body/bullets"},
-                "replacements": {"type": "OBJECT", "description": "Find/replace mapping for formatting-preserving edits"},
-                "find": {"type": "STRING", "description": "Text to find for simple replace_text edits"},
-                "replace": {"type": "STRING", "description": "Replacement text for simple replace_text edits"},
-                "heading": {"type": "STRING", "description": "Heading text to append"},
-                "level": {"type": "INTEGER", "description": "Heading level 1-3"},
-                "recipient": {"type": "STRING", "description": "Letter recipient"},
-                "salutation": {"type": "STRING", "description": "Custom letter salutation"},
-                "closing": {"type": "STRING", "description": "Custom letter closing"},
-                "date": {"type": "STRING", "description": "Letter date"},
-                "author": {"type": "STRING", "description": "Document author"},
-                "subject": {"type": "STRING", "description": "Document subject"},
-                "open_after": {"type": "BOOLEAN", "description": "Open the saved document after writing (default: true)"},
-                "save": {"type": "BOOLEAN", "description": "Save large generated summaries to a text file"},
-            },
-            "required": ["action"]
-        }
-    },
-    {
-        "name": "pdf_document",
-        "description": (
-            "Creates editable-style PDF documents (.pdf) from structured content or converts DOCX / text files into PDFs. "
-            "Use for PDF creation, PDF exports, and PDF generation requests that need a direct file output."
-        ),
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "action": {
-                    "type": "STRING",
-                    "description": "create | create_report | create_letter | convert"
-                },
-                "file_path": {"type": "STRING", "description": "Existing file to convert, typically .docx or .txt"},
-                "output_path": {"type": "STRING", "description": "Optional output path for the saved .pdf"},
-                "title": {"type": "STRING", "description": "PDF title"},
-                "subtitle": {"type": "STRING", "description": "Optional subtitle"},
-                "content": {"type": "STRING", "description": "Main body content"},
-                "body": {"type": "STRING", "description": "Main body content"},
-                "paragraphs": {"type": "ARRAY", "items": {"type": "STRING"}, "description": "Paragraphs to add"},
-                "bullets": {"type": "ARRAY", "items": {"type": "STRING"}, "description": "Bullet items to add"},
-                "numbered": {"type": "ARRAY", "items": {"type": "STRING"}, "description": "Numbered items to add"},
-                "sections": {"type": "ARRAY", "items": {"type": "OBJECT"}, "description": "Structured sections with heading/body/bullets"},
-                "recipient": {"type": "STRING", "description": "Letter recipient"},
-                "salutation": {"type": "STRING", "description": "Custom letter salutation"},
-                "closing": {"type": "STRING", "description": "Custom letter closing"},
-                "date": {"type": "STRING", "description": "Letter date"},
-                "author": {"type": "STRING", "description": "Document author"},
-                "subject": {"type": "STRING", "description": "Document subject"},
-                "auto_open": {"type": "BOOLEAN", "description": "Open the file after creating it (default: true)"},
-            },
-            "required": ["action"]
-        }
-    },
-    {
-        "name": "shutdown_voice",
-        "description": (
-            "Shuts down the assistant completely. "
-        "Call this when the user expresses intent to end the conversation, "
-        "close the assistant, say goodbye, or stop Voice Echo. "
-        "The user can say this in ANY language."
-    ),
-    "parameters": {
-        "type": "OBJECT",
-        "properties": {},
-    }
-    },
-    {
-        "name": "save_memory",
-        "description": (
-            "Save an important personal fact about the user to long-term memory. "
-            "Call this silently whenever the user reveals something worth remembering: "
-            "name, age, city, job, preferences, hobbies, relationships, projects, or future plans. "
-            "Do NOT call for: weather, reminders, searches, or one-time commands. "
-            "Do NOT announce that you are saving — just call it silently. "
-            "Values must be in English regardless of the conversation language."
-        ),
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "category": {
-                    "type": "STRING",
-                    "description": (
-                        "identity — name, age, birthday, city, job, language, nationality | "
-                        "preferences — favorite food/color/music/film/game/sport, hobbies | "
-                        "projects — active projects, goals, things being built | "
-                        "relationships — friends, family, partner, colleagues | "
-                        "wishes — future plans, things to buy, travel dreams | "
-                        "notes — habits, schedule, anything else worth remembering"
-                    )
-                },
-                "key":   {"type": "STRING", "description": "Short snake_case key (e.g. name, favorite_food, sister_name)"},
-                "value": {"type": "STRING", "description": "Concise value in English (e.g. Suryaansh, pizza, older sister)"},
-            },
-            "required": ["category", "key", "value"]
-        }
-    },
-    {
-        "name": "spotify_controller",
-        "description": (
-            "Plays and controls music via Spotify and Google Chrome. "
-            "ALWAYS use this tool whenever the user asks to play any song, music, track, or artist "
-            "(e.g. 'play Starboy', 'play music on Spotify'), or control playback "
-            "('pause the music', 'resume', 'skip song', 'next track', 'volume up', 'volume down', 'mute'). "
-            "Do NOT use open_app for playing songs."
-        ),
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "action": {
-                    "type": "STRING",
-                    "description": "search_play | play | pause | toggle | next | previous | volume_up | volume_down | mute | open_spotify (default: search_play)"
-                },
-                "query": {
-                    "type": "STRING",
-                    "description": "Song title, artist name, album, or playlist to search and play"
-                },
-                "volume": {
-                    "type": "NUMBER",
-                    "description": "Volume level (optional)"
-                }
-            },
-            "required": ["action"]
-        }
-    },
-    {
-        "name": "calendar_scheduler",
-        "description": (
-            "Manages calendar events, appointments, and schedules. "
-            "Use whenever the user asks to schedule a meeting, check upcoming events, "
-            "view schedule for today/tomorrow, or remove an event."
-        ),
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "action": {
-                    "type": "STRING",
-                    "description": "add_event | list_events | check_day | delete_event | get_upcoming | export_ics"
-                },
-                "title": {
-                    "type": "STRING",
-                    "description": "Title or summary of the meeting/event"
-                },
-                "date": {
-                    "type": "STRING",
-                    "description": "Date (YYYY-MM-DD or 'today', 'tomorrow')"
-                },
-                "time": {
-                    "type": "STRING",
-                    "description": "Time (HH:MM in 24h format, e.g. '14:30')"
-                },
-                "duration_minutes": {
-                    "type": "NUMBER",
-                    "description": "Duration in minutes (default: 30)"
-                },
-                "location": {
-                    "type": "STRING",
-                    "description": "Location or meeting link (optional)"
-                }
-            },
-            "required": ["action"]
-        }
-    },
-    {
-        "name": "daily_briefing",
-        "description": (
-            "Delivers a complete daily briefing including time, date, today's schedule/calendar events, "
-            "and top world & tech headlines. Use whenever the user asks for their daily briefing, morning update, "
-            "or what's happening today."
-        ),
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "category": {
-                    "type": "STRING",
-                    "description": "Optional news category: all (default), tech, world"
-                }
-            },
-            "required": []
-        }
-    },
-]
-
-
 class VoiceLive:
 
     def __init__(self, ui: VoiceUI, dashboard=None, dashboard_started: bool = False, enable_dashboard: bool = True):
         self.ui             = ui
         self._smart_home    = SmartHomeService()
-        self.session        = None
-        self.audio_in_queue = None
-        self.out_queue      = None
-        self._loop          = None
         self._is_speaking   = False
         self._speaking_lock = threading.Lock()
-        self._use_openrouter_first = False
         self._local_voice_enabled = False
         self._local_tts = LocalTTS() if LocalTTS is not None else None
         self._local_engine = None
@@ -1500,10 +473,6 @@ class VoiceLive:
                 self._local_voice_enabled = stt_ok or tts_ok
         except Exception:
             self._local_voice_enabled = False
-        if self._local_voice_enabled:
-            # Local mode: never prefer Google for the chat brain either
-            # (Gemini text generation falls back to OpenRouter automatically).
-            self._use_openrouter_first = True
         self._pending_attention: dict | None = None
         self._pending_reply_event: dict | None = None
         self._reply_mode = False
@@ -1526,7 +495,6 @@ class VoiceLive:
             on_update=self._on_meeting_update,
             on_state=self._on_meeting_state,
         )
-        self._phone_active = False
         self._dashboard = dashboard if dashboard is not None else (DashboardServer() if (enable_dashboard and DashboardServer is not None) else None)
         self._dashboard_started = bool(dashboard_started and self._dashboard is not None)
         self.ui.on_text_command = self._on_text_command
@@ -1579,16 +547,8 @@ class VoiceLive:
                 if engine.should_trigger(self._last_activity):
                     engine.mark_triggered()
                     prompt = engine.build_prompt(memory={})
-                    
-                    if self.session and self._loop:
-                        import asyncio
-                        async def _send():
-                            try:
-                                await self.session.send(input=prompt, end_of_turn=True)
-                            except Exception as e:
-                                print(f"[Proactive] Error: {e}")
-                        asyncio.run_coroutine_threadsafe(_send(), self._loop)
-                        self._reset_idle_activity()
+                    self.speak(prompt)
+                    self._reset_idle_activity()
                     
             except Exception as e:
                 print(f"[Proactive] Error: {e}")
@@ -1725,7 +685,7 @@ class VoiceLive:
             try:
                 self.speak("Собираю ваш сайт...")
                 if hasattr(self.ui, "_developer_status_lbl"):
-                    self.ui._developer_status_lbl.setText("Building website with Gemini in the selected workspace")
+                    self.ui._developer_status_lbl.setText("Building website with the local model in the selected workspace")
                     self.ui._developer_card.show()
                     self.ui._developer_card.raise_()
                 result = website_builder(
@@ -1804,16 +764,7 @@ class VoiceLive:
 
             threading.Thread(target=_run_screen_process, daemon=True).start()
             return
-        if self._use_openrouter_first or not self._loop or not self.session:
-            threading.Thread(target=self._fallback_reply, args=(text, memory_ctx), daemon=True).start()
-            return
-        asyncio.run_coroutine_threadsafe(
-            self.session.send_client_content(
-                turns={"parts": [{"text": routed_text}]},
-                turn_complete=True
-            ),
-            self._loop
-        )
+        threading.Thread(target=self._fallback_reply, args=(text, memory_ctx), daemon=True).start()
 
 
     def _handle_smart_home_command(self, text: str, source: str = "local") -> bool:
@@ -2078,10 +1029,7 @@ class VoiceLive:
     def _announce_attention(self, event: dict):
         msg = self._attention_message(event)
         self.ui.write_log(f"Voice Echo: {msg}")
-        if self.session and self._loop:
-            self.speak(msg)
-        else:
-            threading.Thread(target=speak_native, args=(msg,), daemon=True).start()
+        self.speak(msg)
         self.ui.show_attention_alert(event)
 
     def _on_external_notification(self, event: dict):
@@ -2172,10 +1120,7 @@ class VoiceLive:
 
         message = "Что вы хотите ответить?"
         self.ui.write_log(f"Voice Echo: {message}")
-        if self.session and self._loop:
-            self.speak(message)
-        else:
-            threading.Thread(target=speak_native, args=(message,), daemon=True).start()
+        self.speak(message)
         try:
             self.ui.begin_task_workspace(
                 "Подготовка ответа",
@@ -2231,15 +1176,13 @@ class VoiceLive:
             "Reply text:"
         )
         try:
-            return _gemini_text_reply(prompt) or user_text
+            return _local_text_reply(
+                prompt,
+                system="You are a friendly assistant. Rewrite the reply naturally and humanely.",
+                temperature=0.6,
+            ) or user_text
         except Exception:
-            try:
-                return openrouter_client.chat(
-                    prompt,
-                    system="You are a friendly assistant. Rewrite the reply naturally and humanely.",
-                )
-            except Exception:
-                return user_text
+            return user_text
 
     def _draft_and_send_reply(self, event: dict, text: str):
         try:
@@ -2296,13 +1239,10 @@ class VoiceLive:
             "Output ONLY valid JSON: {\"intent\": \"...\", \"reply_text\": \"...\"}"
         )
         try:
-            client = genai.Client(api_key=_get_api_key(), http_options={"api_version": "v1beta"})
-            response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=f"{system_prompt}\n\nUser Response: {text}",
-                config={"temperature": 0.1, "response_mime_type": "application/json"}
+            data = llm.chat_json(
+                f"{system_prompt}\n\nUser Response: {text}",
+                system="Return ONLY valid JSON.",
             )
-            data = json.loads(response.text.strip())
             return data.get("intent", "IGNORE"), data.get("reply_text", "")
         except Exception:
             lower = text.lower()
@@ -2345,7 +1285,7 @@ class VoiceLive:
                 add_auto_thread(thread_id)
                 def _generate_and_send():
                     try:
-                        reply = _ig_gemini_reply(username, message_text)
+                        reply = _ig_local_reply(username, message_text)
                         send_direct_reply(thread_id, reply)
                     except Exception as e:
                         print(f"Error taking over thread: {e}")
@@ -2584,30 +1524,19 @@ class VoiceLive:
             except Exception:
                 pass
             reply = ""
-            gemini_first = not self._use_openrouter_first
             request_text = f"{memory_ctx}\n\nCurrent User Request:\n{text}" if memory_ctx else text
 
-            if gemini_first:
-                try:
-                    reply = _gemini_text_reply(request_text)
-                except Exception as e:
-                    print(f"[VOICE ECHO] ⚠️ Gemini fallback failed: {e}")
-                    if _is_gemini_limit_error(e) or _is_network_unreachable(e):
-                        self._use_openrouter_first = True
-
-            if not reply:
-                try:
-                    reply = openrouter_client.chat(
-                        request_text,
-                        system=(
-                            "You are Voice Echo, a concise, helpful desktop assistant. "
-                            "Reply naturally and briefly. Do not mention internal implementation details."
-                        ),
-                    )
-                except Exception as e:
-                    print(f"[VOICE ECHO] ⚠️ OpenRouter fallback failed: {e}")
-                    if gemini_first and not self._use_openrouter_first and _is_gemini_limit_error(e):
-                        self._use_openrouter_first = True
+            try:
+                reply = llm.chat(
+                    request_text,
+                    system=(
+                        "Ты — Voice Echo, краткий и полезный настольный ассистент. "
+                        "Отвечай естественно, кратко и всегда на русском языке. "
+                        "Не упоминай внутренние детали реализации."
+                    ),
+                )
+            except Exception as e:
+                print(f"[VOICE ECHO] ⚠️ Local model reply failed: {e}")
             reply = (reply or "").strip()
             if not reply:
                 reply = "Я готов."
@@ -2655,370 +1584,21 @@ class VoiceLive:
             threading.Thread(target=_speak_thread, daemon=True).start()
             return
 
-        if self.session and self._loop:
-            # Route text through Gemini Live API for a unified native voice
-            import asyncio
-            async def _send():
-                try:
-                    prompt = f"System Alert / Context: {text}\n\nPlease relay this information to me naturally now."
-                    await self.session.send(input=prompt, end_of_turn=True)
-                except Exception as e:
-                    print(f"[VOICE ECHO] Unified Speak err: {e}")
-            asyncio.run_coroutine_threadsafe(_send(), self._loop)
-        else:
-            # Fallback to Edge TTS if Gemini Live is disconnected
-            def _speak_thread():
-                try:
-                    self.set_speaking(True)
-                    from actions.attention_monitor import _speak_edge_native
-                    _speak_edge_native(text)
-                finally:
-                    self.set_speaking(False)
-            threading.Thread(target=_speak_thread, daemon=True).start()
+        def _speak_thread():
+            try:
+                self.set_speaking(True)
+                from actions.attention_monitor import _speak_edge_native
+                _speak_edge_native(text)
+            except Exception as e:
+                print(f"[VOICE ECHO] TTS failed: {e}")
+            finally:
+                self.set_speaking(False)
+        threading.Thread(target=_speak_thread, daemon=True).start()
 
     def speak_error(self, tool_name: str, error: str):
         short = str(error)[:120]
         self.ui.write_log(f"ERR: {tool_name} — {short}")
         self.speak(f"Во время выполнения «{tool_name.replace('_', ' ')}» произошла ошибка. {short}")
-
-    def _build_config(self) -> types.LiveConnectConfig:
-        from datetime import datetime
-
-        memory     = load_memory()
-        mem_str    = format_memory_for_prompt(memory)
-        sys_prompt = _load_system_prompt()
-
-        now      = datetime.now()
-        time_str = now.strftime("%A, %B %d, %Y — %I:%M %p")
-        time_ctx = (
-            f"[CURRENT DATE & TIME]\n"
-            f"Right now it is: {time_str}\n"
-            f"Use this to calculate exact times for reminders.\n\n"
-        )
-
-        parts = [time_ctx]
-        if mem_str:
-            parts.append(mem_str)
-        parts.append(sys_prompt)
-        parts.append(
-            "Wake-word mode: if the microphone is muted, still listen for the words 'Voice Echo', 'hey', 'hi', and 'hello'. "
-            "When you hear one of these activation cues, keep the session friendly and concise, "
-            "and wait for the user's next command. "
-            "IMPORTANT: Do NOT speak an unprompted generic greeting (like 'Thank you, how can I help you?') upon connecting. "
-            "Remain completely silent until the user speaks to you or asks a question."
-        )
-
-        return types.LiveConnectConfig(
-            response_modalities=["AUDIO"],
-            output_audio_transcription={},
-            input_audio_transcription={},
-            system_instruction="\n".join(parts),
-            tools=[{"function_declarations": TOOL_DECLARATIONS}],
-            session_resumption=types.SessionResumptionConfig(),
-            speech_config=types.SpeechConfig(
-                voice_config=types.VoiceConfig(
-                    prebuilt_voice_config=types.PrebuiltVoiceConfig(
-                        voice_name="Charon"
-                    )
-                )
-            ),
-        )
-
-    async def _execute_tool(self, fc) -> types.FunctionResponse:
-        name = fc.name
-        args = dict(fc.args or {})
-
-        print(f"[VOICE ECHO] 🔧 {name}  {args}")
-        self.speak(f"Выполняю: {name.replace('_', ' ')}...")
-        self.ui.set_state("THINKING")
-        try:
-            self.ui.update_task_workspace(
-                title=f"Выполнение: {name}",
-                status=f"Выполняется: {name}",
-                output="Ожидание завершения инструмента.",
-                percent=45,
-            )
-        except Exception:
-            pass
-        if name == "save_memory":
-            category = args.get("category", "notes")
-            key      = args.get("key", "")
-            value    = args.get("value", "")
-            if key and value:
-                update_memory({category: {key: {"value": value}}})
-                print(f"[Memory] 💾 save_memory: {category}/{key} = {value}")
-                try:
-                    self.ui.finish_task_workspace("Запоминаю.", "Память обновлена.", 100)
-                except Exception:
-                    pass
-            if not self.ui.muted:
-                self.ui.set_state("LISTENING")
-            return types.FunctionResponse(
-                id=fc.id, name=name,
-                response={"result": "ok", "silent": True}
-            )
-
-        loop   = asyncio.get_event_loop()
-        result = "Готово."
-
-        try:
-            if name == "computer_settings":
-                from actions.computer_settings import computer_settings as cs_run
-                r = await loop.run_in_executor(None, lambda: cs_run(parameters=args, player=self.ui))
-                result = r or "Настройки обновлены."
-
-            elif name == "dev_agent":
-                from actions.dev_agent import dev_agent as da_run
-                r = await loop.run_in_executor(None, lambda: da_run(parameters=args, player=self.ui, speak=self.speak))
-                result = r or "Готово."
-
-            elif name == "open_app":
-                r = await loop.run_in_executor(None, lambda: open_app(parameters=args, response=None, player=self.ui))
-                result = r or f"Приложение открыто: {args.get('app_name')}."
-                
-            elif name == "check_instagram_messages":
-                self.ui.write_log("SYS: Проверяю сообщения в Instagram...")
-                from actions.instagram_chat import get_recent_messages
-                result = await loop.run_in_executor(None, get_recent_messages, 5)
-
-            elif name == "instagram_reply":
-                action = args.get("action")
-                reply_text = args.get("reply_text")
-                if getattr(self, "_ig_pending_thread", None):
-                    thread_id = self._ig_pending_thread.get("thread_id")
-                    username = self._ig_pending_thread.get("username")
-                    if action == "take_over":
-                        self.ui.write_log("SYS: Беру управление перепиской (инструмент).")
-                        from actions.instagram_chat import add_auto_thread, send_direct_reply
-                        add_auto_thread(thread_id)
-                        message_text = self._ig_pending_thread.get('message')
-                        def _generate_and_send():
-                            try:
-                                reply = _ig_gemini_reply(username, message_text)
-                                send_direct_reply(thread_id, reply)
-                            except Exception as e:
-                                print(f"Error taking over thread: {e}")
-                        threading.Thread(target=_generate_and_send, daemon=True).start()
-                        result = f"Управление перепиской с {username} передано мне. Теперь я буду отвечать им автоматически."
-                    else:
-                        self.ui.write_log(f"SYS: Отправляю ручной ответ: {username}.")
-                        from actions.instagram_chat import send_direct_reply
-                        send_direct_reply(thread_id, reply_text)
-                        result = f"Ручной ответ отправлен: {username}."
-                        
-                    self._ig_reply_mode = False
-                    self._ig_pending_thread = None
-                else:
-                    result = "Ошибка: сейчас нет ожидающего сообщения в Instagram, на которое можно ответить."
-
-            elif name == "system_manager":
-                from actions.system_manager import run as sm_run
-                r = await loop.run_in_executor(None, lambda: sm_run(parameters=args, player=self.ui))
-                result = r or "Информация о системе получена."
-
-            elif name == "background_monitor":
-                from actions.background_monitor import run as bm_run
-                r = await loop.run_in_executor(None, lambda: bm_run(parameters=args, player=self.ui))
-                result = r or "Готово."
-
-            elif name == "clipboard_processor":
-                from actions.clipboard_processor import process_clipboard
-                r = await loop.run_in_executor(None, lambda: process_clipboard(parameters=args, player=self.ui))
-                result = r or "Буфер обмена прочитан."
-
-            elif name == "weather_report":
-                r = await loop.run_in_executor(None, lambda: weather_action(parameters=args, player=self.ui))
-                result = r or "Прогноз погоды готов."
-
-            elif name == "browser_control":
-                r = await loop.run_in_executor(None, lambda: browser_control(parameters=args, player=self.ui))
-                result = r or "Готово."
-
-            elif name == "file_controller":
-                r = await loop.run_in_executor(None, lambda: file_controller(parameters=args, player=self.ui))
-                result = r or "Готово."
-
-            elif name == "send_message":
-                r = await loop.run_in_executor(None, lambda: send_message(parameters=args, response=None, player=self.ui, session_memory=None))
-                result = r or f"Сообщение отправлено: {args.get('receiver')}."
-
-            elif name == "reminder":
-                r = await loop.run_in_executor(None, lambda: reminder(parameters=args, response=None, player=self.ui))
-                result = r or "Напоминание установлено."
-
-            elif name == "youtube_video":
-                r = await loop.run_in_executor(None, lambda: youtube_video(parameters=args, response=None, player=self.ui))
-                result = r or "Готово."
-            elif name == "file_processor":
-                if not args.get("file_path") and self.ui.current_file:
-                    args["file_path"] = self.ui.current_file
-                r = await loop.run_in_executor(
-                    None,
-                    lambda: file_processor(parameters=args, player=self.ui, speak=self.speak)
-                )
-                result = r or "Готово."
-
-            elif name == "presentation_builder":
-                r = await loop.run_in_executor(
-                    None,
-                    lambda: create_presentation(parameters=args, player=self.ui)
-                )
-                result = r or "Презентация создана."
-
-            elif name == "spreadsheet_builder":
-                r = await loop.run_in_executor(
-                    None,
-                    lambda: create_spreadsheet(parameters=args, player=self.ui)
-                )
-                result = r or "Таблица создана."
-
-
-            elif name == "word_document":
-                if not args.get("file_path") and self.ui.current_file:
-                    current_file = Path(self.ui.current_file)
-                    if current_file.suffix.lower() == ".docx":
-                        args["file_path"] = self.ui.current_file
-                r = await loop.run_in_executor(
-                    None,
-                    lambda: word_document(parameters=args, player=self.ui, speak=self.speak)
-                )
-                result = r or "Документ Word обработан."
-
-            elif name == "pdf_document":
-                r = await loop.run_in_executor(
-                    None,
-                    lambda: create_pdf(parameters=args, player=self.ui)
-                )
-                result = r or "PDF создан."
-
-            elif name == "screen_process":
-                if hasattr(self, "set_scanning"):
-                    self.ui.set_scanning(True, "SCANNING SCREEN")
-                threading.Thread(
-                    target=screen_process,
-                    kwargs={
-                        "parameters": args,
-                        "response": None,
-                        "player": self.ui,
-                        "session_memory": None,
-                    },
-                    daemon=True,
-                ).start()
-                result = "Модуль зрения активирован. Храните полную тишину — модуль зрения ответит сам."
-
-            elif name == "computer_settings":
-                r = await loop.run_in_executor(None, lambda: computer_settings(parameters=args, response=None, player=self.ui))
-                result = r or "Готово."
-
-            elif name == "smart_home_control":
-                command_text = str(args.get("command") or "").strip()
-                r = await loop.run_in_executor(None, lambda: self._smart_home.execute_command(command_text))
-                result = str((r or {}).get("detail") or "Команда умного дома выполнена.")
-
-            elif name == "desktop_control":
-                r = await loop.run_in_executor(None, lambda: desktop_control(parameters=args, player=self.ui))
-                result = r or "Готово."
-
-            elif name == "agent_task":
-                from agent.task_queue import get_queue, TaskPriority
-                priority_map = {"low": TaskPriority.LOW, "normal": TaskPriority.NORMAL, "high": TaskPriority.HIGH}
-                priority = priority_map.get(args.get("priority", "normal").lower(), TaskPriority.NORMAL)
-                task_id  = get_queue().submit(goal=args.get("goal", ""), priority=priority, speak=self.speak)
-                result   = f"Задача запущена (ID: {task_id})."
-
-            elif name == "web_search":
-                r = await loop.run_in_executor(None, lambda: web_search_action(parameters=args, player=self.ui))
-                result = r or "Готово."
-
-            elif name == "computer_control":
-                r = await loop.run_in_executor(None, lambda: computer_control(parameters=args, player=self.ui))
-                result = r or "Готово."
-
-            elif name == "game_updater":
-                r = await loop.run_in_executor(None, lambda: game_updater(parameters=args, player=self.ui, speak=self.speak))
-                result = r or "Готово."
-
-            elif name == "flight_finder":
-                r = await loop.run_in_executor(None, lambda: flight_finder(parameters=args, player=self.ui))
-                result = r or "Готово."
-            elif name == "connect_list_devices":
-                r = await loop.run_in_executor(None, lambda: connect_list_devices(parameters=args, player=self.ui))
-                result = r or "Готово."
-            elif name == "connect_get_device":
-                r = await loop.run_in_executor(None, lambda: connect_get_device(parameters=args, player=self.ui))
-                result = r or "Готово."
-            elif name == "connect_get_capabilities":
-                r = await loop.run_in_executor(None, lambda: connect_get_capabilities(parameters=args, player=self.ui))
-                result = r or "Готово."
-            elif name == "connect_execute":
-                r = await loop.run_in_executor(None, lambda: connect_execute(parameters=args, player=self.ui))
-                result = r or "Готово."
-            elif name == "connect_pair_device":
-                r = await loop.run_in_executor(None, lambda: connect_pair_device(parameters=args, player=self.ui))
-                result = r or "Готово."
-            elif name == "connect_disconnect_device":
-                r = await loop.run_in_executor(None, lambda: connect_disconnect_device(parameters=args, player=self.ui))
-                result = r or "Готово."
-            elif name in ("spotify_controller", "spotify", "music"):
-                from actions.spotify_controller import spotify_controller
-                r = await loop.run_in_executor(None, lambda: spotify_controller(parameters=args, player=self.ui, speak=self.speak))
-                result = r or "Готово."
-            elif name in ("calendar_scheduler", "calendar", "schedule"):
-                from actions.calendar_scheduler import calendar_scheduler
-                r = await loop.run_in_executor(None, lambda: calendar_scheduler(parameters=args, player=self.ui, speak=self.speak))
-                result = r or "Готово."
-            elif name in ("daily_briefing", "briefing"):
-                from actions.daily_briefing import daily_briefing
-                r = await loop.run_in_executor(None, lambda: daily_briefing(parameters=args, player=self.ui, speak=self.speak))
-                result = r or "Дневное резюме готово."
-            elif name == "unlock_device":
-                from actions.unlock_device import unlock_device
-                r = await loop.run_in_executor(None, lambda: unlock_device(parameters=args, player=self.ui))
-                result = r or "Готово."
-            elif name == "shutdown_voice":
-                self.ui.write_log("SYS: Запрошено завершение работы.")
-                self.speak("До свидания.")
-
-                def _shutdown():
-                    import time, sys, os
-                    time.sleep(1)
-                    os._exit(0)
-
-                threading.Thread(target=_shutdown, daemon=True).start()
-            else:
-                result = f"Неизвестный инструмент: {name}"
-
-        except Exception as e:
-            result = f"Инструмент «{name}» не сработал: {e}"
-            traceback.print_exc()
-            self.speak_error(name, e)
-
-        try:
-            self.speak(f"Готово: {name.replace('_', ' ')}.")
-            self.ui.finish_task_workspace(result, "Задача выполнена.", 100)
-        except Exception:
-            pass
-
-        tool_voice = self._connect_tool_voice(name, result)
-        if tool_voice:
-            try:
-                self.ui.write_log(f"Voice Echo: {tool_voice}")
-            except Exception:
-                pass
-            try:
-                self.speak(tool_voice)
-            except Exception:
-                pass
-
-        if not self.ui.muted:
-            self.ui.set_state("LISTENING")
-
-        print(f"[VOICE ECHO] 📤 {name} → {str(result)[:80]}")
-
-        return types.FunctionResponse(
-            id=fc.id, name=name,
-            response={"result": result}
-        )
 
     async def _serve_dashboard(self):
         if self._dashboard is None:
@@ -3042,165 +1622,6 @@ class VoiceLive:
                     self.ui.submit_external_command(text, source="mobile")
                 except Exception:
                     self._on_text_command(text, source="mobile")
-
-    async def _relay_phone_audio(self):
-        if self._dashboard is None:
-            return
-        while True:
-            frame = await self._dashboard._phone_audio_queue.get()
-            if not self.out_queue:
-                continue
-            self._phone_active = True
-            try:
-                await self.out_queue.put(frame)
-            finally:
-                await asyncio.sleep(0.08)
-                if self._dashboard._phone_audio_queue.empty():
-                    self._phone_active = False
-
-    async def _send_realtime(self):
-        while True:
-            msg = await self.out_queue.get()
-            await self.session.send_realtime_input(media=msg)
-
-    async def _listen_audio(self):
-        print("[VOICE ECHO] 🎤 Mic started")
-        loop = asyncio.get_event_loop()
-        import numpy as np
-
-        def callback(indata, frames, time_info, status):
-            with self._speaking_lock:
-                voice_speaking = self._is_speaking
-            if self._phone_active:
-                return
-            
-            if not self.ui.muted or getattr(self.ui, "_wakeword_listening", False):
-                # Calculate RMS volume of the chunk
-                rms = np.sqrt(np.mean(np.square(indata, dtype=np.float32)))
-                
-                # Smart Echo Gate: High threshold if AI is speaking, very low if silent
-                threshold = 1200.0 if voice_speaking else 10.0
-                
-                if rms > threshold:
-                    data = indata.tobytes()
-                else:
-                    # Stream pure silence to keep timeline intact but prevent echo
-                    data = np.zeros_like(indata).tobytes()
-                    
-                loop.call_soon_threadsafe(
-                    self.out_queue.put_nowait,
-                    {"data": data, "mime_type": "audio/pcm"}
-                )
-
-        try:
-            with sd.InputStream(
-                samplerate=SEND_SAMPLE_RATE,
-                channels=CHANNELS,
-                dtype="int16",
-                blocksize=CHUNK_SIZE,
-                callback=callback,
-            ):
-                print("[VOICE ECHO] 🎤 Mic stream open")
-                while True:
-                    await asyncio.sleep(0.1)
-        except Exception as e:
-            print(f"[VOICE ECHO] ❌ Mic: {e}")
-            raise
-
-    async def _receive_audio(self):
-        print("[VOICE ECHO] 👂 Recv started")
-        out_buf, in_buf = [], []
-
-        try:
-            while True:
-                async for response in self.session.receive():
-
-                    if response.data:
-                        self.audio_in_queue.put_nowait(response.data)
-
-                    if response.server_content:
-                        sc = response.server_content
-
-                        if sc.output_transcription and sc.output_transcription.text:
-                            self.set_speaking(True)
-                            txt = sc.output_transcription.text.strip()
-                            if txt:
-                                out_buf.append(txt)
-
-                        if sc.input_transcription and sc.input_transcription.text:
-                            txt = sc.input_transcription.text.strip()
-                            if txt:
-                                try:
-                                    from actions.attention_monitor import stop_native_speech
-                                    stop_native_speech()
-                                except Exception:
-                                    pass
-                                in_buf.append(txt)
-                                if self.ui.muted and _wakeword_detected(txt):
-                                    try:
-                                        self.ui.set_muted_state(False, wakeword=True)
-                                        self.ui.write_log("SYS: Активировано wake-word. Микрофон активен.")
-                                    except Exception:
-                                        pass
-
-                        if sc.turn_complete:
-                            self.set_speaking(False)
-
-                            full_in = " ".join(in_buf).strip()
-                            if full_in:
-                                self.ui.write_log(f"Вы: {full_in}")
-                            in_buf = []
-
-                            full_out = " ".join(out_buf).strip()
-                            if full_out:
-                                self.ui.write_log(f"Voice Echo: {full_out}")
-                            out_buf = []
-
-                            if full_in and len(full_in) > 5:
-                                threading.Thread(
-                                    target=_update_memory_async,
-                                    args=(full_in, full_out),
-                                    daemon=True
-                                ).start()
-
-                    if response.tool_call:
-                        fn_responses = []
-                        for fc in response.tool_call.function_calls:
-                            print(f"[VOICE ECHO] 📞 {fc.name}")
-                            fr = await self._execute_tool(fc)
-                            fn_responses.append(fr)
-                        await self.session.send_tool_response(
-                            function_responses=fn_responses
-                        )
-
-        except Exception as e:
-            print(f"[VOICE ECHO] ❌ Recv: {e}")
-            traceback.print_exc()
-            raise
-
-    async def _play_audio(self):
-        print("[VOICE ECHO] 🔊 Play started")
-        loop = asyncio.get_event_loop()
-
-        stream = sd.RawOutputStream(
-            samplerate=RECEIVE_SAMPLE_RATE,
-            channels=CHANNELS,
-            dtype="int16",
-            blocksize=CHUNK_SIZE,
-        )
-        stream.start()
-        try:
-            while True:
-                chunk = await self.audio_in_queue.get()
-                self.set_speaking(True)
-                await asyncio.to_thread(stream.write, chunk)
-        except Exception as e:
-            print(f"[VOICE ECHO] ❌ Play: {e}")
-            raise
-        finally:
-            self.set_speaking(False)
-            stream.stop()
-            stream.close()
 
     async def run(self):
         # announce boot steps to UI overlay (thread-safe wrappers)
@@ -3231,7 +1652,6 @@ class VoiceLive:
                 except Exception:
                     pass
             asyncio.create_task(self._consume_remote_commands())
-            asyncio.create_task(self._relay_phone_audio())
         try:
             self.ui.boot_set_progress(36, "Инициализация AI-клиента")
         except Exception:
@@ -3239,7 +1659,7 @@ class VoiceLive:
 
         if self._local_voice_enabled:
             # Fully offline voice loop: local STT (Vosk/sherpa) + local TTS (Piper).
-            # No Google/Gemini endpoint is contacted for speech.
+            # No cloud endpoint is contacted for speech.
             try:
                 self.ui.boot_set_step_status("Подключение к AI backend", "done")
                 self.ui.boot_set_progress(70, "Загрузка офлайн-голосового движка")
@@ -3283,81 +1703,6 @@ class VoiceLive:
                 pass
             while True:
                 await asyncio.sleep(3600)
-
-        client = genai.Client(
-            api_key=_get_api_key(),
-            http_options={"api_version": "v1beta", "httpx_client": get_httpx_client()}
-        )
-
-        while True:
-            fatal_hint = False
-            try:
-                print("[VOICE ECHO] 🔌 Connecting...")
-                self.ui.set_state("THINKING")
-                config = self._build_config()
-
-                connect_cm = client.aio.live.connect(model=LIVE_MODEL, config=config)
-                session = await asyncio.wait_for(connect_cm.__aenter__(), timeout=LIVE_CONNECT_TIMEOUT)
-                try:
-                    async with asyncio.TaskGroup() as tg:
-                        self.session        = session
-                        self._loop          = asyncio.get_event_loop()
-                        self.audio_in_queue = asyncio.Queue()
-                        self.out_queue      = asyncio.Queue()  # Fix: removed maxsize=10 to prevent dropping packets
-                        
-                        print("[VOICE ECHO] ✅ Connected.")
-                        try:
-                            self.ui.boot_set_step_status("Подключение к AI backend", "done")
-                            self.ui.boot_set_progress(75, "AI backend подключён")
-                        except Exception:
-                            pass
-                        self.ui.set_state("LISTENING")
-                        self.ui.write_log("SYS: Voice Echo онлайн.")
-
-                        tg.create_task(self._send_realtime())
-                        tg.create_task(self._listen_audio())
-                        tg.create_task(self._relay_phone_audio())
-                        tg.create_task(self._receive_audio())
-                        tg.create_task(self._play_audio())
-                        try:
-                            self.ui.boot_set_step_status("Инициализация аудио", "done")
-                            self.ui.boot_set_progress(92, "Аудио-подсистемы запущены")
-                        except Exception:
-                            pass
-                        # finalize
-                        try:
-                            self.ui.boot_set_step_status("Завершение запуска", "done")
-                            self.ui.boot_set_progress(100, "Запуск завершён")
-                        except Exception:
-                            pass
-                finally:
-                    try:
-                        await connect_cm.__aexit__(None, None, None)
-                    except Exception:
-                        pass
-            except Exception as e:
-                print(f"[VOICE ECHO] ⚠️ {e}")
-                traceback.print_exc()
-                fatal_hint = _is_network_unreachable(e)
-                if _is_gemini_limit_error(e):
-                    self._use_openrouter_first = True
-                self.session = None
-                self._loop = None
-            self.set_speaking(False)
-            self.ui.set_state("LISTENING")
-            if fatal_hint:
-                self.ui.write_log(
-                    "ERR: Не удаётся подключиться к серверу Gemini. Это ошибка конфигурации "
-                    "хоста/сети (см. /etc/hosts или прокси), а не временный сбой."
-                )
-                print(
-                    "[VOICE ECHO] 🚫 Gemini host unreachable — retrying will not help "
-                    "until DNS/hosts/proxy is fixed. See /etc/hosts and proxy settings."
-                )
-                _startup_log(f"gemini connect unreachable: {e}")
-            print("[VOICE ECHO] 🔄 Reconnecting in 5s...")
-            await asyncio.sleep(5)
-
 def main():
     _startup_log("main entered")
     try:
@@ -3476,7 +1821,7 @@ def main():
             from actions.instagram_chat import set_ig_prompt_callback
             def _ig_handler(thread_id, username, text, is_auto):
                 if is_auto:
-                    return _ig_gemini_reply(username, text)
+                    return _ig_local_reply(username, text)
                 else:
                     voice_echo._ig_reply_mode = True
                     voice_echo._ig_pending_thread = {
@@ -3507,7 +1852,7 @@ def main():
                         last_clip = curr_clip
                         text = (curr_clip or "").strip()
                         if text and len(text) > 3:
-                            reply = _clipboard_gemini_reply(text[:1000])
+                            reply = _clipboard_local_reply(text[:1000])
                             ui.write_log(f"Voice Echo (Clipboard): {reply}")
                             voice_echo.speak(reply)
                 except Exception:

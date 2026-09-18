@@ -151,7 +151,7 @@ def _get_transcript(video_id: str) -> str | None:
         return None
 
 
-def _summarize_with_gemini(transcript: str, video_url: str) -> str:
+def _summarize_with_llm(transcript: str, video_url: str) -> str:
     from llm_client import client
 
     max_chars = 80000
@@ -312,7 +312,7 @@ def _handle_summarize(parameters: dict, player, speak) -> str:
         speak("Расшифровка получена. Создаю сводку.")
 
     try:
-        summary = _summarize_with_gemini(transcript, url)
+        summary = _summarize_with_llm(transcript, url)
     except Exception as e:
         return f"Не удалось создать сводку: {e}"
 

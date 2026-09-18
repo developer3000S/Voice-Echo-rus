@@ -835,7 +835,7 @@
       _toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
     }
 
-    // ── Real-time Voice — PCM16 WebSocket → Gemini Live ──────────────────────
+    // ── Real-time Voice — PCM16 WebSocket bridge ──────────────────────
     const micBtn  = document.getElementById('mic-btn');
     let _voiceWs  = null;
     let _audioCtx = null;

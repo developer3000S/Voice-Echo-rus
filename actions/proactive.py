@@ -1,6 +1,6 @@
 """
 ProactiveEngine 2.0 — context-aware, time-aware, non-repetitive background prompting.
-Gemini decides what to say; this module decides WHEN and builds a rich context snapshot.
+The local model decides what to say; this module decides WHEN and builds a rich context snapshot.
 """
 import time
 from datetime import datetime
@@ -54,7 +54,7 @@ class ProactiveEngine:
         recent_turns: list[str] | None = None,
     ) -> str:
         """
-        Build a context snapshot for Gemini.
+        Build a context snapshot for the local model.
         Rotates through three focus areas so proactive messages don't repeat.
         """
         from memory.memory_manager import format_memory_for_prompt

@@ -43,7 +43,6 @@ except Exception:
     WEB_ENGINE_AVAILABLE = False
 
 from discord_bot import DiscordBotService
-from proxy_manager import get_proxy_url, set_proxy_url
 from gesture_utils import estimate_gesture_state, GestureTracker
 from smart_home import SmartHomeService
 from smart_home_page_new import VoiceHomePage, _DeviceTile
@@ -652,14 +651,13 @@ def _default_app_settings() -> dict:
         "launcher_pos": None,
         "launch_minimized": False,
         "check_updates_on_startup": True,
-        "default_ai_provider": "Gemini",
+        "default_ai_provider": "Local",
         "auto_provider_switch": True,
         "attention_message_prompts": True,
         "attention_call_prompts": True,
         "local_voice_engine": True,
         "developer_mode_enabled": False,
         "developer_mode_workspace": "",
-        "proxy_url": "",
     }
 
 
@@ -4583,7 +4581,7 @@ class SetupOverlay(QWidget):
 
         lay.addStretch(3)
 
-        title = QLabel("ВЫБЕРИТЕ ОСНОВНОЙ ИНТЕЛЛЕКТ")
+        title = QLabel("ЛОКАЛЬНЫЙ ИНТЕЛЛЕКТ")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
         title.setStyleSheet("color: rgba(255,255,255,0.5); background: transparent; border: none; letter-spacing: 4px;")
@@ -4594,10 +4592,10 @@ class SetupOverlay(QWidget):
         cards_lay.setSpacing(20)
         cards_lay.addStretch()
 
-        # ── Gemini Card ──
-        gem_card = QFrame()
-        gem_card.setFixedSize(260, 160)
-        gem_card.setStyleSheet("""
+        # ── Local Model Card ──
+        loc_card = QFrame()
+        loc_card.setFixedSize(260, 160)
+        loc_card.setStyleSheet("""
             QFrame {
                 background: rgba(255, 179, 0, 0.06);
                 border: 1px solid rgba(255, 179, 0, 0.25);
@@ -4608,84 +4606,40 @@ class SetupOverlay(QWidget):
                 border: 1px solid rgba(255, 179, 0, 0.5);
             }
         """)
-        gem_card.setCursor(Qt.CursorShape.PointingHandCursor)
-        glay = QVBoxLayout(gem_card)
-        glay.setContentsMargins(22, 18, 22, 18)
-        glay.setSpacing(4)
+        loc_card.setCursor(Qt.CursorShape.PointingHandCursor)
+        llay = QVBoxLayout(loc_card)
+        llay.setContentsMargins(22, 18, 22, 18)
+        llay.setSpacing(4)
 
-        gt = QLabel("Google Gemini")
-        gt.setFont(QFont("Segoe UI", 15, QFont.Weight.Bold))
-        gt.setStyleSheet("color: #ffb300; background: transparent; border: none;")
-        glay.addWidget(gt)
+        lt = QLabel("Локальная модель")
+        lt.setFont(QFont("Segoe UI", 15, QFont.Weight.Bold))
+        lt.setStyleSheet("color: #ffb300; background: transparent; border: none;")
+        llay.addWidget(lt)
 
-        gs = QLabel("★★★★★  Рекомендуется")
-        gs.setFont(QFont("Segoe UI", 9))
-        gs.setStyleSheet("color: rgba(255,179,0,0.7); background: transparent; border: none;")
-        glay.addWidget(gs)
+        ls = QLabel("★★★★★  Ollama · офлайн")
+        ls.setFont(QFont("Segoe UI", 9))
+        ls.setStyleSheet("color: rgba(255,179,0,0.7); background: transparent; border: none;")
+        llay.addWidget(ls)
 
-        gd = QLabel("Основной интеллект")
-        gd.setFont(QFont("Segoe UI", 9))
-        gd.setStyleSheet("color: rgba(255,255,255,0.35); background: transparent; border: none;")
-        glay.addWidget(gd)
+        ld = QLabel("MiniCPM5 · без облака")
+        ld.setFont(QFont("Segoe UI", 9))
+        ld.setStyleSheet("color: rgba(255,255,255,0.35); background: transparent; border: none;")
+        llay.addWidget(ld)
 
-        glay.addStretch()
+        llay.addStretch()
 
-        gc = QLabel("Подключить →")
-        gc.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
-        gc.setStyleSheet("color: #ffb300; background: transparent; border: none;")
-        glay.addWidget(gc)
+        lc = QLabel("Продолжить →")
+        lc.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        lc.setStyleSheet("color: #ffb300; background: transparent; border: none;")
+        llay.addWidget(lc)
 
-        # Make the whole card clickable via a transparent button overlay
-        gem_btn = QPushButton(gem_card)
-        gem_btn.setGeometry(0, 0, 260, 160)
-        gem_btn.setStyleSheet("background: transparent; border: none;")
-        gem_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        gem_btn.clicked.connect(self._goto_stage3)
+        loc_btn = QPushButton(loc_card)
+        loc_btn.setGeometry(0, 0, 260, 160)
+        loc_btn.setStyleSheet("background: transparent; border: none;")
+        loc_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        loc_btn.clicked.connect(self._goto_stage3)
 
-        cards_lay.addWidget(gem_card)
-
-        # ── OpenRouter Card ──
-        or_card = QFrame()
-        or_card.setFixedSize(260, 160)
-        or_card.setStyleSheet("""
-            QFrame {
-                background: rgba(255, 255, 255, 0.02);
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                border-radius: 16px;
-            }
-            QFrame:hover {
-                background: rgba(255, 255, 255, 0.05);
-                border: 1px solid rgba(255, 255, 255, 0.2);
-            }
-        """)
-        or_card.setCursor(Qt.CursorShape.PointingHandCursor)
-        olay = QVBoxLayout(or_card)
-        olay.setContentsMargins(22, 18, 22, 18)
-        olay.setSpacing(4)
-
-        ot = QLabel("OpenRouter")
-        ot.setFont(QFont("Segoe UI", 15, QFont.Weight.Bold))
-        ot.setStyleSheet("color: rgba(255,255,255,0.8); background: transparent; border: none;")
-        olay.addWidget(ot)
-
-        od = QLabel("Несколько моделей")
-        od.setFont(QFont("Segoe UI", 9))
-        od.setStyleSheet("color: rgba(255,255,255,0.3); background: transparent; border: none;")
-        olay.addWidget(od)
-
-        od2 = QLabel("Опционально · Вторичный")
-        od2.setFont(QFont("Segoe UI", 9))
-        od2.setStyleSheet("color: rgba(255,255,255,0.2); background: transparent; border: none;")
-        olay.addWidget(od2)
-
-        olay.addStretch()
-
-        oc = QLabel("Настроить позже →")
-        oc.setFont(QFont("Segoe UI", 11))
-        oc.setStyleSheet("color: rgba(255,255,255,0.35); background: transparent; border: none;")
-        olay.addWidget(oc)
-
-        cards_lay.addWidget(or_card)
+        cards_lay.addWidget(loc_card)
         cards_lay.addStretch()
 
         lay.addLayout(cards_lay)
@@ -4695,6 +4649,7 @@ class SetupOverlay(QWidget):
     def _goto_stage3(self):
         self._call_js("if(window.triggerPulse) window.triggerPulse();")
         self._stack.setCurrentIndex(6)
+        self._probe_local_model()
 
     # ── STAGE 3 & 4: API Input + Auth ──────────────────────────────
     def _build_stage3(self):
@@ -4718,56 +4673,17 @@ class SetupOverlay(QWidget):
         blay.setContentsMargins(32, 28, 32, 28)
         blay.setSpacing(6)
 
-        self._s3_title = QLabel("Google Gemini")
+        self._s3_title = QLabel("Локальная модель")
         self._s3_title.setFont(QFont("Segoe UI", 18, QFont.Weight.Bold))
         self._s3_title.setStyleSheet("color: #ffb300; background: transparent; border: none;")
         blay.addWidget(self._s3_title)
 
-        self._s3_sub = QLabel("Вставьте ваш Neural Key")
+        self._s3_sub = QLabel("Проверка подключения к Ollama...")
         self._s3_sub.setFont(QFont("Segoe UI", 10))
         self._s3_sub.setStyleSheet("color: rgba(255,255,255,0.4); background: transparent; border: none;")
         blay.addWidget(self._s3_sub)
 
         blay.addSpacing(16)
-
-        # Input row
-        input_row = QHBoxLayout()
-        self._key_input = QLineEdit()
-        self._key_input.setEchoMode(QLineEdit.EchoMode.Password)
-        self._key_input.setPlaceholderText("Вставьте API-ключ сюда...")
-        self._key_input.setFont(QFont("Consolas", 12))
-        self._key_input.setFixedHeight(48)
-        self._key_input.setStyleSheet("""
-            QLineEdit {
-                background: rgba(255, 179, 0, 0.04);
-                color: #ffb300;
-                border: 1px solid rgba(255, 179, 0, 0.25);
-                border-radius: 12px;
-                padding: 0 16px;
-                letter-spacing: 1px;
-                selection-background-color: rgba(255, 179, 0, 0.3);
-            }
-            QLineEdit:focus {
-                border: 1px solid rgba(255, 179, 0, 0.6);
-                background: rgba(255, 179, 0, 0.06);
-            }
-        """)
-        self._key_input.setText((self._defaults.get("gemini_api_key") or "").strip())
-        self._key_input.textChanged.connect(self._on_key_changed)
-        input_row.addWidget(self._key_input)
-
-        toggle_pw = QPushButton("👁")
-        toggle_pw.setCursor(Qt.CursorShape.PointingHandCursor)
-        toggle_pw.setFixedSize(36, 48)
-        toggle_pw.setStyleSheet("QPushButton { background: transparent; border: none; color: rgba(255,255,255,0.3); font-size: 16px; } QPushButton:hover { color: #ffb300; }")
-        def _toggle():
-            if self._key_input.echoMode() == QLineEdit.EchoMode.Password:
-                self._key_input.setEchoMode(QLineEdit.EchoMode.Normal)
-            else:
-                self._key_input.setEchoMode(QLineEdit.EchoMode.Password)
-        toggle_pw.clicked.connect(_toggle)
-        input_row.addWidget(toggle_pw)
-        blay.addLayout(input_row)
 
         # Status + link row
         status_row = QHBoxLayout()
@@ -4778,13 +4694,34 @@ class SetupOverlay(QWidget):
 
         status_row.addStretch()
 
-        hint = QLabel("<a href='https://aistudio.google.com/app/apikey' style='color: rgba(255,179,0,0.5); text-decoration: none; font-size: 10px;'>Получить API-ключ →</a>")
+        hint = QLabel("<a href='https://ollama.com/download' style='color: rgba(255,179,0,0.5); text-decoration: none; font-size: 10px;'>Скачать Ollama →</a>")
         hint.setOpenExternalLinks(True)
         hint.setStyleSheet("background: transparent; border: none;")
         status_row.addWidget(hint)
         blay.addLayout(status_row)
 
         blay.addStretch()
+
+        self._s3_continue = QPushButton("Далее →")
+        self._s3_continue.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._s3_continue.setFixedHeight(42)
+        self._s3_continue.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        self._s3_continue.setStyleSheet("""
+            QPushButton {
+                background: rgba(255, 179, 0, 0.1);
+                color: #ffb300;
+                border: 1px solid rgba(255, 179, 0, 0.35);
+                border-radius: 12px;
+                padding: 0 24px;
+            }
+            QPushButton:hover {
+                background: rgba(255, 179, 0, 0.2);
+                border: 1px solid rgba(255, 179, 0, 0.6);
+            }
+        """)
+        self._s3_continue.hide()
+        self._s3_continue.clicked.connect(self._show_color_stage)
+        blay.addWidget(self._s3_continue, 0, Qt.AlignmentFlag.AlignRight)
 
         lay.addWidget(self._s3_box, 0, Qt.AlignmentFlag.AlignCenter)
         lay.addStretch(1)
@@ -4834,18 +4771,15 @@ class SetupOverlay(QWidget):
 
         self._stack.addWidget(page)
 
-    def _on_key_changed(self, text):
-        if len(text) > 10 and not hasattr(self, "_authenticating"):
-            self._authenticating = True
-            self._key_input.setReadOnly(True)
-            self._s3_sub.setText("Авторизация...")
-            self._s3_sub.setStyleSheet("color: #ffb300; background: transparent; border: none;")
-            self._auth_step = 0
-            self._auth_timer = QTimer(self)
-            self._auth_timer.timeout.connect(self._auth_tick)
-            self._auth_timer.start(250)
+    def _probe_local_model(self):
+        """Animate a progress bar while checking the local Ollama model."""
+        self._probe_step = 0
+        self._probe_timer = QTimer(self)
+        self._probe_timer.timeout.connect(self._probe_tick)
+        self._probe_timer.start(250)
+        self._probe_tick()
 
-    def _auth_tick(self):
+    def _probe_tick(self):
         bars = [
             "█░░░░░░░░░░░░░░",
             "████░░░░░░░░░░░",
@@ -4853,217 +4787,42 @@ class SetupOverlay(QWidget):
             "███████████░░░░",
             "███████████████",
         ]
-        if self._auth_step < len(bars):
-            self._s3_status.setText(bars[self._auth_step])
-            if self._auth_step % 2 == 0:
+        if self._probe_step < len(bars):
+            self._s3_status.setText(bars[self._probe_step])
+            if self._probe_step % 2 == 0:
                 self._call_js("if(window.triggerPulse) window.triggerPulse();")
-            self._auth_step += 1
+            self._probe_step += 1
         else:
-            self._auth_timer.stop()
-            self._s3_status.setText("✓ Identity Verified")
-            self._s3_status.setStyleSheet("color: #37ff5f; background: transparent; border: none;")
-            self._s3_title.setText("✓ Google Gemini")
-            self._s3_title.setStyleSheet("color: #37ff5f; background: transparent; border: none;")
-            self._s3_sub.setText("Gemini 2.5 Pro  ·  Готов")
-            self._s3_sub.setStyleSheet("color: rgba(55,255,95,0.6); background: transparent; border: none;")
-            self._key_input.setStyleSheet("""
-                QLineEdit {
-                    background: rgba(55, 255, 95, 0.04);
-                    color: #37ff5f;
-                    border: 1px solid rgba(55, 255, 95, 0.3);
-                    border-radius: 12px;
-                    padding: 0 16px;
-                }
-            """)
-            self._s3_box.setStyleSheet("""
-                QFrame {
-                    background: rgba(8, 10, 16, 220);
-                    border: 1px solid rgba(55, 255, 95, 0.2);
-                    border-radius: 20px;
-                }
-            """)
-            QTimer.singleShot(1800, self._show_or_prompt)
+            self._probe_timer.stop()
 
+            model_name = self._defaults.get("local_ai_model", "minicpm5-2b")
+            try:
+                from llm_client import client as _llm
+                ok = _llm._model_exists()
+            except Exception:
+                ok = False
 
-    def _show_or_prompt(self):
-        """After Gemini verified, ask if user wants to add OpenRouter too."""
-        self._s3_box.hide()
-        page = self._stack.widget(6)
-        lay = page.layout()
-
-        self._or_prompt_widget = QFrame()
-        self._or_prompt_widget.setFixedSize(460, 200)
-        self._or_prompt_widget.setStyleSheet("""
-            QFrame {
-                background: rgba(8, 10, 16, 220);
-                border: 1px solid rgba(255, 179, 0, 0.15);
-                border-radius: 20px;
-            }
-        """)
-        prom_lay = QVBoxLayout(self._or_prompt_widget)
-        prom_lay.setContentsMargins(32, 28, 32, 24)
-        prom_lay.setSpacing(8)
-
-        q_title = QLabel("Вторичный интеллект")
-        q_title.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
-        q_title.setStyleSheet("color: #ffffff; background: transparent; border: none;")
-        prom_lay.addWidget(q_title)
-
-        q_sub = QLabel("Настроить OpenRouter сейчас?\nЭто необязательно — сделать это можно позже в настройках.")
-        q_sub.setFont(QFont("Segoe UI", 10))
-        q_sub.setWordWrap(True)
-        q_sub.setStyleSheet("color: rgba(255,255,255,0.4); background: transparent; border: none;")
-        prom_lay.addWidget(q_sub)
-
-        prom_lay.addStretch()
-
-        btn_row = QHBoxLayout()
-        btn_row.setSpacing(12)
-
-        skip_btn = QPushButton("Пропустить")
-        skip_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        skip_btn.setFixedHeight(42)
-        skip_btn.setFont(QFont("Segoe UI", 11))
-        skip_btn.setStyleSheet("""
-            QPushButton {
-                background: transparent;
-                color: rgba(255,255,255,0.4);
-                border: 1px solid rgba(255,255,255,0.1);
-                border-radius: 12px;
-                padding: 0 24px;
-            }
-            QPushButton:hover {
-                color: rgba(255,255,255,0.7);
-                border: 1px solid rgba(255,255,255,0.25);
-            }
-        """)
-        skip_btn.clicked.connect(self._skip_or)
-        btn_row.addWidget(skip_btn)
-
-        yes_btn = QPushButton("Настроить OpenRouter")
-        yes_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        yes_btn.setFixedHeight(42)
-        yes_btn.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
-        yes_btn.setStyleSheet("""
-            QPushButton {
-                background: rgba(255, 179, 0, 0.1);
-                color: #ffb300;
-                border: 1px solid rgba(255, 179, 0, 0.35);
-                border-radius: 12px;
-                padding: 0 24px;
-            }
-            QPushButton:hover {
-                background: rgba(255, 179, 0, 0.2);
-                border: 1px solid rgba(255, 179, 0, 0.6);
-            }
-        """)
-        yes_btn.clicked.connect(self._show_or_input)
-        btn_row.addWidget(yes_btn)
-
-        prom_lay.addLayout(btn_row)
-
-        lay.insertWidget(lay.count() - 1, self._or_prompt_widget, 0, Qt.AlignmentFlag.AlignCenter)
-
-    def _skip_or(self):
-        """User chose to skip OpenRouter, go to color selection."""
-        self._or_key_value = ""
-        self._or_prompt_widget.hide()
-        self._show_color_stage()
-
-    def _show_or_input(self):
-        """User wants to add OpenRouter."""
-        self._or_prompt_widget.hide()
-        page = self._stack.widget(6)
-        lay = page.layout()
-
-        self._or_box = QFrame()
-        self._or_box.setFixedSize(480, 230)
-        self._or_box.setStyleSheet("""
-            QFrame {
-                background: rgba(8, 10, 16, 220);
-                border: 1px solid rgba(255, 179, 0, 0.2);
-                border-radius: 20px;
-            }
-        """)
-        or_blay = QVBoxLayout(self._or_box)
-        or_blay.setContentsMargins(32, 28, 32, 28)
-        or_blay.setSpacing(6)
-
-        or_title = QLabel("OpenRouter")
-        or_title.setFont(QFont("Segoe UI", 18, QFont.Weight.Bold))
-        or_title.setStyleSheet("color: rgba(255,255,255,0.8); background: transparent; border: none;")
-        or_blay.addWidget(or_title)
-
-        or_sub = QLabel("Вставьте ваш OpenRouter API-ключ")
-        or_sub.setFont(QFont("Segoe UI", 10))
-        or_sub.setStyleSheet("color: rgba(255,255,255,0.4); background: transparent; border: none;")
-        or_blay.addWidget(or_sub)
-
-        or_blay.addSpacing(12)
-
-        self._or_input = QLineEdit()
-        self._or_input.setEchoMode(QLineEdit.EchoMode.Password)
-        self._or_input.setPlaceholderText("sk-or-************************")
-        self._or_input.setFont(QFont("Consolas", 12))
-        self._or_input.setFixedHeight(48)
-        self._or_input.setStyleSheet("""
-            QLineEdit {
-                background: rgba(255, 255, 255, 0.03);
-                color: #ffffff;
-                border: 1px solid rgba(255, 255, 255, 0.15);
-                border-radius: 12px;
-                padding: 0 16px;
-                letter-spacing: 1px;
-            }
-            QLineEdit:focus {
-                border: 1px solid rgba(255, 179, 0, 0.5);
-            }
-        """)
-        self._or_input.setText((self._defaults.get("openrouter_api_key") or "").strip())
-        or_blay.addWidget(self._or_input)
-
-        or_blay.addStretch()
-
-        or_btn_row = QHBoxLayout()
-        or_skip = QPushButton("Пропустить")
-        or_skip.setCursor(Qt.CursorShape.PointingHandCursor)
-        or_skip.setFixedHeight(42)
-        or_skip.setFont(QFont("Segoe UI", 11))
-        or_skip.setStyleSheet("""
-            QPushButton { background: transparent; color: rgba(255,255,255,0.4); border: none; }
-            QPushButton:hover { color: rgba(255,255,255,0.7); }
-        """)
-        or_skip.clicked.connect(self._skip_or)
-        or_btn_row.addWidget(or_skip)
-
-        or_save = QPushButton("Сохранить и продолжить")
-        or_save.setCursor(Qt.CursorShape.PointingHandCursor)
-        or_save.setFixedHeight(42)
-        or_save.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
-        or_save.setStyleSheet("""
-            QPushButton {
-                background: rgba(255, 179, 0, 0.1);
-                color: #ffb300;
-                border: 1px solid rgba(255, 179, 0, 0.35);
-                border-radius: 12px;
-                padding: 0 24px;
-            }
-            QPushButton:hover {
-                background: rgba(255, 179, 0, 0.2);
-                border: 1px solid rgba(255, 179, 0, 0.6);
-            }
-        """)
-        or_save.clicked.connect(self._save_or_key)
-        or_btn_row.addWidget(or_save)
-
-        or_blay.addLayout(or_btn_row)
-
-        lay.insertWidget(lay.count() - 1, self._or_box, 0, Qt.AlignmentFlag.AlignCenter)
-
-    def _save_or_key(self):
-        self._or_key_value = self._or_input.text().strip()
-        self._or_box.hide()
-        self._show_color_stage()
+            if ok:
+                self._s3_status.setText("✓ Модель найдена")
+                self._s3_status.setStyleSheet("color: #37ff5f; background: transparent; border: none;")
+                self._s3_title.setText("✓ Локальная модель")
+                self._s3_title.setStyleSheet("color: #37ff5f; background: transparent; border: none;")
+                self._s3_sub.setText(f"{model_name}  ·  Готов")
+                self._s3_sub.setStyleSheet("color: rgba(55,255,95,0.6); background: transparent; border: none;")
+                self._s3_box.setStyleSheet("""
+                    QFrame {
+                        background: rgba(8, 10, 16, 220);
+                        border: 1px solid rgba(55, 255, 95, 0.2);
+                        border-radius: 20px;
+                    }
+                """)
+                self._s3_continue.show()
+            else:
+                self._s3_status.setText("✕ Ollama не отвечает")
+                self._s3_status.setStyleSheet("color: #ff3b30; background: transparent; border: none;")
+                self._s3_sub.setText("Запустите Ollama и повторите настройку")
+                self._s3_sub.setStyleSheet("color: rgba(255,59,48,0.6); background: transparent; border: none;")
+                self._s3_continue.show()
 
     def _show_color_stage(self):
         """Show color selection."""
@@ -5160,18 +4919,6 @@ class SetupOverlay(QWidget):
 
     def _show_intro_final(self):
         """Show the Voice Echo intro sequence."""
-        page = self._stack.widget(6)
-        lay = page.layout()
-        self._intro_widget.setParent(None)
-        lay.insertWidget(lay.count() - 1, self._intro_widget, 0, Qt.AlignmentFlag.AlignCenter)
-        self._intro_widget.show()
-        self._intro_reveal_idx = 0
-        self._intro_timer = QTimer(self)
-        self._intro_timer.timeout.connect(self._intro_tick)
-        self._intro_timer.start(600)
-
-    def _show_intro(self):
-        self._s3_box.hide()
         page = self._stack.widget(6)
         lay = page.layout()
         self._intro_widget.setParent(None)
@@ -5279,7 +5026,7 @@ class SetupOverlay(QWidget):
                 n.setStyleSheet("color: #37ff5f; background: transparent; border: none; font-weight: bold;")
                 b.setStyleSheet("color: #37ff5f; background: transparent; border: none;")
             self._call_js("if(window.dissolveReactor) window.dissolveReactor();")
-            QTimer.singleShot(1200, lambda: self.done.emit(self._key_input.text().strip(), getattr(self, "_or_key_value", ""), self._sel_os))
+            QTimer.singleShot(1200, lambda: self.done.emit("", "", self._sel_os))
 
 
 
@@ -7247,8 +6994,6 @@ class MainWindow(QMainWindow):
     def _load_api_defaults(self) -> dict:
         if not API_FILE.exists():
             return {
-                "gemini_api_key": "",
-                "openrouter_api_key": "",
                 "anthropic_api_key": "",
                 "os_system": platform.system(),
             }
@@ -7260,8 +7005,6 @@ class MainWindow(QMainWindow):
         except Exception:
             pass
         return {
-            "gemini_api_key": "",
-            "openrouter_api_key": "",
             "anthropic_api_key": "",
             "os_system": platform.system(),
         }
@@ -7580,7 +7323,7 @@ class MainWindow(QMainWindow):
         if hasattr(self, "_core_sub_lbl") and self._core_sub_lbl is not None:
             self._core_sub_lbl.setText("Готов помочь.")
         if hasattr(self, "_core_status_lbl") and self._core_status_lbl is not None:
-            self._core_status_lbl.setText("Voice Echo готов. Gemini 2.5 Flash · OpenRouter · Голос подключён · Память включена")
+            self._core_status_lbl.setText("Voice Echo готов. Локальная модель · Голос подключён · Память включена")
         if hasattr(self, "_cpu_lbl") and self._cpu_lbl is not None:
             self._cpu_lbl.setText(f"CPU {int(psutil.cpu_percent(interval=None))}%")
         if hasattr(self, "_ram_lbl") and self._ram_lbl is not None:
@@ -8068,11 +7811,10 @@ class MainWindow(QMainWindow):
                 self._result_card.set_body("Действие выполнено")
 
     def _check_config(self) -> bool:
-        if not API_FILE.exists(): return False
+        """Готовность определяется наличием локальной модели в Ollama."""
         try:
-            d = json.loads(API_FILE.read_text(encoding="utf-8"))
-            return (bool(d.get("gemini_api_key")) and
-                    bool(d.get("os_system")))
+            from llm_client import client as _llm
+            return bool(_llm._model_exists())
         except Exception:
             return False
 
@@ -8291,10 +8033,8 @@ class MainWindow(QMainWindow):
             existing = self._load_api_defaults()
             API_FILE.write_text(
                 json.dumps({
-                    "gemini_api_key":    key,
-                    "openrouter_api_key": or_key,
+                    "os_system":         os_name or existing.get("os_system", ""),
                     "anthropic_api_key": existing.get("anthropic_api_key", ""),
-                    "os_system":         os_name,
                 }, indent=4),
                 encoding="utf-8",
             )
@@ -8966,7 +8706,8 @@ class SystemConnectivitySidebar(QFrame):
         if self._bridge() and hasattr(self._bridge(), "_win"):
             version = "v1.0.0"
             platform_name = platform.system()
-            provider = self._bridge()._win._load_app_settings().get("default_ai_provider", "Gemini")
+            app = self._bridge()._win._load_app_settings()
+            provider = "Локальная модель · " + app.get("local_ai_model", "minicpm5-2b")
             last_updated = time.strftime("%d %b %Y %H:%M")
             self._info_rows["Версия"].setText(version)
             self._info_rows["Платформа"].setText(platform_name)
@@ -8975,7 +8716,7 @@ class SystemConnectivitySidebar(QFrame):
         else:
             self._info_rows["Версия"].setText("v1.0.0")
             self._info_rows["Платформа"].setText(platform.system())
-            self._info_rows["Текущий ИИ-провайдер"].setText("Gemini")
+            self._info_rows["Текущий ИИ-провайдер"].setText("Локальная модель")
             self._info_rows["Последнее обновление"].setText(time.strftime("%d %b %Y %H:%M"))
 
 
@@ -9192,79 +8933,6 @@ class SystemConnectivityPage(QWidget):
         )
         return btn
 
-    def _provider_key_preview(self, key: str) -> str:
-        key = (key or "").strip()
-        if not key:
-            return "Не задано"
-        if len(key) <= 8:
-            return "ΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇó"
-        return f"{key[:4]}ΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇó{key[-4:]}"
-
-    def _provider_row(self, name: str, key: str, model: str, setting_key: str):
-        row = QFrame()
-        if key:
-            row.setStyleSheet("QFrame { background: rgba(55, 255, 95, 0.02); border: 1px solid rgba(55, 255, 95, 0.1); border-radius: 14px; } QFrame:hover { background: rgba(55, 255, 95, 0.05); border: 1px solid rgba(55, 255, 95, 0.25); }")
-        else:
-            row.setStyleSheet("QFrame { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px; } QFrame:hover { background: rgba(255, 179, 0, 0.04); border: 1px solid rgba(255, 179, 0, 0.3); }")
-        r = QHBoxLayout(row)
-        r.setContentsMargins(14, 12, 14, 12)
-        r.setSpacing(12)
-        icon = QLabel(name[:1].upper())
-        icon.setFixedSize(42, 42)
-        icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        icon.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
-        if key:
-            icon.setStyleSheet(f"background: rgba(55, 255, 95, 0.12); color: {C.GREEN}; border: 1px solid rgba(55, 255, 95, 0.3); border-radius: 21px;")
-        else:
-            icon.setStyleSheet(f"background: rgba(255, 179, 0, 0.12); color: {C.WHITE}; border: 1px solid rgba(255, 179, 0, 0.38); border-radius: 21px;")
-        r.addWidget(icon)
-        meta = QVBoxLayout()
-        title = QLabel(name)
-        title.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
-        title.setStyleSheet(f"color: {C.WHITE}; border: none;")
-        if key:
-            status = QLabel("\u2713  Уже добавлено")
-            status.setStyleSheet(f"color: {C.GREEN}; border: none; font-weight: bold;")
-        else:
-            status = QLabel("Не настроено")
-            status.setStyleSheet(f"color: {C.TEXT_DIM}; border: none;")
-        model_lbl = QLabel(f"Текущая модель: {model}")
-        model_lbl.setStyleSheet(f"color: {C.TEXT_DIM}; border: none;")
-        api_lbl = QLabel(self._provider_key_preview(key))
-        api_lbl.setStyleSheet(f"color: {C.TEXT_MED}; border: none;")
-        meta.addWidget(title)
-        meta.addWidget(status)
-        meta.addWidget(model_lbl)
-        meta.addWidget(api_lbl)
-        r.addLayout(meta, 1)
-        btn_lay = QVBoxLayout()
-        btn_lay.setSpacing(8)
-        if key:
-            edit = QPushButton("Изменить API-ключ")
-        else:
-            edit = QPushButton("Добавить API-ключ")
-            edit.setStyleSheet("""
-                QPushButton {
-                    background: rgba(255, 179, 0, 0.1);
-                    color: #ffb300;
-                    border: 1px solid rgba(255, 179, 0, 0.3);
-                    border-radius: 12px;
-                    padding: 10px 12px;
-                    font-weight: bold;
-                }
-                QPushButton:hover {
-                    background: rgba(255, 179, 0, 0.2);
-                    border: 1px solid rgba(255, 179, 0, 0.5);
-                }
-            """)
-        edit.clicked.connect(lambda: self._open_api_keys())
-        test = QPushButton("Проверить подключение")
-        test.clicked.connect(lambda: self._test_provider(setting_key))
-        btn_lay.addWidget(edit)
-        btn_lay.addWidget(test)
-        r.addLayout(btn_lay)
-        return row, status, api_lbl
-
     def _build_left_column(self):
         col = QWidget()
         lay = QVBoxLayout(col)
@@ -9367,63 +9035,36 @@ class SystemConnectivityPage(QWidget):
         lay.addWidget(identity_card)
 
         # AI Providers
-        card = self._card("ИИ-провайдеры", "Здесь показаны только поддерживаемые провайдеры.")
+        card = self._card("ИИ-провайдер", "Voice Echo работает на локальной модели через Ollama.")
         lay1 = card.layout()
         self._api_defaults = self._load_api_defaults()
-        self._gemini_row, self._gemini_status, self._gemini_key = self._provider_row(
-            "Google Gemini",
-            self._api_defaults.get("gemini_api_key", ""),
-            "gemini-2.5-flash",
-            "gemini",
-        )
-        self._or_row, self._or_status, self._or_key = self._provider_row(
-            "OpenRouter",
-            self._api_defaults.get("openrouter_api_key", ""),
-            "auto",
-            "openrouter",
-        )
-        lay1.addWidget(self._gemini_row)
-        lay1.addWidget(self._or_row)
-        controls = QHBoxLayout()
-        controls.setSpacing(12)
-        self._default_provider = QComboBox()
-        self._default_provider.addItems(["Google Gemini", "OpenRouter", "Local"])
-        
-        current_provider = self._load_app_settings().get("default_ai_provider", "Gemini")
-        if current_provider in {"Gemini", "Google Gemini"}:
-            self._default_provider.setCurrentText("Google Gemini")
-        elif current_provider == "Local":
-            self._default_provider.setCurrentText("Local")
-        else:
-            self._default_provider.setCurrentText("OpenRouter")
-            
-        self._default_provider.currentTextChanged.connect(self._set_default_provider)
-        controls.addWidget(QLabel("Основной ИИ-провайдер"))
-        controls.addWidget(self._default_provider, 1)
-        lay1.addLayout(controls)
-        
-        # Local AI Settings
         self._local_ai_widget = QWidget()
         local_lay = QVBoxLayout(self._local_ai_widget)
         local_lay.setContentsMargins(0, 0, 0, 0)
-        
+
         url_row = QHBoxLayout()
         url_row.addWidget(QLabel("URL локального сервера"))
-        self._local_url_input = QLineEdit(self._load_app_settings().get("local_ai_url", "http://localhost:11434/v1"))
+        self._local_url_input = QLineEdit(self._load_app_settings().get("local_ai_url", "http://localhost:11434"))
         self._local_url_input.textChanged.connect(lambda t: self._set_setting("local_ai_url", t))
         url_row.addWidget(self._local_url_input, 1)
         local_lay.addLayout(url_row)
-        
+
         model_row = QHBoxLayout()
         model_row.addWidget(QLabel("Название локальной модели"))
-        self._local_model_input = QLineEdit(self._load_app_settings().get("local_ai_model", "llama3.2"))
+        self._local_model_input = QLineEdit(self._load_app_settings().get("local_ai_model", "minicpm5-2b"))
         self._local_model_input.textChanged.connect(lambda t: self._set_setting("local_ai_model", t))
         model_row.addWidget(self._local_model_input, 1)
         local_lay.addLayout(model_row)
-        
-        self._local_ai_widget.setVisible(current_provider == "Local")
-        self._default_provider.currentTextChanged.connect(lambda t: self._local_ai_widget.setVisible(t == "Local"))
-        
+
+        vision_row = QHBoxLayout()
+        vision_row.addWidget(QLabel("Модель зрения (vision)"))
+        self._local_vision_input = QLineEdit(self._load_app_settings().get("local_vision_model", "minicpmv"))
+        self._local_vision_input.textChanged.connect(lambda t: self._set_setting("local_vision_model", t))
+        vision_row.addWidget(self._local_vision_input, 1)
+        local_lay.addLayout(vision_row)
+
+        self._local_ai_widget.setVisible(True)
+
         lay1.addWidget(self._local_ai_widget)
 
         # Local offline voice (STT + TTS, no Google)
@@ -9439,28 +9080,6 @@ class SystemConnectivityPage(QWidget):
         )
         lvl.addWidget(self._local_voice_btn)
         lay.addWidget(local_voice_card)
-
-        # Network Proxy
-        proxy_card = self._card("Сетевой прокси", "Направляйте все внешние HTTP/HTTPS/WebSocket-подключения через этот прокси.")
-        proxy_lay = proxy_card.layout()
-        proxy_row = QHBoxLayout()
-        proxy_row.addWidget(QLabel("URL прокси"))
-        self._proxy_url_input = QLineEdit()
-        self._proxy_url_input.setEchoMode(QLineEdit.EchoMode.Password)
-        self._proxy_url_input.setPlaceholderText("http://user:pass@host:port")
-        self._proxy_url_input.setText(self._load_app_settings().get("proxy_url", ""))
-        self._proxy_url_input.textChanged.connect(self._sync_proxy_url)
-        proxy_row.addWidget(self._proxy_url_input, 1)
-        proxy_lay.addLayout(proxy_row)
-        self._proxy_status = QLabel("Прокси не настроен")
-        self._proxy_status.setStyleSheet(f"color: {C.TEXT_DIM};")
-        proxy_lay.addWidget(self._proxy_status)
-        proxy_btns = QHBoxLayout()
-        self._proxy_save_btn = QPushButton("Сохранить и перезапустить")
-        self._proxy_save_btn.clicked.connect(self._save_proxy_and_restart)
-        proxy_btns.addWidget(self._proxy_save_btn)
-        proxy_lay.addLayout(proxy_btns)
-        lay.addWidget(proxy_card)
 
         self._auto_switch_btn = self._mk_toggle("Автоматически переключаться при сбое провайдера", bool(self._load_app_settings().get("auto_provider_switch", True)), self._toggle_auto_provider_switch)
         lay1.addWidget(self._auto_switch_btn)
@@ -9820,7 +9439,7 @@ class SystemConnectivityPage(QWidget):
         lay.addWidget(self._sys_note)
         self._sys_version = QLabel("v1.0.0")
         self._sys_platform = QLabel(platform.system())
-        self._sys_provider = QLabel("Gemini")
+        self._sys_provider = QLabel("Локальная модель")
         self._sys_updated = QLabel(time.strftime("%d %b %Y %H:%M"))
         for label, val in (("Версия", self._sys_version), ("Платформа", self._sys_platform), ("Текущий ИИ-провайдер", self._sys_provider), ("Последнее обновление", self._sys_updated)):
             row = QHBoxLayout()
@@ -9867,8 +9486,7 @@ class SystemConnectivityPage(QWidget):
         if self._ctrl() and hasattr(self._ctrl(), "_win"):
             return self._ctrl()._win._load_api_defaults()
         return {
-            "gemini_api_key": "",
-            "openrouter_api_key": "",
+            "anthropic_api_key": "",
             "os_system": platform.system(),
         }
 
@@ -9893,15 +9511,13 @@ class SystemConnectivityPage(QWidget):
             settings[key] = value
             self._ctrl()._win._save_app_settings(settings)
 
-    def _open_api_keys(self):
-        if self._ctrl() and hasattr(self._ctrl(), "_win"):
-            self._ctrl()._win._show_setup(self._ctrl()._win._load_api_defaults())
-
     def _test_provider(self, setting_key: str):
-        if setting_key == "gemini":
-            msg = "Ключ Google Gemini найден." if self._load_api_defaults().get("gemini_api_key") else "Ключ Google Gemini отсутствует."
-        else:
-            msg = "Ключ OpenRouter найден." if self._load_api_defaults().get("openrouter_api_key") else "Ключ OpenRouter отсутствует."
+        try:
+            from llm_client import client as _llm
+            ok = _llm._model_exists()
+        except Exception:
+            ok = False
+        msg = "Локальная модель доступна." if ok else "Локальная модель не найдена. Проверьте, что Ollama запущен."
         if self._ctrl() and hasattr(self._ctrl(), "write_log"):
             self._ctrl().write_log(f"SYS: {msg}")
         self.refresh()
@@ -9955,17 +9571,6 @@ class SystemConnectivityPage(QWidget):
             self._ctrl()._win._set_startup_animation_enabled(bool(checked))
             self._ctrl()._win._refresh_startup_animation_button()
 
-    def _set_default_provider(self, text: str):
-        if (text or "").strip().lower().startswith("google"):
-            provider = "Gemini"
-        elif (text or "").strip().lower() == "local":
-            provider = "Local"
-        else:
-            provider = "OpenRouter"
-        self._set_setting("default_ai_provider", provider)
-        if self._ctrl() and hasattr(self._ctrl(), "write_log"):
-            self._ctrl().write_log(f"SYS: Default AI provider set to {provider}.")
-
     def _toggle_auto_provider_switch(self, checked: bool):
         self._set_setting("auto_provider_switch", bool(checked))
         if self._ctrl() and hasattr(self._ctrl(), "write_log"):
@@ -9978,31 +9583,6 @@ class SystemConnectivityPage(QWidget):
                 "SYS: Local voice engine "
                 + ("enabled (Vosk + Piper, offline). Restart to apply." if checked else "disabled. Restart to apply.")
             )
-
-    def _sync_proxy_url(self, text: str):
-        try:
-            set_proxy_url(text or "")
-        except Exception:
-            pass
-        if text and text.strip():
-            self._proxy_status.setText("Прокси будет применён после перезапуска")
-            self._proxy_status.setStyleSheet(f"color: {C.PRI};")
-        else:
-            self._proxy_status.setText("Прокси не настроен")
-            self._proxy_status.setStyleSheet(f"color: {C.TEXT_DIM};")
-
-    def _save_proxy_and_restart(self):
-        try:
-            set_proxy_url(self._proxy_url_input.text())
-        except Exception as e:
-            QMessageBox.critical(self, "Ошибка", f"Не удалось сохранить конфигурацию прокси: {e}")
-            return
-        if self._ctrl() and hasattr(self._ctrl(), "write_log"):
-            self._ctrl().write_log("SYS: Proxy configuration saved, restarting...")
-        if self._ctrl() and hasattr(self._ctrl(), "_restart_app"):
-            self._ctrl()._restart_app()
-        else:
-            self._restart_app()
 
     def _toggle_attention_message_prompts(self, checked: bool):
         self._set_setting("attention_message_prompts", bool(checked))
@@ -10117,11 +9697,6 @@ class SystemConnectivityPage(QWidget):
             if widget is not None:
                 widget.blockSignals(True)
         try:
-            self._gemini_status.setText("Подключено" if api.get("gemini_api_key") else "Не подключено")
-            self._or_status.setText("Подключено" if api.get("openrouter_api_key") else "Не подключено")
-            self._gemini_key.setText(self._provider_key_preview(api.get("gemini_api_key", "")))
-            self._or_key.setText(self._provider_key_preview(api.get("openrouter_api_key", "")))
-            self._default_provider.setCurrentText("Google Gemini" if app.get("default_ai_provider", "Gemini") == "Gemini" else "OpenRouter")
             self._auto_switch_btn.setChecked(bool(app.get("auto_provider_switch", True)))
             if getattr(self, "_local_voice_btn", None) is not None:
                 self._local_voice_btn.setChecked(bool(app.get("local_voice_engine", True)))
@@ -10135,7 +9710,6 @@ class SystemConnectivityPage(QWidget):
             self._discord_channel.setText((discord.get("channel_id") or "").strip())
         finally:
             for widget in (
-                getattr(self, "_default_provider", None),
                 getattr(self, "_auto_switch_btn", None),
                 getattr(self, "_local_voice_btn", None),
                 getattr(self, "_attention_message_btn", None),
@@ -10162,7 +9736,7 @@ class SystemConnectivityPage(QWidget):
             self._discord_status.setText("Статус бота: Офлайн")
             self._discord_msg.setText("Требуется токен")
         if self._ctrl() and hasattr(self._ctrl(), "_win"):
-            self._sys_provider.setText("Gemini" if app.get("default_ai_provider", "Gemini") == "Gemini" else "OpenRouter")
+            self._sys_provider.setText(app.get("local_ai_model", "minicpm5-2b"))
 
     def _handle_create_desktop_shortcut(self):
         success, path_or_err = self._create_desktop_shortcut_logic()

@@ -10,6 +10,7 @@ from typing import Callable
 
 from agent.planner       import create_plan, replan
 from agent.error_handler import analyze_error, generate_fix, ErrorDecision
+from llm_client          import client as llm
 
 
 def get_base_dir() -> Path:
@@ -19,16 +20,9 @@ def get_base_dir() -> Path:
 
 
 BASE_DIR        = get_base_dir()
-API_CONFIG_PATH = BASE_DIR / "config" / "api_keys.json"
 
-
-def _get_api_key() -> str:
-    with open(API_CONFIG_PATH, "r", encoding="utf-8") as f:
-        return json.load(f)["gemini_api_key"]
 
 def _run_generated_code(description: str, speak: Callable | None = None) -> str:
-    from google import genai
-
     if speak:
         speak("Пишу собственный код для этой задачи.")
 
@@ -46,7 +40,7 @@ def _run_generated_code(description: str, speak: Callable | None = None) -> str:
         except Exception:
             pass
 
-    client = genai.Client(api_key=_get_api_key())
+    client = llm
     system_instruction = (
         "You are an expert Python developer. "
         "Write clean, complete, working Python code. "
@@ -61,12 +55,13 @@ def _run_generated_code(description: str, speak: Callable | None = None) -> str:
     )
 
     try:
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=f"Write Python code to accomplish this task:\n\n{description}",
-            config={"system_instruction": system_instruction},
+        code = client.chat(
+            f"Write Python code to accomplish this task:\n\n{description}",
+            system=system_instruction,
+            max_tokens=4096,
+            temperature=0.2,
         )
-        code = response.text.strip()
+        code = code.strip()
         code = re.sub(r"```(?:python)?", "", code).strip().rstrip("`").strip()
 
         with tempfile.NamedTemporaryFile(
@@ -127,19 +122,15 @@ def _inject_context(params: dict, tool: str, step_results: dict, goal: str = "")
 
     return params
 def _detect_language(text: str) -> str:
-    from google import genai
-
-    client = genai.Client(api_key=_get_api_key())
     try:
-        response = client.models.generate_content(
-            model="gemini-2.5-flash-lite",
-            contents=(
-                f"What language is this text written in? "
-                f"Reply with ONLY the language name in English (e.g. Turkish, English, French).\n\n"
-                f"Text: {text[:200]}"
-            ),
-        )
-        return response.text.strip()
+        return llm.chat(
+            "What language is this text written in? "
+            "Reply with ONLY the language name in English (e.g. Turkish, English, French).\n\n"
+            f"Text: {text[:200]}",
+            system="Reply with ONLY the language name in English.",
+            max_tokens=20,
+            temperature=0.0,
+        ).strip()
     except Exception:
         return "English"
 
@@ -148,10 +139,6 @@ def _translate_to_goal_language(content: str, goal: str) -> str:
     if not goal:
         return content
     try:
-        from google import genai
-
-        client = genai.Client(api_key=_get_api_key())
-
         target_lang = _detect_language(goal)
         print(f"[Executor] 🌐 Translating to: {target_lang}")
 
@@ -165,8 +152,12 @@ def _translate_to_goal_language(content: str, goal: str) -> str:
             f"- Output ONLY the translated text, nothing else\n\n"
             f"Text to translate:\n{content[:4000]}"
         )
-        response = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
-        translated = response.text.strip()
+        translated = llm.chat(
+            prompt,
+            system="You are a professional translator. Output ONLY the translated text.",
+            max_tokens=4096,
+            temperature=0.3,
+        ).strip()
         print(f"[Executor] ✅ Translation done ({target_lang})")
         return translated
     except Exception as e:
@@ -416,9 +407,6 @@ class AgentExecutor:
     def _summarize(self, goal: str, completed_steps: list, speak: Callable | None) -> str:
         fallback = f"Готово. Выполнено шагов: {len(completed_steps)}. Задача: {goal[:60]}."
         try:
-            from google import genai
-
-            client = genai.Client(api_key=_get_api_key())
             steps_str = "\n".join(f"- {s.get('description', '')}" for s in completed_steps)
             prompt    = (
                 f'Цель пользователя: "{goal}"\n'
@@ -426,8 +414,12 @@ class AgentExecutor:
                 "Напиши одно естественное предложение, резюмирующее, что было выполнено. "
                 "Обращайся к пользователю на «ты». Будь кратким и позитивным."
             )
-            response = client.models.generate_content(model="gemini-2.5-flash-lite", contents=prompt)
-            summary  = response.text.strip()
+            summary = llm.chat(
+                prompt,
+                system="Напиши одно краткое естественное предложение-резюме на русском.",
+                max_tokens=256,
+                temperature=0.5,
+            ).strip()
             if speak: speak(summary)
             return summary
         except Exception:

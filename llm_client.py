@@ -5,16 +5,17 @@ import os
 from pathlib import Path
 from typing import Optional
 
-import httpx
-from proxy_manager import get_httpx_client
+import requests
 
 logger = logging.getLogger("llm_client")
+
 
 def _get_base_dir() -> Path:
     import sys
     if getattr(sys, "frozen", False):
         return Path(sys.executable).parent
     return Path(__file__).resolve().parent
+
 
 BASE_DIR = _get_base_dir()
 SETTINGS_PATH = BASE_DIR / "config" / "app_settings.json"
@@ -30,12 +31,14 @@ TEMPLATE = """<|im_start|>system
 <|im_start|>assistant
 """
 
+TIMEOUT = 300
+
 
 class UnifiedAIClient:
-    """Единый LLM-клиент, который всегда обращается к локальной модели (Ollama)."""
+    """Единый LLM-клиент. Всегда обращается к локальной модели через Ollama."""
 
     def __init__(self):
-        self._local_url = "http://localhost:11434/v1"
+        self._local_url = "http://localhost:11434"
         self._local_model = LOCAL_MODEL
         self.reload_settings()
 
@@ -43,58 +46,72 @@ class UnifiedAIClient:
         try:
             with open(SETTINGS_PATH, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            self._local_url = data.get("local_ai_url", "http://localhost:11434/v1").rstrip("/")
+            url = data.get("local_ai_url", "http://localhost:11434/v1").rstrip("/")
+            # В настройках исторически хранится OpenAI-совместимый путь (/v1),
+            # а нативный API Ollama живёт на корневом пути.
+            self._local_url = url[:-3] if url.endswith("/v1") else url
             self._local_model = data.get("local_ai_model", LOCAL_MODEL)
         except Exception as e:
             logger.error(f"[LLM Client] Failed to load settings: {e}")
 
-    def _local_chat_completion(self, messages: list[dict], temperature: float = 0.7, response_format: Optional[dict] = None, max_tokens: Optional[int] = None) -> Optional[str]:
+    # ------------------------------------------------------------------ core
+
+    def _chat(self, messages: list[dict], temperature: float = 0.7,
+              response_format: Optional[dict] = None, max_tokens: Optional[int] = None,
+              think: bool = False, images: Optional[list[str]] = None,
+              model: Optional[str] = None) -> Optional[str]:
         payload = {
-            "model": self._local_model,
+            "model": model or self._local_model,
             "messages": messages,
-            "temperature": temperature
+            "temperature": temperature,
+            "stream": False,
+            "think": think,
         }
         if max_tokens:
-            payload["max_tokens"] = max_tokens
+            payload["num_predict"] = max_tokens
         if response_format:
-            payload["response_format"] = response_format
+            # Нативный API Ollama принимает "json" или объект JSON Schema,
+            # но не OpenAI-овское "json_object".
+            payload["format"] = "json"
+        if images:
+            payload["images"] = images
 
-        endpoint = f"{self._local_url}/chat/completions"
+        endpoint = f"{self._local_url}/api/chat"
         try:
-            resp = get_httpx_client().post(
-                endpoint,
-                headers={"Content-Type": "application/json"},
-                json=payload,
-            )
+            resp = requests.post(endpoint, json=payload, timeout=TIMEOUT)
             if resp.status_code == 200:
                 data = resp.json()
-                content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                message = data.get("message", {})
+                content = message.get("content", "")
                 return content.strip() if content else None
-            else:
-                logger.error(f"[LLM Client] Local AI Error {resp.status_code}: {resp.text}")
-                return None
+            logger.error(f"[LLM Client] Local AI Error {resp.status_code}: {resp.text[:300]}")
+            return None
         except Exception as e:
             logger.error(f"[LLM Client] Local AI Request Failed: {e}")
             return None
 
-    def chat(self, prompt: str, system: str = "Ты полезный ассистент. Отвечай кратко и на русском языке.", history: Optional[list[dict]] = None, model: Optional[str] = None, max_tokens: int = 4096, temperature: float = 0.7) -> str:
+    def chat(self, prompt: str, system: str = "Ты полезный ассистент. Отвечай кратко и на русском языке.",
+             history: Optional[list[dict]] = None, model: Optional[str] = None,
+             max_tokens: int = 4096, temperature: float = 0.7) -> str:
         self.reload_settings()
         messages = [{"role": "system", "content": system}]
         if history:
             messages.extend(history)
         messages.append({"role": "user", "content": prompt})
-        result = self._local_chat_completion(messages, temperature, max_tokens=max_tokens)
+        result = self._chat(messages, temperature, max_tokens=max_tokens)
         if result:
             return result
         raise RuntimeError("Local AI request failed. Please check if Ollama is running.")
 
-    def chat_json(self, prompt: str, system: str = "Return ONLY valid JSON.", model: Optional[str] = None, max_tokens: int = 4096) -> dict:
+    def chat_json(self, prompt: str, system: str = "Return ONLY valid JSON.", model: Optional[str] = None,
+                  max_tokens: int = 4096) -> dict:
         self.reload_settings()
         messages = [
             {"role": "system", "content": system + " Output valid JSON only, without any markdown formatting."},
-            {"role": "user", "content": prompt}
+            {"role": "user", "content": prompt},
         ]
-        raw = self._local_chat_completion(messages, temperature=0.2, response_format={"type": "json_object"}, max_tokens=max_tokens)
+        raw = self._chat(messages, temperature=0.2,
+                         response_format={"type": "json_object"}, max_tokens=max_tokens)
         if not raw:
             raise RuntimeError("Local AI request failed.")
 
@@ -111,50 +128,68 @@ class UnifiedAIClient:
         except json.JSONDecodeError as e:
             raise ValueError(f"Local model returned unparseable JSON: {e}\nRaw output: {raw[:200]}")
 
-    def vision(self, prompt: str, image_b64: str, mime: str = "image/png", system: str = "Analyze the image.", model: Optional[str] = None, max_tokens: int = 1024) -> str:
+    # --------------------------------------------------------------- vision
+
+    def vision(self, prompt: str, image_b64: str, mime: str = "image/png",
+               system: str = "Analyze the image.", model: Optional[str] = None,
+               max_tokens: int = 1024) -> str:
+        """Анализ изображения. MiniCPM5 — текстовая модель, поэтому задача
+        поручается мультимодальной модели Ollama (minicpmv), если она доступна."""
         self.reload_settings()
+        vision_model = self._pick_vision_model()
+        if not vision_model:
+            raise RuntimeError("Vision request failed: no multimodal model available in Ollama.")
+
         messages = [
             {"role": "system", "content": system},
-            {
-                "role": "user",
-                "content": [
-                    {"type": "image_url", "image_url": {"url": f"data:{mime};base64,{image_b64}"}},
-                    {"type": "text", "text": prompt}
-                ]
-            }
+            {"role": "user", "content": prompt},
         ]
-        result = self._local_chat_completion(messages, temperature=0.2, max_tokens=max_tokens)
+        result = self._chat(messages, temperature=0.2, max_tokens=max_tokens,
+                            images=[image_b64], model=vision_model)
         if result:
             return result
         raise RuntimeError("Local AI vision request failed.")
 
-    def vision_from_file(self, prompt: str, image_path: str, system: str = "Analyze the image.", model: Optional[str] = None, max_tokens: int = 1024) -> str:
+    def vision_from_file(self, prompt: str, image_path: str, system: str = "Analyze the image.",
+                         model: Optional[str] = None, max_tokens: int = 1024) -> str:
         self.reload_settings()
         path = Path(image_path)
-        mime_map = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif"}
-        mime = mime_map.get(path.suffix.lower(), "image/png")
         with open(path, "rb") as f:
             image_b64 = base64.b64encode(f.read()).decode("utf-8")
-        return self.vision(prompt, image_b64, mime, system, model, max_tokens)
+        return self.vision(prompt, image_b64, system=system, model=model, max_tokens=max_tokens)
 
-    def multi_turn(self, messages: list[dict], model: Optional[str] = None, max_tokens: int = 4096, temperature: float = 0.7) -> str:
+    def _pick_vision_model(self) -> Optional[str]:
+        """Мультимодальные модели живут отдельным списком в настройках."""
+        try:
+            with open(SETTINGS_PATH, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            candidate = data.get("local_vision_model", "minicpmv")
+            if candidate and self._model_exists(candidate):
+                return candidate
+        except Exception as e:
+            logger.error(f"[LLM Client] vision model lookup failed: {e}")
+        return None
+
+    def multi_turn(self, messages: list[dict], model: Optional[str] = None,
+                   max_tokens: int = 4096, temperature: float = 0.7) -> str:
         self.reload_settings()
-        result = self._local_chat_completion(messages, temperature, max_tokens=max_tokens)
+        result = self._chat(messages, temperature, max_tokens=max_tokens)
         if result:
             return result
         raise RuntimeError("Local AI request failed.")
 
-    # --- Управление локальной моделью ---
+    # ------------------------------------------------- Управление локальной моделью
 
     def _ollama_base(self) -> str:
-        return self._local_url.rsplit("/v1", 1)[0]
+        return self._local_url
 
-    def _model_exists(self) -> bool:
+    def _model_exists(self, model_name: Optional[str] = None) -> bool:
         try:
-            resp = get_httpx_client().get(f"{self._ollama_base()}/api/tags", timeout=5)
+            resp = requests.get(f"{self._ollama_base()}/api/tags", timeout=10)
             if resp.status_code == 200:
                 names = {m.get("name", "") for m in resp.json().get("models", [])}
-                return any(n.split(":")[0] == self._local_model for n in names)
+                target = model_name or self._local_model
+                return any(n.split(":")[0] == target for n in names)
         except Exception as e:
             logger.error(f"[LLM Client] ollama tags check failed: {e}")
         return False
@@ -171,12 +206,12 @@ class UnifiedAIClient:
             base = self._ollama_base()
             digest = "sha256:" + _sha256(LOCAL_GGUF)
 
-            resp = get_httpx_client().head(f"{base}/api/blobs/{digest}", timeout=10)
+            resp = requests.head(f"{base}/api/blobs/{digest}", timeout=10)
             if resp.status_code != 200:
                 with open(LOCAL_GGUF, "rb") as f:
-                    resp = get_httpx_client().post(
+                    resp = requests.post(
                         f"{base}/api/blobs/{digest}",
-                        content=f.read(),
+                        data=f.read(),
                         headers={"Content-Type": "application/octet-stream"},
                         timeout=600,
                     )
@@ -196,10 +231,7 @@ class UnifiedAIClient:
                     "top_p": 0.9,
                 },
             }
-            with get_httpx_client().stream(
-                "POST", f"{base}/api/create",
-                json=payload, timeout=1200,
-            ) as resp:
+            with requests.post(f"{base}/api/create", json=payload, stream=True, timeout=1200) as resp:
                 if resp.status_code != 200:
                     logger.error(f"[LLM Client] create failed: {resp.status_code}")
                     return False

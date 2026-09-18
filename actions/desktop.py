@@ -95,7 +95,7 @@ def _execute_generated_code(code: str, player=None) -> str:
         print(f"[Desktop] Exec error: {e}\nCode:\n{code[:300]}")
         return f"Execution error: {e}"
 
-def _ask_gemini_for_desktop_action(task: str) -> str:
+def _ask_llm_for_desktop_action(task: str) -> str:
     from llm_client import client
 
     desktop = str(_get_desktop())
@@ -439,16 +439,16 @@ def desktop_control(
             if not actual_task:
                 return "Please describe what you want to do on the desktop."
 
-            print(f"[Desktop] Asking Gemini: {actual_task}")
+            print(f"[Desktop] Asking local model: {actual_task}")
             if player:
                 player.write_log("[Desktop] Generating action...")
 
-            code = _ask_gemini_for_desktop_action(actual_task)
+            code = _ask_llm_for_desktop_action(actual_task)
             return _execute_generated_code(code, player=player)
 
         else:
             if action:
-                code = _ask_gemini_for_desktop_action(action)
+                code = _ask_llm_for_desktop_action(action)
                 return _execute_generated_code(code, player=player)
             return "No action or task specified."
 

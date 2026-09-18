@@ -137,7 +137,7 @@ def _search_flights_browser(
 
     raw = browser_control({"action": "get_text"})
     return (raw or ""), url
-def _parse_flights_with_gemini(
+def _parse_flights_with_llm(
     raw_text:    str,
     origin:      str,
     destination: str,
@@ -319,7 +319,7 @@ def flight_finder(parameters: dict, player=None, speak=None) -> str:
         if speak:
             speak("Анализирую результаты.")
 
-        flights = _parse_flights_with_gemini(raw_text, origin, destination, date)
+        flights = _parse_flights_with_llm(raw_text, origin, destination, date)
         spoken  = _format_spoken(flights, origin, destination, date)
 
         if speak:
