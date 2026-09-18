@@ -362,6 +362,65 @@ def _wakeword_detected(text: str) -> bool:
     return any(word in {"voice echo", "hey", "hi", "hello"} for word in words)
 
 
+def _looks_like_tool_request(text: str) -> bool:
+    """Возвращает True, если текст похож на поручение, которое нужно выполнить
+    инструментами, а не просто обсудить с пользователем. Предикат намеренно
+    перестраховывается: незамеченное поручение останется за фолбэк-ответчиком."""
+    t = (text or "").lower().strip()
+    if not t:
+        return False
+
+    # Разговорные реплики и вопросы — не задачи для инструментов.
+    conversational = (
+        "привет", "здравствуй", "как дела", "кто ты", "как тебя зовут",
+        "спасибо", "благодарю", "пока", "до свидания", "хорошо", "понятно",
+        "hello", "hi", "hey", "how are you", "who are you", "thanks", "thank you",
+        "bye", "goodbye", "ok", "okay",
+    )
+    if t in conversational:
+        return False
+    # Вопросы к модели — оставляем фолбэку (он и так ходит в LLM).
+    if t.endswith("?") or t.startswith(("почему", "что такое", "объясни", "расскажи о", "why", "what is", "explain")):
+        return False
+
+    tool_words = (
+        # приложения и система
+        "открой", "открывать", "запусти", "запустить", "закрой", "закрыть",
+        "переведи", "перевести", "установи", "установить", "удали", "удалить",
+        "перезагрузи", "перезагрузить", "выключи", "выключить", "ярче", "тише", "громче",
+        "open", "launch", "start", "close", "quit", "exit", "kill", "delete", "install",
+        "uninstall", "restart", "shutdown", "turn on", "turn off", "mute", "volume",
+        # браузер и интернет
+        "найди", "найти", "поищи", "искать", "загугли", "загуглить",
+        "search", "google", "look up", "find online", "find", "посмотри",
+        # файлы и документы
+        "сохрани", "сохранить", "создай", "создать", "сделай", "сделать",
+        "презентаци", "презентацию", "слайды", "доклад", "таблиц", "excel", "xlsx",
+        "word", "docx", "документ", "pdf", "файл", "папк", "папку", "рабочий стол",
+        "create", "save", "write", "build", "make", "presentation", "slides", "deck",
+        "spreadsheet", "sheet", "document", "file", "folder", "desktop", "rename",
+        "move", "copy", "organize",
+        # сообщения и напоминания
+        "напомни", "напомнить", "отправь", "отправить", "напиши", "написать",
+        "сообщение", "смс", "sms", "instagram", "whatsapp", "telegram",
+        "remind", "reminder", "send", "message", "email", "mail",
+        # погода, музыка, видео, игры
+        "погода", "прогноз", "weather", "temperature",
+        "включи", "включить", "поставь", "play", "pause", "next song", "skip",
+        "youtube", "spotify", "музык", "музыку", "видео", "video",
+        "steam", "epic", "игр", "игру", "game", "update games",
+        # экран и автоматизация
+        "экран", "screen", "screenshot", "скриншот", "камера", "camera",
+        "кликни", "кликнуть", "нажми", "нажать", "введи", "ввести текст",
+        "click", "type", "press", "scroll", "hotkey", "automate",
+        # планировщик и устройства
+        "календарь", "calendar", "встреч", "meeting", "событие", "event",
+        "устройство", "device", "телефон", "phone", "android", "смартфон",
+        "Flight", "рейс", "самолёт", "flight", "ticket", "билет",
+    )
+    return any(word in t for word in tool_words)
+
+
 def _build_task_plan(text: str) -> list[str]:
     t = (text or "").lower()
     if any(word in t for word in ("presentation", "ppt", "slides", "deck")):
@@ -764,6 +823,11 @@ class VoiceLive:
 
             threading.Thread(target=_run_screen_process, daemon=True).start()
             return
+
+        if _looks_like_tool_request(text):
+            threading.Thread(target=self._run_tool_task, args=(text, source), daemon=True).start()
+            return
+
         threading.Thread(target=self._fallback_reply, args=(text, memory_ctx), daemon=True).start()
 
 
@@ -1511,6 +1575,59 @@ class VoiceLive:
             with self._attention_lock:
                 self._pending_attention = None
 
+
+    def _run_tool_task(self, text: str, source: str = "local"):
+        """Диспетчер инструментов: локальный планер -> исполнитель -> очередь задач.
+
+        Заменяет удалённый при миграции Gemini Live dispatch: LLM отдаёт JSON-план
+        (agent.planner), а executor._call_tool маршрутизирует вызовы к модулям actions/*."""
+        try:
+            self.ui.set_state("THINKING")
+            try:
+                self.ui.update_task_workspace(
+                    status="Выполняю задачу",
+                    output="Voice Echo планирует и запускает инструменты.",
+                    percent=25,
+                )
+            except Exception:
+                pass
+
+            from agent.task_queue import get_queue, TaskPriority
+
+            def _on_complete(task_id: str, result):
+                try:
+                    summary = str(result or "Задача выполнена.").strip()
+                    self.ui.write_log(f"Voice Echo: {summary}")
+                    self.ui.finish_task_workspace(summary, "Задача выполнена.", 100)
+                except Exception:
+                    pass
+                if source != "instagram":
+                    try:
+                        self._update_memory_after_task(text, summary)
+                    except Exception:
+                        pass
+
+            get_queue().submit(
+                goal=text,
+                priority=TaskPriority.NORMAL,
+                speak=self.speak,
+                on_complete=_on_complete,
+            )
+        except Exception as e:
+            msg = f"Не удалось выполнить задачу: {e}"
+            print(f"[VOICE ECHO] ⚠️ {msg}")
+            self.ui.write_log(f"ERR: {msg}")
+            try:
+                self.ui.finish_task_workspace(msg, "Задача не выполнена.", 100)
+            except Exception:
+                pass
+            threading.Thread(target=self._fallback_reply, args=(text, ""), daemon=True).start()
+
+    def _update_memory_after_task(self, user_text: str, result_text: str):
+        try:
+            _update_memory_async(user_text, result_text)
+        except Exception:
+            pass
 
     def _fallback_reply(self, text: str, memory_ctx: str = ""):
         try:

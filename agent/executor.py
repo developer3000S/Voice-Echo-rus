@@ -164,6 +164,31 @@ def _translate_to_goal_language(content: str, goal: str) -> str:
         print(f"[Executor] ⚠️ Translation failed: {e}")
         return content
 
+def _cmd_control_compat(task: str, speak: Callable | None = None) -> str:
+    """Совместимый обработчик инструмента cmd_control, отсутствующего в проекте.
+
+    Берёт естественный язык ("открой файл X", "запусти Y") и маршрутизирует
+    его в open_app, который реализован и для Windows, и для Linux."""
+    from actions.open_app import open_app
+
+    task = (task or "").strip()
+    if not task:
+        return "Не указана задача для cmd_control."
+
+    lowered = task.lower()
+    # Выделяем имя файла/приложения из типичных формулировок.
+    for prefix in ("open ", "launch ", "start ", "run ", "открой ", "запусти ", "открыть ", "запустить "):
+        if lowered.startswith(prefix):
+            task = task[len(prefix):].strip()
+            break
+
+    if not task:
+        return "Не удалось определить, что открыть."
+
+    result = open_app(parameters={"app_name": task}, player=None)
+    return result or f"Открываю {task}."
+
+
 def _call_tool(tool: str, parameters: dict, speak: Callable | None) -> str:
 
     if tool == "open_app":
@@ -185,8 +210,46 @@ def _call_tool(tool: str, parameters: dict, speak: Callable | None) -> str:
         return file_controller(parameters=parameters, player=None) or "Готово."
 
     elif tool == "cmd_control":
-        from actions.cmd_control import cmd_control
-        return cmd_control(parameters=parameters, player=None) or "Готово."
+        # actions/cmd_control.py не существует в проекте; задача «открыть файл или
+        # выполнить системную команду» безопасно маршрутизируется на open_app
+        # (есть реализации и для Windows, и для Linux).
+        task = (parameters or {}).get("task") or ""
+        return _cmd_control_compat(task, speak)
+
+    elif tool == "office_builder":
+        from actions.office_builder import create_presentation, create_spreadsheet
+        kind = (parameters or {}).get("kind", "presentation").lower().strip()
+        if kind in {"spreadsheet", "excel", "xlsx", "table"}:
+            return create_spreadsheet(parameters=parameters, player=None) or "Таблица готова."
+        return create_presentation(parameters=parameters, player=None) or "Презентация готова."
+
+    elif tool == "word_document":
+        from actions.docx_tools import word_document
+        return word_document(parameters=parameters, player=None, speak=speak) or "Документ готов."
+
+    elif tool in ("pdf_document", "create_pdf"):
+        from actions.pdf_tools import create_pdf
+        return create_pdf(parameters=parameters, player=None) or "PDF готов."
+
+    elif tool == "file_processor":
+        from actions.file_processor import file_processor
+        return file_processor(parameters=parameters, player=None, speak=speak) or "Готово."
+
+    elif tool in ("voice_connect", "connect"):
+        from actions.voice_connect import connect_execute
+        return connect_execute(parameters=parameters) or "Команда устройству отправлена."
+
+    elif tool == "system_manager":
+        from actions.system_manager import run as run_system_manager
+        return run_system_manager(parameters=parameters, player=None) or "Готово."
+
+    elif tool == "website_builder":
+        from actions.website_builder import website_builder
+        return website_builder(parameters=parameters, player=None) or "Сайт собран."
+
+    elif tool == "weather_report":
+        from actions.weather_report import weather_action
+        return weather_action(parameters=parameters, player=None) or "Готово."
 
     elif tool == "claude_code":
         from actions.claude_code_bridge import run_developer_mode_request

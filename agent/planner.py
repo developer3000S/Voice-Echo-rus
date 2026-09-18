@@ -1,4 +1,5 @@
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -60,6 +61,36 @@ file_controller
 cmd_control
   task: string (required) — natural language description of what to do
   visible: boolean (optional)
+
+office_builder
+  Use when the user asks for a PRESENTATION, SLIDES, DECK, SPREADSHEET, EXCEL SHEET, TABLE, TRACKER or BUDGET.
+  kind: "presentation" | "spreadsheet" (required)
+  title: string (required)
+  subtitle: string (optional)
+  theme: string (optional, visual style)
+  For presentations: outline: list of strings or slides: list of objects {"title", "bullets"} (max 20)
+  For spreadsheets: worksheets: list of objects {"name", "headers": [string], "rows": [[value]]}
+
+word_document
+  Use when the user asks for a WORD DOCUMENT, .docx FILE, LETTER, REPORT or EDITED DOCUMENT.
+  action: "create" | "create_letter" | "create_report" | "summarize" | "read" | "open" (required)
+  title: string
+  doc_type: "letter" | "report" (optional)
+  file_path: string (for read/summarize/open actions)
+  body / content: string (for letters and reports)
+
+pdf_document
+  Use when the user asks to CREATE A PDF or CONVERT a DOCX/TXT file to PDF.
+  action: "create" | "create_letter" | "convert" (required)
+  title: string
+  file_path: string (for convert — .docx, .txt, .md)
+  body / content: string (for create)
+
+file_processor
+  Use when the user asks to ANALYZE, SUMMARIZE or PROCESS an EXISTING FILE.
+  file_path: string (required)
+  action: string (optional — what to do with the file)
+  instruction: string (optional)
 
 computer_settings
   action: string (required)

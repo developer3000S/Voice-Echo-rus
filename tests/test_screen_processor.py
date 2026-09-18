@@ -1,3 +1,4 @@
+import base64
 import importlib
 import io
 
@@ -46,15 +47,13 @@ def test_screen_process_uses_provided_image_bytes(monkeypatch):
         called["capture"] = True
         return b"fallback"
 
-    def fake_analyze(image_bytes, mime_type, user_text):
-        assert image_bytes == b"provided"
-        assert mime_type == "image/jpeg"
-        assert user_text == "look at my screen"
+    def fake_analyze(prompt, image_b64, mime="image/png", system=None, model=None, max_tokens=1024):
+        assert base64.b64decode(image_b64) == b"provided"
+        assert mime == "image/jpeg"
+        assert prompt == "look at my screen"
 
     monkeypatch.setattr(screen_processor, "_capture_screenshot", fake_capture_screenshot)
-    monkeypatch.setattr(screen_processor._live, "analyze", fake_analyze)
-    monkeypatch.setattr(screen_processor._live, "is_ready", lambda: True)
-    monkeypatch.setattr(screen_processor, "_ensure_started", lambda player=None: None)
+    monkeypatch.setattr(screen_processor.llm, "vision", fake_analyze)
 
     result = screen_processor.screen_process(
         parameters={"text": "look at my screen", "angle": "screen"},

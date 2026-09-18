@@ -79,7 +79,8 @@ def test_connect_tools_are_registered_in_main():
         "connect_pair_device",
         "connect_disconnect_device",
     ):
-        assert f'"name": "{tool_name}"' in main_text
+        assert f"    {tool_name}," in main_text
+        assert f'name == "{tool_name}"' in main_text
 
 
 def test_connect_list_devices_and_capabilities(monkeypatch):
