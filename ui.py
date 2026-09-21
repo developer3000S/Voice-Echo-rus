@@ -3498,7 +3498,7 @@ class InlineChatWorkspace(QFrame):
 
         footer = QHBoxLayout()
         footer.setContentsMargins(4, 4, 4, 4)
-        self._footer_status = QLabel("Voice Echo слушает...")
+        self._footer_status = QLabel("Voice Echo слушает... скажите «Привет, Бро»")
         self._footer_status.setFont(QFont("Segoe UI", 9))
         self._footer_status.setStyleSheet("color: rgba(255, 255, 255, 0.70); background: transparent;")
         footer.addWidget(self._footer_status)

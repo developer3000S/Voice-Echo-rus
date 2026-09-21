@@ -343,23 +343,31 @@ def _looks_like_screen_request(text: str) -> bool:
 
 
 def _wakeword_detected(text: str) -> bool:
-    t = re.sub(r"[^a-z0-9\s]+", " ", (text or "").lower())
+    t = re.sub(r"[^a-zа-яё0-9\s]+", " ", (text or "").lower())
     words = [w for w in t.split() if w]
     if not words:
         return False
+    # Wake word — «Привет, Бро». Локальный STT (sherpa-onnx ru) часто
+    # доносит «бро» как «бру»/«бра», поэтому ловим и такие варианты.
+    # Голый «привет» не будим — слишком частое слово в обычной речи.
     phrases = (
-        "voice echo",
-        "hey voice echo",
-        "hi voice echo",
-        "hello voice echo",
-        "hey",
-        "hi",
-        "hello",
+        "привет бро",
+        "привет бру",
+        "привет бра",
+        "привет брат",
+        "хей бро",
+        "хей бру",
+        "хейбро",
+        "хейбру",
+        "эй бро",
+        "эй бру",
+        "эйбро",
+        "эйбру",
     )
     compact = " ".join(words)
     if compact in phrases or any(p in compact for p in phrases):
         return True
-    return any(word in {"voice echo", "hey", "hi", "hello"} for word in words)
+    return any(word in {"бро", "бру", "бра"} for word in words)
 
 
 def _looks_like_tool_request(text: str) -> bool:
