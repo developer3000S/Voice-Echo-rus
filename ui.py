@@ -659,6 +659,7 @@ def _default_app_settings() -> dict:
         "assistant_language": "ru",
         "developer_mode_enabled": False,
         "developer_mode_workspace": "",
+        "dashboard_viz": "line",
     }
 
 
@@ -1848,6 +1849,170 @@ class MetricBar(QWidget):
         p.setFont(QFont("Courier New", 9, QFont.Weight.Bold))
         p.setPen(QPen(bar_col if self._text != "--" else qcol(C.TEXT_DIM), 1))
         p.drawText(QRectF(0, 4, W - 6, 16), Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter, self._text)
+
+class MetricScope(QWidget):
+    """Живая визуализация системных метрик для вкладки «Панель».
+
+    Варианты отрисовки: line — графики-осциллограммы, bars — столбчатая
+    диаграмма, radar — радар загрузки подсистем. Выбор хранится в
+    настройках (dashboard_viz) и применяется на лету.
+    """
+
+    VARIANTS = ("line", "bars", "radar")
+
+    def __init__(self, source=None, variant: str = "line", parent=None):
+        super().__init__(parent)
+        self._source = source
+        self._variant = "line"
+        self._history: dict[str, list[float]] = {k: [] for k in ("cpu", "mem", "net")}
+        self._latest: dict[str, float] = {k: 0.0 for k in ("cpu", "mem", "net")}
+        self._max_points = 64
+        self.setMinimumSize(240, 120)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.set_variant(variant)
+
+    def set_variant(self, variant: str) -> None:
+        self._variant = variant if variant in self.VARIANTS else "line"
+        self.update()
+
+    def push(self, snap: dict) -> None:
+        """Принять срез метрик (cpu, mem, net) и обновить визуализацию."""
+        if not snap:
+            return
+        for key in self._history:
+            raw = snap.get(key, 0.0)
+            try:
+                value = float(raw)
+            except (TypeError, ValueError):
+                continue
+            if value < 0:
+                continue
+            scale = 10.0 if key == "net" else 1.0
+            value = min(value * scale, 100.0)
+            self._latest[key] = value
+            hist = self._history[key]
+            hist.append(value)
+            if len(hist) > self._max_points:
+                del hist[: len(hist) - self._max_points]
+        self.update()
+
+    # -- отрисовка -----------------------------------------------------
+
+    def paintEvent(self, _):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        W, H = self.width(), self.height()
+        p.setBrush(QBrush(qcol(C.PANEL2)))
+        p.setPen(QPen(qcol(C.BORDER_A), 1))
+        p.drawRoundedRect(QRectF(1, 1, W - 2, H - 2), 10, 10)
+
+        variant = self._variant
+        if variant == "bars":
+            self._draw_bars(p, W, H)
+        elif variant == "radar":
+            self._draw_radar(p, W, H)
+        else:
+            self._draw_lines(p, W, H)
+
+        p.setFont(QFont("Courier New", 8, QFont.Weight.Bold))
+        p.setPen(QPen(qcol(C.TEXT_DIM), 1))
+        title = {"line": "ОСЦИЛЛОГРАММА", "bars": "ЗАГРУЗКА", "radar": "РАДАР"}[variant]
+        p.drawText(QRectF(10, 6, W - 20, 16), Qt.AlignmentFlag.AlignLeft, title)
+
+    def _series(self) -> list[tuple[str, str, float]]:
+        return [
+            ("CPU", C.PRI, self._latest["cpu"]),
+            ("RAM", C.GREEN, self._latest["mem"]),
+            ("NET", C.ACC2, self._latest["net"]),
+        ]
+
+    def _draw_lines(self, p: QPainter, W: int, H: int) -> None:
+        pad_l, pad_r, pad_t, pad_b = 14, 14, 26, 18
+        x0, x1 = pad_l, W - pad_r
+        y0, y1 = pad_t, H - pad_b
+        if x1 <= x0 or y1 <= y0:
+            return
+        p.setPen(QPen(qcol(C.BAR_BG), 1))
+        for i in range(1, 4):
+            y = y0 + (y1 - y0) * i / 4
+            p.drawLine(QPointF(x0, y), QPointF(x1, y))
+        leg_x = x0
+        for name, color, _ in self._series():
+            hist = self._history[{"CPU": "cpu", "RAM": "mem", "NET": "net"}[name]]
+            if not hist:
+                continue
+            step = (x1 - x0) / max(self._max_points - 1, 1)
+            start = max(0, len(hist) - self._max_points)
+            pts = [
+                QPointF(x0 + (i - start) * step, y1 - (y1 - y0) * hist[i] / 100.0)
+                for i in range(start, len(hist))
+            ]
+            if len(pts) >= 2:
+                p.setPen(QPen(qcol(color), 1.6))
+                p.drawPolyline(pts)
+            elif pts:
+                p.setPen(QPen(qcol(color), 2.0))
+                p.drawPoint(pts[0])
+            p.setPen(QPen(qcol(color), 1))
+            p.drawEllipse(leg_x + 3, pad_t - 11, 5, 5)
+            p.setPen(QPen(qcol(C.TEXT_DIM), 1))
+            p.drawText(QRectF(leg_x + 11, pad_t - 16, 60, 14), Qt.AlignmentFlag.AlignLeft, name)
+            leg_x += 58
+
+    def _draw_bars(self, p: QPainter, W: int, H: int) -> None:
+        pad_t, pad_b = 26, 18
+        y0, y1 = pad_t, H - pad_b
+        if y1 <= y0:
+            return
+        series = self._series()
+        slot = (W - 28) / len(series)
+        bw = min(slot * 0.5, 46)
+        for i, (name, color, value) in enumerate(series):
+            cx = 14 + slot * (i + 0.5)
+            bh = (y1 - y0) * max(value, 1.0) / 100.0
+            p.setBrush(QBrush(qcol(C.BAR_BG)))
+            p.setPen(Qt.PenStyle.NoPen)
+            p.drawRoundedRect(QRectF(cx - bw / 2, y0, bw, y1 - y0), 5, 5)
+            if bh > 0:
+                p.setBrush(QBrush(qcol(color)))
+                p.drawRoundedRect(QRectF(cx - bw / 2, y1 - bh, bw, bh), 5, 5)
+            p.setPen(QPen(qcol(C.TEXT_DIM), 1))
+            p.setFont(QFont("Courier New", 8, QFont.Weight.Bold))
+            p.drawText(
+                QRectF(cx - bw, y1 + 3, bw * 2, 14),
+                Qt.AlignmentFlag.AlignCenter,
+                f"{name} {value:.0f}",
+            )
+
+    def _draw_radar(self, p: QPainter, W: int, H: int) -> None:
+        cx, cy = W / 2, (H + 24) / 2
+        radius = min(W, H) / 2 - 34
+        if radius <= 10:
+            return
+        p.setPen(QPen(qcol(C.BAR_BG), 1))
+        for r in (0.33, 0.66, 1.0):
+            p.drawEllipse(QPointF(cx, cy), radius * r, radius * r)
+        series = self._series()
+        n = len(series)
+        import math
+        for i, (name, color, value) in enumerate(series):
+            angle = -math.pi / 2 + 2 * math.pi * i / n
+            x = cx + math.cos(angle) * radius
+            y = cy + math.sin(angle) * radius
+            p.setPen(QPen(qcol(C.BAR_BG), 1))
+            p.drawLine(QPointF(cx, cy), QPointF(x, y))
+            vx = cx + math.cos(angle) * radius * value / 100.0
+            vy = cy + math.sin(angle) * radius * value / 100.0
+            p.setBrush(QBrush(qcol(color)))
+            p.setPen(QPen(qcol(color), 1))
+            p.drawEllipse(QPointF(vx, vy), 4, 4)
+            p.setPen(QPen(qcol(C.TEXT_DIM), 1))
+            p.setFont(QFont("Courier New", 8, QFont.Weight.Bold))
+            p.drawText(
+                QRectF(cx + math.cos(angle) * (radius + 8) - 24, cy + math.sin(angle) * (radius + 8) - 7, 48, 14),
+                Qt.AlignmentFlag.AlignCenter,
+                f"{name} {value:.0f}",
+            )
 
 class MessageCard(QFrame):
     def __init__(self, role: str, name: str, text: str, stamp: str, parent=None):
@@ -7171,6 +7336,8 @@ class MainWindow(QMainWindow):
         if not hasattr(self, "_bar_cpu"):
             return
         snap = _metrics.snapshot()
+        if hasattr(self, "_metric_scope"):
+            self._metric_scope.push(snap)
 
         # CPU
         cpu = snap["cpu"]
@@ -8350,6 +8517,12 @@ class MainWindow(QMainWindow):
         command_row.addWidget(self._result_card, alignment=Qt.AlignmentFlag.AlignVCenter)
         stage.addLayout(command_row, stretch=1)
 
+        self._metric_scope = MetricScope(
+            variant=str(self._load_app_settings().get("dashboard_viz", "line"))
+        )
+        self._metric_scope.setFixedHeight(190)
+        stage.addWidget(self._metric_scope)
+
         self._command_panel = QWidget()
         self._command_panel.setStyleSheet("background: transparent;")
         cmd_lay = QVBoxLayout(self._command_panel)
@@ -9085,6 +9258,26 @@ class SystemConnectivityPage(QWidget):
         lvl.addWidget(self._local_voice_btn)
         lay.addWidget(local_voice_card)
 
+        # Dashboard visualization
+        viz_card = self._card(
+            "Визуализация на панели",
+            "Выберите способ отображения системных метрик на вкладке «Панель».",
+        )
+        vl = viz_card.layout()
+        viz_row = QHBoxLayout()
+        viz_row.addWidget(QLabel("Тип визуализации"))
+        self._viz_combo = QComboBox()
+        self._viz_combo.addItem("Осциллограмма (линейный график)", "line")
+        self._viz_combo.addItem("Столбчатая диаграмма", "bars")
+        self._viz_combo.addItem("Радар загрузки", "radar")
+        current_viz = self._load_app_settings().get("dashboard_viz", "line")
+        idx = self._viz_combo.findData(current_viz)
+        self._viz_combo.setCurrentIndex(idx if idx >= 0 else 0)
+        self._viz_combo.currentIndexChanged.connect(self._change_dashboard_viz)
+        viz_row.addWidget(self._viz_combo, 1)
+        vl.addLayout(viz_row)
+        lay.addWidget(viz_card)
+
         self._auto_switch_btn = self._mk_toggle("Автоматически переключаться при сбое провайдера", bool(self._load_app_settings().get("auto_provider_switch", True)), self._toggle_auto_provider_switch)
         lay1.addWidget(self._auto_switch_btn)
         lay.addWidget(card)
@@ -9588,6 +9781,16 @@ class SystemConnectivityPage(QWidget):
                 + ("enabled (Vosk + Piper, offline). Restart to apply." if checked else "disabled. Restart to apply.")
             )
 
+    def _change_dashboard_viz(self, index: int):
+        variant = self._viz_combo.itemData(index) or "line"
+        self._set_setting("dashboard_viz", variant)
+        if self._ctrl() and hasattr(self._ctrl(), "_win"):
+            win = self._ctrl()._win
+            if hasattr(win, "_metric_scope"):
+                win._metric_scope.set_variant(variant)
+        if self._ctrl() and hasattr(self._ctrl(), "write_log"):
+            self._ctrl().write_log(f"SYS: Визуализация панели переключена на «{variant}».")
+
     def _toggle_attention_message_prompts(self, checked: bool):
         self._set_setting("attention_message_prompts", bool(checked))
         if self._ctrl() and hasattr(self._ctrl(), "write_log"):
@@ -9688,6 +9891,7 @@ class SystemConnectivityPage(QWidget):
             getattr(self, "_default_provider", None),
             getattr(self, "_auto_switch_btn", None),
             getattr(self, "_local_voice_btn", None),
+            getattr(self, "_viz_combo", None),
             getattr(self, "_attention_message_btn", None),
             getattr(self, "_attention_call_btn", None),
             getattr(self, "_startup_launch_btn", None),
@@ -9704,6 +9908,9 @@ class SystemConnectivityPage(QWidget):
             self._auto_switch_btn.setChecked(bool(app.get("auto_provider_switch", True)))
             if getattr(self, "_local_voice_btn", None) is not None:
                 self._local_voice_btn.setChecked(bool(app.get("local_voice_engine", True)))
+            if getattr(self, "_viz_combo", None) is not None:
+                viz_idx = self._viz_combo.findData(app.get("dashboard_viz", "line"))
+                self._viz_combo.setCurrentIndex(viz_idx if viz_idx >= 0 else 0)
             self._attention_message_btn.setChecked(bool(app.get("attention_message_prompts", True)))
             self._attention_call_btn.setChecked(bool(app.get("attention_call_prompts", True)))
             self._startup_launch_btn.setChecked(bool(app.get("show_workspace_on_startup", False)))
@@ -9716,6 +9923,7 @@ class SystemConnectivityPage(QWidget):
             for widget in (
                 getattr(self, "_auto_switch_btn", None),
                 getattr(self, "_local_voice_btn", None),
+                getattr(self, "_viz_combo", None),
                 getattr(self, "_attention_message_btn", None),
                 getattr(self, "_attention_call_btn", None),
                 getattr(self, "_startup_launch_btn", None),
