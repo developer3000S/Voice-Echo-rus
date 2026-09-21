@@ -42,12 +42,12 @@ def _run_generated_code(description: str, speak: Callable | None = None) -> str:
 
     client = llm
     system_instruction = (
-        "You are an expert Python developer. "
-        "Write clean, complete, working Python code. "
-        "Use standard library + common packages. "
-        "Install missing packages with subprocess + pip if needed. "
-        "Return ONLY the Python code. No explanation, no markdown, no backticks.\n\n"
-        f"SYSTEM PATHS:\n"
+        "Ты — экспертный Python-разработчик. "
+        "Пиши чистый, полный, рабочий Python-код. "
+        "Используй стандартную библиотеку + распространённые пакеты. "
+        "Устанавливай недостающие пакеты через subprocess + pip при необходимости. "
+        "Возвращай ТОЛЬКО Python-код. Без пояснений, без markdown, без обратных кавычек.\n\n"
+        f"СИСТЕМНЫЕ ПУТИ:\n"
         f"  Desktop   = r'{desktop}'\n"
         f"  Downloads = r'{downloads}'\n"
         f"  Documents = r'{documents}'\n"
@@ -56,7 +56,7 @@ def _run_generated_code(description: str, speak: Callable | None = None) -> str:
 
     try:
         code = client.chat(
-            f"Write Python code to accomplish this task:\n\n{description}",
+            f"Напиши Python-код для выполнения этой задачи:\n\n{description}",
             system=system_instruction,
             max_tokens=4096,
             temperature=0.2,
@@ -122,17 +122,21 @@ def _inject_context(params: dict, tool: str, step_results: dict, goal: str = "")
 
     return params
 def _detect_language(text: str) -> str:
+    from llm_client import assistant_language
+    fallback = assistant_language()
+    lang_name = "Russian" if fallback == "ru" else ("English" if fallback == "en" else fallback)
     try:
-        return llm.chat(
-            "What language is this text written in? "
-            "Reply with ONLY the language name in English (e.g. Turkish, English, French).\n\n"
-            f"Text: {text[:200]}",
-            system="Reply with ONLY the language name in English.",
+        detected = llm.chat(
+            "На каком языке написан этот текст? "
+            "Ответь ТОЛЬКО названием языка на английском (например: Russian, English, Turkish).\n\n"
+            f"Текст: {text[:200]}",
+            system="Ответь ТОЛЬКО названием языка на английском.",
             max_tokens=20,
             temperature=0.0,
         ).strip()
+        return detected or lang_name
     except Exception:
-        return "English"
+        return lang_name
 
 
 def _translate_to_goal_language(content: str, goal: str) -> str:
@@ -143,18 +147,18 @@ def _translate_to_goal_language(content: str, goal: str) -> str:
         print(f"[Executor] 🌐 Translating to: {target_lang}")
 
         prompt = (
-            f"You are a professional translator. "
-            f"Translate the following text into {target_lang}.\n"
-            f"IMPORTANT:\n"
-            f"- Translate EVERYTHING, leave nothing in English\n"
-            f"- Keep all facts, numbers, and data intact\n"
-            f"- Keep the structure and formatting\n"
-            f"- Output ONLY the translated text, nothing else\n\n"
-            f"Text to translate:\n{content[:4000]}"
+            f"Ты — профессиональный переводчик. "
+            f"Переведи следующий текст на {target_lang}.\n"
+            f"ВАЖНО:\n"
+            f"- Переведи ВСЁ, ничего не оставляй на исходном языке\n"
+            f"- Сохрани все факты, числа и данные\n"
+            f"- Сохрани структуру и форматирование\n"
+            f"- Выведи ТОЛЬКО переведённый текст, больше ничего\n\n"
+            f"Текст для перевода:\n{content[:4000]}"
         )
         translated = llm.chat(
             prompt,
-            system="You are a professional translator. Output ONLY the translated text.",
+            system="Ты — профессиональный переводчик. Выведи ТОЛЬКО переведённый текст.",
             max_tokens=4096,
             temperature=0.3,
         ).strip()

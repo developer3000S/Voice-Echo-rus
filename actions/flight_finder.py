@@ -59,10 +59,10 @@ def _parse_date(raw: str) -> str:
     try:
         from llm_client import client
         result = client.chat(
-            f"Today is {today.strftime('%Y-%m-%d')}. "
-            f"Convert this date expression to YYYY-MM-DD: '{raw}'. "
-            f"Return ONLY the date string, nothing else.",
-            system="You are a date converter. Return only the YYYY-MM-DD string."
+            f"Сегодня {today.strftime('%Y-%m-%d')}. "
+            f"Преобразуй это выражение даты в формат YYYY-MM-DD: '{raw}'. "
+            f"Верни ТОЛЬКО строку с датой, больше ничего.",
+            system="Ты — конвертер дат. Верни только строку в формате YYYY-MM-DD."
         )
         result = result.strip()
         if re.match(r"\d{4}-\d{2}-\d{2}", result):
@@ -146,16 +146,16 @@ def _parse_flights_with_llm(
     from llm_client import client
 
     prompt = (
-        f"Extract flight options from {origin} to {destination} on {date} "
-        f"from this Google Flights page text:\n\n{raw_text[:12000]}\n\n"
-        f"Return a JSON array of up to 5 flights:\n"
+        f"Извлеки варианты рейсов из {origin} в {destination} на {date} "
+        f"из текста страницы Google Flights:\n\n{raw_text[:12000]}\n\n"
+        f"Верни JSON-массив максимум из 5 рейсов:\n"
         f'[{{"airline":"...","departure":"HH:MM","arrival":"HH:MM",'
         f'"duration":"Xh Ym","stops":0,"price":"...","currency":"USD"}}]\n'
-        f"If no flights found, return: []"
+        f"Если рейсы не найдены, верни: []"
     )
 
     try:
-        result = client.chat_json(prompt, system="Return only valid JSON. No extra text.")
+        result = client.chat_json(prompt, system="Верни только валидный JSON. Без лишнего текста.")
         return result if isinstance(result, list) else []
     except Exception as e:
         print(f"[FlightFinder] ⚠️ parse failed: {e}")

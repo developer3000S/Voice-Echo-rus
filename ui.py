@@ -656,6 +656,7 @@ def _default_app_settings() -> dict:
         "attention_message_prompts": True,
         "attention_call_prompts": True,
         "local_voice_engine": True,
+        "assistant_language": "ru",
         "developer_mode_enabled": False,
         "developer_mode_workspace": "",
     }
@@ -5761,7 +5762,6 @@ class BootSequenceOverlay(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent, False)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setWindowOpacity(1.0)
-        print("DEBUG: BootSequenceOverlay created!")
 
         
         self._time = 0.0
@@ -5996,7 +5996,6 @@ class BootSequenceOverlay(QWidget):
             self._time = 4.0
 
     def start(self, device_name: str, greeting_name: str):
-        print("DEBUG: BootSequenceOverlay start() called!")
         screen = QApplication.primaryScreen()
         geo = screen.geometry() if screen else QRectF(0, 0, 1280, 720).toRect()
         self.setGeometry(geo)
@@ -6838,6 +6837,11 @@ class MainWindow(QMainWindow):
         os.makedirs(CONFIG_DIR, exist_ok=True)
         APP_SETTINGS_FILE.write_text(json.dumps(settings, indent=4), encoding="utf-8")
         self._app_settings_cache = dict(settings)
+        try:
+            from llm_client import reset_language_cache
+            reset_language_cache()
+        except Exception:
+            pass
 
     def _startup_animation_enabled(self) -> bool:
         if platform.system() != "Windows":
@@ -10532,6 +10536,11 @@ class VoiceUI:
         os.makedirs(CONFIG_DIR, exist_ok=True)
         APP_SETTINGS_FILE.write_text(json.dumps(settings, indent=4), encoding="utf-8")
         self._app_settings_cache = dict(settings)
+        try:
+            from llm_client import reset_language_cache
+            reset_language_cache()
+        except Exception:
+            pass
 
     def _save_launcher_position(self, x: int, y: int):
         try:
@@ -12032,6 +12041,11 @@ class VoiceUI:
         os.makedirs(CONFIG_DIR, exist_ok=True)
         APP_SETTINGS_FILE.write_text(json.dumps(settings, indent=4), encoding="utf-8")
         self._app_settings_cache = dict(settings)
+        try:
+            from llm_client import reset_language_cache
+            reset_language_cache()
+        except Exception:
+            pass
 
     def _save_launcher_position(self, x: int, y: int):
         try:

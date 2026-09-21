@@ -219,9 +219,9 @@ class WorkspaceStore:
             try:
                 from llm_client import client as llm
                 prompt = (
-                    "Summarize the following user conversation into 1-2 short, conversational sentences "
-                    "that describe what the user was doing or asking about. Phrase it as 'Yesterday you were...'\n\n"
-                    f"Conversation:\n{full_text}"
+                    "Кратко перескажи следующий разговор пользователя в 1-2 коротких разговорных предложениях, "
+                    "описывающих, чем пользователь занимался или о чём спрашивал. Сформулируй как «Вчера ты...»\n\n"
+                    f"Разговор:\n{full_text}"
                 )
                 summary = (llm.chat(prompt, temperature=0.5, max_tokens=256) or "").strip()
                 if summary:

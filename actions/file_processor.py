@@ -57,7 +57,7 @@ class _LocalModel:
 
         if image_part:
             text = llm.vision(
-                prompt or "Analyze this image.",
+                prompt or "Проанализируй это изображение.",
                 image_part[0],
                 image_part[1],
                 max_tokens=kwargs.get("max_tokens", 1024),
@@ -126,12 +126,12 @@ def _process_image(path: Path, action: str, params: dict, speak=None) -> str:
             model  = _local_client()
             img    = Image.open(path)
             prompt = {
-                "describe": "Describe this image in detail.",
-                "ocr":      "Extract all text visible in this image. Return only the text, formatted clearly.",
-                "analyze":  "Analyze this image thoroughly: objects, colors, composition, any text, context.",
-                "read":     "Read all text in this image, preserving structure and formatting.",
-                "extract_text": "Extract all text from this image.",
-            }.get(action, "Describe this image.")
+                "describe": "Опиши это изображение подробно.",
+                "ocr":      "Извлеки весь текст, видимый на этом изображении. Верни только текст, чётко отформатированный.",
+                "analyze":  "Проанализируй это изображение тщательно: объекты, цвета, композиция, любой текст, контекст.",
+                "read":     "Прочитай весь текст на этом изображении, сохраняя структуру и форматирование.",
+                "extract_text": "Извлеки весь текст из этого изображения.",
+            }.get(action, "Опиши это изображение.")
 
             if params.get("instruction"):
                 prompt = params["instruction"]
@@ -237,14 +237,14 @@ def _process_pdf(path: Path, action: str, params: dict, speak=None) -> str:
             return f"Text extracted ({len(text)} chars). Saved: {out.name}"
 
         prompt_map = {
-            "summarize":      f"Summarize this PDF document concisely:\n\n{text}",
-            "analyze":        f"Analyze this document thoroughly:\n\n{text}",
-            "translate_hint": f"What language is this document in and what does it say? Summarize:\n\n{text}",
-            "reformat":       f"Reformat this text cleanly with proper structure:\n\n{text}",
+            "summarize":      f"Кратко перескажи этот PDF-документ:\n\n{text}",
+            "analyze":        f"Тщательно проанализируй этот документ:\n\n{text}",
+            "translate_hint": f"На каком языке этот документ и о чём он? Кратко перескажи:\n\n{text}",
+            "reformat":       f"Переформатируй этот текст чисто с правильной структурой:\n\n{text}",
         }
         try:
             model    = _local_client()
-            response = model.generate_content(prompt_map.get(action, f"Analyze:\n\n{text}"))
+            response = model.generate_content(prompt_map.get(action, f"Проанализируй:\n\n{text}"))
             result   = response.text.strip()
             if len(result) > 600 and params.get("save", True):
                 out = _output_path(path, action, ".txt")
@@ -318,12 +318,12 @@ def _process_text_doc(path: Path, file_type: str, action: str,
 
     instruction = params.get("instruction", "")
     prompt_map  = {
-        "summarize":  f"Summarize this document concisely:\n\n{content[:40000]}",
-        "analyze":    f"Analyze this document:\n\n{content[:40000]}",
-        "reformat":   f"Reformat this text with clean structure, proper headings and paragraphs:\n\n{content[:40000]}",
-        "fix":        f"Fix grammar, spelling and style issues in this text:\n\n{content[:40000]}",
-        "translate_hint": f"What language is this and what does it say? Summarize:\n\n{content[:10000]}",
-        "to_bullet":  f"Convert this text into a clear bullet-point summary:\n\n{content[:40000]}",
+        "summarize":  f"Кратко перескажи этот документ:\n\n{content[:40000]}",
+        "analyze":    f"Проанализируй этот документ:\n\n{content[:40000]}",
+        "reformat":   f"Переформатируй этот текст с чистой структурой, правильными заголовками и абзацами:\n\n{content[:40000]}",
+        "fix":        f"Исправь грамматику, орфографию и стиль в этом тексте:\n\n{content[:40000]}",
+        "translate_hint": f"На каком языке это написано и о чём? Кратко перескажи:\n\n{content[:10000]}",
+        "to_bullet":  f"Преобразуй этот текст в чёткий маркированный список:\n\n{content[:40000]}",
         "custom":     f"{instruction}\n\n{content[:40000]}",
     }
 
@@ -376,9 +376,9 @@ def _process_data(path: Path, file_type: str, action: str,
 
     if action == "analyze":
         preview = df.head(50).to_string()
-        prompt  = (f"Analyze this dataset. Columns: {list(df.columns)}\n"
-                   f"Rows: {len(df)}\nPreview:\n{preview}\n\n"
-                   f"Give insights, patterns, and notable findings.")
+        prompt  = (f"Проанализируй этот датасет. Колонки: {list(df.columns)}\n"
+                   f"Строк: {len(df)}\nПредпросмотр:\n{preview}\n\n"
+                   f"Дай инсайты, закономерности и заметные находки.")
         try:
             model    = _local_client()
             response = model.generate_content(prompt)

@@ -105,12 +105,12 @@ class RateLimitError(Exception):
 def _plan_project(description: str, language: str) -> dict:
     model = _get_model()
 
-    prompt = f"""You are a senior software architect. Create a minimal, complete file plan for this project.
+    prompt = f"""Ты — старший архитектор программного обеспечения. Создай минимальный, полный план файлов для этого проекта.
 
-Language: {language}
-Description: {description}
+Язык: {language}
+Описание: {description}
 
-Return ONLY valid JSON — no markdown, no explanation:
+Верни ТОЛЬКО валидный JSON — без markdown, без пояснений:
 {{
   "project_name": "snake_case_name",
   "entry_point": "main.py",
@@ -130,13 +130,13 @@ Return ONLY valid JSON — no markdown, no explanation:
   "dependencies": ["requests"]
 }}
 
-Critical rules:
-1. List files in DEPENDENCY ORDER — files with no imports come first, entry point comes last.
-2. The "imports" field must list every other project module this file imports (dot-notation, e.g. "utils.helpers").
-3. Keep it minimal — only files truly needed.
-4. Entry point must be in the files list.
-5. Use relative paths only (e.g. "utils/helpers.py", not absolute paths).
-6. Standard library modules (os, sys, json, etc.) do NOT go in "dependencies".
+Критические правила:
+1. Перечисляй файлы В ПОРЯДКЕ ЗАВИСИМОСТЕЙ — файлы без импортов первыми, точка входа последней.
+2. Поле "imports" должно содержать каждый модуль проекта, который импортирует этот файл (через точку, например "utils.helpers").
+3. Держи план минимальным — только действительно нужные файлы.
+4. Точка входа должна быть в списке файлов.
+5. Используй только относительные пути (например "utils/helpers.py", не абсолютные).
+6. Модули стандартной библиотеки (os, sys, json и т.д.) НЕ попадают в "dependencies".
 
 JSON:"""
 
@@ -194,30 +194,30 @@ JS/TS-specific rules:
 - Add JSDoc comments for all exported functions.
 - Handle promise rejections with try/catch in async functions."""
 
-    prompt = f"""You are a senior {language} developer writing production-quality code for a real project.
+    prompt = f"""Ты — старший {language}-разработчик, пишущий код производственного качества для реального проекта.
 
-Project goal: {project_description}
+Цель проекта: {project_description}
 
-Complete project file structure (in dependency order):
+Полная структура файлов проекта (в порядке зависимостей):
 {file_list}
 
-{f"Dependencies this file must import from other project files:{dependency_context}" if dependency_context else ""}
+{f"Зависимости, которые этот файл должен импортировать из других файлов проекта:{dependency_context}" if dependency_context else ""}
 
-Your task: Write the complete, working code for: {file_path}
-Purpose of this file: {file_desc}
-{f"This file imports from: {', '.join(file_imports)}" if file_imports else "This file has no project-internal imports."}
+Твоя задача: напиши полный, рабочий код для: {file_path}
+Назначение этого файла: {file_desc}
+{f"Этот файл импортирует из: {', '.join(file_imports)}" if file_imports else "У этого файла нет внутренних импортов из проекта."}
 
 {lang_rules}
 
-General rules:
-- Output ONLY raw code. Absolutely no explanation, no markdown, no triple backticks.
-- Write COMPLETE, RUNNABLE code — no placeholders, no "# TODO", no "pass" stubs.
-- Every import must either be from the standard library, listed dependencies, or the project files shown above.
-- Match import paths EXACTLY to the file paths in the project structure (e.g. if file is "utils/helpers.py", import as "from utils.helpers import ...").
-- Use proper error handling (try/except) where I/O or network calls are made.
-- The code must work correctly when the project entry point is run from the project root directory.
+Общие правила:
+- Выводи ТОЛЬКО чистый код. Абсолютно без пояснений, без markdown, без тройных обратных кавычек.
+- Пиши ПОЛНЫЙ, ИСПОЛНЯЕМЫЙ код — без заглушек, без "# TODO", без пустых pass.
+- Каждый импорт должен быть либо из стандартной библиотеки, либо из перечисленных зависимостей, либо из файлов проекта, показанных выше.
+- Пути импорта должны ТОЧНО совпадать с путями файлов в структуре проекта (например, если файл "utils/helpers.py", импортируй как "from utils.helpers import ...").
+- Используй правильную обработку ошибок (try/except) там, где есть I/O или сетевые вызовы.
+- Код должен корректно работать при запуске точки входа проекта из корневой директории проекта.
 
-Code for {file_path}:"""
+Код для {file_path}:"""
 
     try:
         response = model.generate_content(prompt)
@@ -414,33 +414,33 @@ def _fix_files(
             error_line and fix_path == error_file
         ) else ""
 
-        prompt = f"""You are an expert {language} debugger. Fix the broken file below.
+        prompt = f"""Ты — экспертный {language}-отладчик. Исправь сломанный файл ниже.
 
-Project goal: {project_description}
+Цель проекта: {project_description}
 
-All project files:
+Все файлы проекта:
 {chr(10).join(f"  - {f['path']}: {f.get('description', '')}" for f in all_files)}
 
-Other files for context (read-only — fix only the target file):
+Другие файлы для контекста (только для чтения — исправляй только целевой файл):
 {other_ctx[:3500]}
 
-File to fix: {fix_path}{line_hint}
-Error type: {error_type}
+Файл для исправления: {fix_path}{line_hint}
+Тип ошибки: {error_type}
 
-Error output:
+Вывод ошибки:
 {error_output[:2500]}
 
-Current (broken) code:
+Текущий (сломанный) код:
 {current_code}
 
-Rules:
-- Output ONLY the complete fixed code. No explanation, no markdown, no backticks.
-- Fix ALL errors visible in the error output.
-- Keep all existing correct logic — do not remove working features.
-- Ensure import paths match the actual project file structure exactly.
-- Do NOT introduce new bugs or remove error handling.
+Правила:
+- Выводи ТОЛЬКО полный исправленный код. Без пояснений, без markdown, без обратных кавычек.
+- Исправь ВСЕ ошибки, видимые в выводе ошибки.
+- Сохрани всю существующую корректную логику — не удаляй рабочие функции.
+- Пути импорта должны точно соответствовать реальной структуре файлов проекта.
+- НЕ добавляй новые баги и не удаляй обработку ошибок.
 
-Fixed code for {fix_path}:"""
+Исправленный код для {fix_path}:"""
 
         try:
             response = model.generate_content(prompt)

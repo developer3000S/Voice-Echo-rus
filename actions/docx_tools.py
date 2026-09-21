@@ -402,16 +402,16 @@ def word_document(parameters: dict, player=None, speak=None) -> str:
             if not text.strip():
                 return "The document appears to be empty."
             prompt = (
-                "Summarize this Word document concisely and clearly:\n\n"
+                "Кратко и ясно перескажи этот документ Word:\n\n"
                 if action == "summarize"
-                else "Analyze this Word document thoroughly:\n\n"
+                else "Тщательно проанализируй этот документ Word:\n\n"
             )
             result = llm.chat(
                 prompt + text[:40000],
                 system=(
-                    "You are a document analysis assistant. Be concise and accurate."
+                    "Ты — ассистент анализа документов. Будь кратким и точным."
                     if action == "summarize"
-                    else "You are a thorough document analyst."
+                    else "Ты — тщательный аналитик документов."
                 ),
                 temperature=0.3,
             ).strip()

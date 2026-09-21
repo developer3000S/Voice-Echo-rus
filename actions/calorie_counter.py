@@ -124,20 +124,21 @@ def _analyze(photo: np.ndarray, query: str, api_key: str) -> dict:
         raise RuntimeError("could not encode photo")
 
     prompt = (
-        "You are a nutrition analysis engine. Look at the food in this photo.\n"
-        f'User\'s request (respond in the SAME language as this request): "{query}"\n'
-        "Return ONLY minified JSON — no markdown fences, no extra text — with keys:\n"
-        ' "food": short name of the dish/foods (null if NO food is visible),\n'
-        ' "portion": estimated portion size as short text,\n'
-        ' "calories_kcal": number (total estimate),\n'
-        ' "carbs_g", "sugar_g", "fiber_g", "protein_g", "fat_g": numbers,\n'
-        ' "panel_text": multi-line plain-text nutrition breakdown in the user\'s'
-        " language — food name, portion, total calories, then one line per macro"
-        " (carbs, sugar, fiber, protein, fat) with units; if several foods are"
-        " visible add a short per-item calorie list; max 25 lines,\n"
-        ' "spoken_summary": 1-2 conversational sentences in the user\'s language'
-        " naming the food and total calories, mentioning it is an estimate."
-        " If no food is visible, politely say so instead."
+        "Ты — анализатор питания. Посмотри на еду на этом фото.\n"
+        f'Запрос пользователя (отвечай на ТОМ ЖЕ языке, что и запрос): "{query}"\n'
+        "Верни ТОЛЬКО минифицированный JSON — без markdown-блоков, без лишнего текста — со следующими ключами:\n"
+        ' "food": краткое название блюда/продуктов (null, если еды НЕ видно),\n'
+        ' "portion": предполагаемый размер порции коротким текстом,\n'
+        ' "calories_kcal": число (общая оценка),\n'
+        ' "carbs_g", "sugar_g", "fiber_g", "protein_g", "fat_g": числа,\n'
+        ' "panel_text": многострочное текстовое описание пищевой ценности на языке'
+        " пользователя — название еды, порция, общее количество калорий, затем"
+        " по одной строке на каждый макронутриент (углеводы, сахар, клетчатка,"
+        " белки, жиры) с единицами измерения; если видно несколько блюд, добавь"
+        " краткий список калорий по каждому пункту; максимум 25 строк,\n"
+        ' "spoken_summary": 1-2 разговорных предложения на языке пользователя,'
+        " называющие еду и общее количество калорий, с упоминанием, что это"
+        " приблизительная оценка. Если еды не видно, вежливо сообщи об этом."
     )
 
     jpg_b64 = base64.b64encode(jpg.tobytes()).decode("utf-8")
@@ -145,7 +146,7 @@ def _analyze(photo: np.ndarray, query: str, api_key: str) -> dict:
         prompt,
         jpg_b64,
         "image/jpeg",
-        system="You are a nutrition analysis engine. Return ONLY valid JSON.",
+        system="Ты — анализатор питания. Верни ТОЛЬКО валидный JSON.",
         max_tokens=2048,
     )
     text = (text or "").strip()

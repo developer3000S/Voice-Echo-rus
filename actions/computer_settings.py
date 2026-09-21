@@ -595,26 +595,26 @@ def _detect_action(description: str) -> dict:
     available = ", ".join(sorted(ACTION_MAP.keys())) + \
                 ", volume_set, type_text, press_key, reload_n"
 
-    prompt = f"""You are an intent detector for a computer control assistant.
+    prompt = f"""Ты — определитель намерений для ассистента управления компьютером.
 
-The user issued a command (possibly in any language): "{description}"
+Пользователь дал команду (возможно, на любом языке): "{description}"
 
-Available actions: {available}
+Доступные действия: {available}
 
-Return ONLY a valid JSON object:
+Верни ТОЛЬКО валидный JSON-объект:
 {{"action": "action_name", "value": null_or_value}}
 
-Rules:
-- Pick the single best matching action from the available list.
-- For volume_set: value is an integer 0-100.
-- For type_text: value is the exact text to type.
-- For press_key: value is the key name (e.g. "f5", "tab", "enter").
-- For reload_n: value is an integer (number of times to reload).
-- If no clear match, pick the closest action.
-- Return ONLY the JSON, no explanation, no markdown."""
+Правила:
+- Выбери одно наилучшее действие из списка доступных.
+- Для volume_set: value — целое число 0-100.
+- Для type_text: value — точный текст для ввода.
+- Для press_key: value — имя клавиши (например, "f5", "tab", "enter").
+- Для reload_n: value — целое число (количество перезагрузок).
+- Если точного совпадения нет, выбери ближайшее действие.
+- Верни ТОЛЬКО JSON, без пояснений и markdown."""
 
     try:
-        return llm.chat_json(prompt, system="You are an intent detector for a computer control assistant.", max_tokens=512)
+        return llm.chat_json(prompt, system="Ты — определитель намерений для ассистента управления компьютером.", max_tokens=512)
     except Exception as e:
         print(f"[Settings] Intent detection failed: {e}")
         return {"action": description.lower().replace(" ", "_"), "value": None}

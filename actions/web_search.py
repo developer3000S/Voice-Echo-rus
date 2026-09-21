@@ -10,7 +10,7 @@ from llm_client import client as llm
 def _local_search(query: str) -> str:
     text = llm.chat(
         query,
-        system="You are a helpful online research assistant. Give specific facts and data.",
+        system="Ты — полезный ассистент для онлайн-исследований. Давай конкретные факты и данные. Отвечай на русском языке.",
         temperature=0.3,
     )
     text = text.strip()

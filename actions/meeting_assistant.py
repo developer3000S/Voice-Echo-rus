@@ -288,27 +288,27 @@ class MeetingAssistant:
                 spoken = self._last_speech
 
                 prompt = f"""
-You are Voice AI - Lite running in meeting mode on a Windows desktop.
-The screen belongs to a live Zoom, Microsoft Teams, WhatsApp call, or similar meeting.
+Ты — Voice AI - Lite, работающий в режиме встречи на компьютере Windows.
+Экран принадлежит живому звонку Zoom, Microsoft Teams, WhatsApp или похожей встрече.
 
-Tasks:
-1. Identify the meeting topic from what is visible.
-2. If a question is visible on screen, answer it directly and briefly.
-3. If no question is visible, give a very short helpful summary of what is happening.
-4. Keep it to at most 3 short lines.
-5. Use plain language and be confident.
+Задачи:
+1. Определи тему встречи по тому, что видно на экране.
+2. Если на экране виден вопрос, ответь на него прямо и кратко.
+3. Если вопроса не видно, дай очень короткий полезный обзор происходящего.
+4. Уложись максимум в 3 короткие строки.
+5. Используй простой язык и будь уверенным.
 
-Meeting title/context: {self._title}
-Extra context: {self._context}
-Latest spoken audio from the meeting: {spoken or 'No speech captured yet.'}
+Название/контекст встречи: {self._title}
+Дополнительный контекст: {self._context}
+Последняя сказанная речь со встречи: {spoken or 'Речь пока не была зафиксирована.'}
 
-Return the result in this structure:
+Верни результат в такой структуре:
 Summary: ...
 Answer: ...
 """
                 b64 = base64.b64encode(image_bytes).decode("utf-8")
                 mime = "image/jpeg" if _PIL_OK else "image/png"
-                text = llm.vision(prompt, b64, mime, system="Analyze the image.", max_tokens=1024)
+                text = llm.vision(prompt, b64, mime, system="Проанализируй изображение.", max_tokens=1024)
                 summary, answer = _clean_response(text)
                 self._last_answer = answer or summary
                 payload = {

@@ -304,9 +304,9 @@ def _screen_find(description: str) -> tuple[int, int] | None:
         b64 = base64.b64encode(buf.getvalue()).decode()
 
         text = client.vision(
-            f"This is a screenshot of a {w}×{h} pixel screen. "
-            f"Locate the UI element: '{description}'. "
-            f"Reply ONLY with center coordinates as: x,y — or NOT_FOUND",
+            f"Это скриншот экрана размером {w}×{h} пикселей. "
+            f"Найди элемент интерфейса: «{description}». "
+            f"Ответь ТОЛЬКО координатами центра в виде: x,y — или NOT_FOUND",
             image_b64=b64,
             mime="image/png",
         )

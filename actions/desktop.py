@@ -105,26 +105,26 @@ def _ask_llm_for_desktop_action(task: str) -> str:
         "Linux":   "- subprocess is NOT available; use pyautogui or Path only",
     }.get(_OS, "")
 
-    prompt = f"""You are a desktop automation assistant.
-Current OS: {_OS}
-Desktop path: {desktop}
-Generate safe Python code to accomplish the task below.
-Allowed modules ONLY:
-- pyautogui (mouse, keyboard — if needed)
-- pathlib.Path (file/folder inspection only, no deletion)
-- shutil.copy2, shutil.copytree, shutil.disk_usage (NO move, NO rmtree)
-- os_path (os.path equivalent, read-only)
+    prompt = f"""Ты — ассистент автоматизации рабочего стола.
+Текущая ОС: {_OS}
+Путь к рабочему столу: {desktop}
+Сгенерируй безопасный Python-код для выполнения задачи ниже.
+Разрешённые модули ТОЛЬКО:
+- pyautogui (мышь, клавиатура — при необходимости)
+- pathlib.Path (только проверка файлов/папок, без удаления)
+- shutil.copy2, shutil.copytree, shutil.disk_usage (НЕ move, НЕ rmtree)
+- os_path (эквивалент os.path, только чтение)
 - time.sleep
 {os_specific}
-Hard rules:
-- NO file deletion, NO subprocess, NO exec/eval inside the code
-- NO import statements, NO file write except explicitly requested
-- If task cannot be done safely with these tools, output exactly: UNSAFE
-Output ONLY the Python code. No explanation, no markdown, no backticks.
-Task: {task}"""
+Строгие правила:
+- НЕТ удалению файлов, НЕТ subprocess, НЕТ exec/eval внутри кода
+- НЕТ операторам import, НЕТ записи в файл, если это явно не запрошено
+- Если задачу нельзя безопасно выполнить этими инструментами, выведи ровно: UNSAFE
+Выведи ТОЛЬКО Python-код. Без пояснений, без markdown, без обратных кавычек.
+Задача: {task}"""
 
     try:
-        return client.chat(prompt, system="You are a code generator. Output only raw Python code.")
+        return client.chat(prompt, system="Ты — генератор кода. Выводи только чистый Python-код.")
     except Exception as e:
         return f"ERROR: {e}"
         

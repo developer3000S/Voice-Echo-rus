@@ -33,6 +33,43 @@ TEMPLATE = """<|im_start|>system
 
 TIMEOUT = 300
 
+# Язык по умолчанию для всех пользовательских ответов ассистента.
+# Берётся из config/app_settings.json (ключ assistant_language), по умолчанию "ru".
+DEFAULT_ASSISTANT_LANGUAGE = "ru"
+_SETTINGS_LANGUAGE_CACHE: Optional[str] = None
+
+
+def assistant_language() -> str:
+    """Текущий язык общения ассистента ('ru', 'en', ...).
+
+    Значение кэшируется при первом обращении; вызовите ``reset_language_cache()``
+    после изменения ``app_settings.json``, чтобы новый язык подхватился."""
+    global _SETTINGS_LANGUAGE_CACHE
+    if _SETTINGS_LANGUAGE_CACHE is not None:
+        return _SETTINGS_LANGUAGE_CACHE
+    try:
+        with open(SETTINGS_PATH, "r", encoding="utf-8") as f:
+            lang = json.load(f).get("assistant_language")
+    except Exception:
+        lang = None
+    _SETTINGS_LANGUAGE_CACHE = (lang or DEFAULT_ASSISTANT_LANGUAGE).strip().lower() or DEFAULT_ASSISTANT_LANGUAGE
+    return _SETTINGS_LANGUAGE_CACHE
+
+
+def language_instruction() -> str:
+    """Готовая инструкция для системного промпта: отвечать на текущем языке."""
+    lang = assistant_language()
+    if lang == "ru":
+        return "Отвечай на русском языке."
+    if lang == "en":
+        return "Respond in English."
+    return f"Respond in {lang}."
+
+
+def reset_language_cache() -> None:
+    global _SETTINGS_LANGUAGE_CACHE
+    _SETTINGS_LANGUAGE_CACHE = None
+
 
 class UnifiedAIClient:
     """Единый LLM-клиент. Всегда обращается к локальной модели через Ollama."""
@@ -90,9 +127,11 @@ class UnifiedAIClient:
             logger.error(f"[LLM Client] Local AI Request Failed: {e}")
             return None
 
-    def chat(self, prompt: str, system: str = "Ты полезный ассистент. Отвечай кратко и на русском языке.",
+    def chat(self, prompt: str, system: Optional[str] = None,
              history: Optional[list[dict]] = None, model: Optional[str] = None,
              max_tokens: int = 4096, temperature: float = 0.7) -> str:
+        if system is None:
+            system = f"Ты полезный ассистент. Отвечай кратко. {language_instruction()}"
         self.reload_settings()
         messages = [{"role": "system", "content": system}]
         if history:
@@ -103,11 +142,13 @@ class UnifiedAIClient:
             return result
         raise RuntimeError("Local AI request failed. Please check if Ollama is running.")
 
-    def chat_json(self, prompt: str, system: str = "Return ONLY valid JSON.", model: Optional[str] = None,
+    def chat_json(self, prompt: str, system: Optional[str] = None, model: Optional[str] = None,
                   max_tokens: int = 4096) -> dict:
+        if system is None:
+            system = f"Верни только валидный JSON. {language_instruction()}"
         self.reload_settings()
         messages = [
-            {"role": "system", "content": system + " Output valid JSON only, without any markdown formatting."},
+            {"role": "system", "content": system + " Выводи только валидный JSON, без markdown-форматирования."},
             {"role": "user", "content": prompt},
         ]
         raw = self._chat(messages, temperature=0.2,

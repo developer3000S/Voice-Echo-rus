@@ -98,8 +98,16 @@ _WINDOW_CALL_HINTS = (
 
 
 def _db_path() -> Path:
+    if platform.system() != "Windows":
+        return Path("/nonexistent/wpndatabase.db")
     local = os.environ.get("LOCALAPPDATA", "")
     return Path(local) / "Microsoft" / "Windows" / "Notifications" / "wpndatabase.db"
+
+
+def _db_available() -> bool:
+    if platform.system() != "Windows":
+        return False
+    return _db_path().exists()
 
 
 def _normalize_app_from_primary(primary: str | None, fallback: str = "") -> str | None:
@@ -567,8 +575,11 @@ class AttentionMonitor:
         self._running = False
 
     def _loop(self) -> None:
-        if not self._db.exists():
-            print(f"[AttentionMonitor] notification DB not found: {self._db}")
+        if not _db_available():
+            if platform.system() != "Windows":
+                print("[AttentionMonitor] Toast monitoring is Windows-only — idle on this platform.")
+            else:
+                print(f"[AttentionMonitor] notification DB not found: {self._db}")
             return
         while self._running:
             try:

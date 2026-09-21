@@ -40,29 +40,36 @@ PLUGIN = {
 
 
 def _get_top_headlines(category: str = "all", limit: int = 3) -> list[str]:
-    """Fetches clean top headlines using Google News RSS with zero rate limits."""
-    headlines = []
-    feed_url = "https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en"
+    """Fetches clean top headlines from Russian RSS feeds (Google News RSS is unreachable from this network)."""
+    feeds: list[tuple[str, str]] = [
+        ("https://tass.ru/rss/v2.xml", "TASS"),
+        ("https://ria.ru/export/rss2/index.xml", "РИА Новости"),
+        ("https://lenta.ru/rss/news", "Lenta.ru"),
+    ]
     if category.lower() == "tech":
-        feed_url = "https://news.google.com/rss/headlines/section/topic/TECHNOLOGY?hl=en-US&gl=US&ceid=US:en"
+        feeds = [("https://tass.ru/rss/v2.xml", "TASS")]
 
-    try:
-        req = urllib.request.Request(feed_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
-        with urllib.request.urlopen(req, timeout=4) as resp:
-            root = ET.fromstring(resp.read())
-            items = root.findall(".//item")[:limit]
-            for item in items:
+    headlines: list[str] = []
+    for feed_url, source in feeds:
+        if len(headlines) >= limit:
+            break
+        try:
+            req = urllib.request.Request(feed_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+            with urllib.request.urlopen(req, timeout=6) as resp:
+                root = ET.fromstring(resp.read())
+            for item in root.findall(".//item"):
+                if len(headlines) >= limit:
+                    break
                 title_elem = item.find("title")
-                if title_elem is not None and title_elem.text:
-                    title = title_elem.text.strip()
-                    # Remove trailing source name (e.g. "... - CNN" -> "...")
-                    if " - " in title:
-                        title = title.rsplit(" - ", 1)[0]
+                if title_elem is None or not title_elem.text:
+                    continue
+                title = " ".join(title_elem.text.split())
+                if title and title not in headlines:
                     headlines.append(title)
-    except Exception as e:
-        print(f"[DailyBriefing] News fetch error: {e}")
+        except Exception as e:
+            print(f"[DailyBriefing] News fetch error ({source}): {e}")
 
-    return headlines
+    return headlines[:limit]
 
 
 def _get_today_schedule() -> list[str]:

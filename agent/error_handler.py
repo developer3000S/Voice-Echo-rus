@@ -23,29 +23,29 @@ class ErrorDecision(Enum):
     ABORT       = "abort"    
 
 
-ERROR_ANALYST_PROMPT = """You are the error recovery module of Voice AI - Lite AI assistant.
+ERROR_ANALYST_PROMPT = """Ты — модель восстановления ошибок ИИ-ассистента Voice Echo.
 
-A task step has failed. Analyze the error and decide what to do.
+Шаг задачи завершился ошибкой. Проанализируй ошибку и реши, что делать.
 
-DECISIONS:
-- retry   : Transient error (network timeout, temporary file lock, race condition).
-             The same step can succeed if tried again.
-- skip    : This step is not critical and the task can succeed without it.
-- replan  : The approach was wrong. A different tool or method should be tried.
-- abort   : The task is fundamentally impossible or unsafe to continue.
+РЕШЕНИЯ:
+- retry   : Временная ошибка (таймаут сети, временная блокировка файла, состояние гонки).
+             Тот же шаг может успешно выполниться при повторе.
+- skip    : Этот шаг не критичен, и задача может быть выполнена без него.
+- replan  : Подход был ошибочным. Следует попробовать другой инструмент или метод.
+- abort   : Задача фундаментально невыполнима или небезопасна для продолжения.
 
-Also provide:
-- A brief explanation of WHY it failed (1 sentence)
-- A fix suggestion if decision is replan (what to try instead)
-- Max retries: how many times to retry if decision is retry (1 or 2)
+Также укажи:
+- Краткое объяснение, ПОЧЕМУ произошла ошибка (1 предложение)
+- Предложение исправления, если решение replan (что попробовать вместо этого)
+- Максимум повторов: сколько раз повторить при решении retry (1 или 2)
 
-Return ONLY valid JSON:
+Верни ТОЛЬКО валидный JSON:
 {
   "decision": "retry|skip|replan|abort",
-  "reason": "why it failed",
-  "fix_suggestion": "what to try instead (for replan)",
+  "reason": "почему произошла ошибка",
+  "fix_suggestion": "что попробовать вместо этого (для replan)",
   "max_retries": 1,
-  "user_message": "Short message to tell the user (max 15 words)"
+  "user_message": "Короткое сообщение для пользователя (максимум 15 слов)"
 }
 """
 
@@ -80,19 +80,19 @@ def analyze_error(
             "reason":        f"Failed {attempt} times: {error[:100]}",
             "fix_suggestion": "Try a completely different approach or tool",
             "max_retries":   0,
-            "user_message":  "Trying a different approach, sir."
+            "user_message":  "Пробую другой подход."
         }
 
-    prompt = f"""Failed step:
-Tool: {step.get('tool')}
-Description: {step.get('description')}
-Parameters: {json.dumps(step.get('parameters', {}), indent=2)}
-Critical: {step.get('critical', False)}
+    prompt = f"""Проваленный шаг:
+Инструмент: {step.get('tool')}
+Описание: {step.get('description')}
+Параметры: {json.dumps(step.get('parameters', {}), indent=2)}
+Критичный: {step.get('critical', False)}
 
-Error:
+Ошибка:
 {error[:500]}
 
-Attempt number: {attempt}"""
+Номер попытки: {attempt}"""
 
     try:
         text = llm.chat(
@@ -117,7 +117,7 @@ Attempt number: {attempt}"""
 
         if step.get("critical") and result["decision"] == ErrorDecision.SKIP:
             result["decision"]     = ErrorDecision.REPLAN
-            result["user_message"] = "This step is critical — finding alternative approach, sir."
+            result["user_message"] = "Этот шаг критичен — ищу альтернативный подход."
 
         print(f"[ErrorHandler] Decision: {result['decision'].value} — {result.get('reason', '')}")
         return result
@@ -129,7 +129,7 @@ Attempt number: {attempt}"""
             "reason":         str(e),
             "fix_suggestion": "Try alternative approach",
             "max_retries":    1,
-            "user_message":   "Encountered an issue, adjusting approach, sir."
+            "user_message":   "Возникла проблема, меняю подход."
         }
 
 
@@ -140,23 +140,23 @@ def generate_fix(step: dict, error: str, fix_suggestion: str) -> dict:
 
     Returns a modified step dict.
     """
-    prompt = f"""A task step failed. Generate a replacement step.
+    prompt = f"""Шаг задачи завершился ошибкой. Сгенерируй шаг-замену.
 
-Original step:
-Tool: {step.get('tool')}
-Description: {step.get('description')}
-Parameters: {json.dumps(step.get('parameters', {}), indent=2)}
+Исходный шаг:
+Инструмент: {step.get('tool')}
+Описание: {step.get('description')}
+Параметры: {json.dumps(step.get('parameters', {}), indent=2)}
 
-Error: {error[:300]}
-Fix suggestion: {fix_suggestion}
+Ошибка: {error[:300]}
+Предложение исправления: {fix_suggestion}
 
-Write a Python script that accomplishes the same goal differently.
-Return ONLY the Python code, no explanation."""
+Напиши Python-скрипт, который достигает той же цели другим путём.
+Верни ТОЛЬКО Python-код, без пояснений."""
 
     try:
         code = llm.chat(
             prompt,
-            system="You are an expert Python developer. Return ONLY the Python code, no explanation, no markdown.",
+            system="Ты — экспертный Python-разработчик. Верни ТОЛЬКО Python-код, без пояснений, без markdown.",
             max_tokens=4096,
             temperature=0.2,
         )

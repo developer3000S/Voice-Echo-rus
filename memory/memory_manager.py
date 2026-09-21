@@ -144,15 +144,15 @@ def should_extract_memory(user_text: str, voice_text: str, api_key: str = "") ->
         combined = f"User: {user_text[:300]}\nVoice AI: {voice_text[:1000]}"
 
         result = client.chat(
-            f"Does this conversation contain ANY of the following?\n"
-            f"- Personal facts (name, age, city, job, birthday, nationality)\n"
-            f"- Preferences or favorites (food, color, music, sport, game, film, book, etc.)\n"
-            f"- Active projects or goals the user is working on\n"
-            f"- People in the user's life (friends, family, partner, colleagues)\n"
-            f"- Things the user wants to do or buy in the future\n"
-            f"- Any other fact worth remembering long-term\n\n"
-            f"Reply only YES or NO.\n\nConversation:\n{combined}",
-            system="You are a memory relevance checker. Reply only YES or NO.",
+            f"Содержит ли этот разговор ХОТЯ БЫ ОДНО из перечисленного?\n"
+            f"- Личные факты (имя, возраст, город, работа, день рождения, национальность)\n"
+            f"- Предпочтения или любимое (еда, цвет, музыка, спорт, игра, фильм, книга и т.д.)\n"
+            f"- Активные проекты или цели, над которыми работает пользователь\n"
+            f"- Люди из жизни пользователя (друзья, семья, партнёр, коллеги)\n"
+            f"- Что пользователь хочет сделать или купить в будущем\n"
+            f"- Любой другой факт, достойный долгосрочного запоминания\n\n"
+            f"Ответь только YES или NO.\n\nРазговор:\n{combined}",
+            system="Ты — проверщик релевантности памяти. Отвечай только YES или NO.",
             max_tokens=5,
             temperature=0.0,
         )
@@ -170,34 +170,34 @@ def extract_memory(user_text: str, voice_text: str, api_key: str = "") -> dict:
         combined = f"User: {user_text[:600]}\nVoice AI: {voice_text[:300]}"
 
         raw = client.chat(
-            f"Extract ALL memorable personal facts from this conversation. Any language.\n"
-            f"Return ONLY valid JSON. Use {{}} if truly nothing is worth saving.\n\n"
-            f"Category guide:\n"
-            f"  identity      → name, age, birthday, city, country, job, school, nationality, language\n"
-            f"  preferences   → ANY favorite or preferred thing:\n"
+            f"Извлеки ВСЕ запоминающиеся личные факты из этого разговора. Любой язык.\n"
+            f"Верни ТОЛЬКО валидный JSON. Используй {{}}, если действительно нечего сохранять.\n\n"
+            f"Руководство по категориям:\n"
+            f"  identity      → имя, возраст, день рождения, город, страна, работа, школа, национальность, язык\n"
+            f"  preferences   → ЛЮБОЕ любимое или предпочитаемое:\n"
             f"                  favorite_food, favorite_color, favorite_music, favorite_film,\n"
             f"                  favorite_game, favorite_sport, favorite_book, favorite_artist,\n"
-            f"                  favorite_country, hobbies, interests, dislikes, etc.\n"
-            f"  projects      → projects being built, ongoing work, goals, ideas in progress\n"
-            f"                  (e.g. mark_xxv: 'Building a Voice AI - Lite assistant')\n"
-            f"  relationships → people mentioned: friends, family, partner, colleagues\n"
-            f"                  (e.g. best_friend_ali: 'Best friend, met in university')\n"
-            f"  wishes        → future plans, things to buy, travel plans, dreams\n"
-            f"  notes         → anything else worth remembering (habits, schedule, etc.)\n\n"
-            f"IMPORTANT:\n"
-            f"- Be LIBERAL: if something MIGHT be worth remembering, include it.\n"
-            f"- Extract from BOTH user and Voice AI turns.\n"
-            f"- Skip: weather, reminders, search results, one-time commands.\n"
-            f"- Use concise English values regardless of conversation language.\n\n"
-            f"Format:\n"
-            f'{{"identity":{{"name":{{"value":"Ali"}}}},\n'
-            f' "preferences":{{"favorite_color":{{"value":"blue"}}}},\n'
-            f' "projects":{{"mark_xxv":{{"value":"Voice AI - Lite assistant"}}}},\n'
-            f' "relationships":{{"friend_yusuf":{{"value":"close friend"}}}},\n'
-            f' "wishes":{{"buy_guitar":{{"value":"wants an acoustic guitar"}}}},\n'
-            f' "notes":{{"works_at_night":{{"value":"usually active late at night"}}}}}}\n\n'
-            f"Conversation:\n{combined}\n\nJSON:",
-            system="Return ONLY valid JSON. No markdown, no explanation, no extra text.",
+            f"                  favorite_country, hobbies, interests, dislikes и т.д.\n"
+            f"  projects      → строящиеся проекты, текущая работа, цели, идеи в процессе\n"
+            f"                  (например, mark_xxv: 'Building a Voice AI - Lite assistant')\n"
+            f"  relationships → упомянутые люди: друзья, семья, партнёр, коллеги\n"
+            f"                  (например, best_friend_ali: 'Best friend, met in university')\n"
+            f"  wishes        → планы на будущее, покупки, путешествия, мечты\n"
+            f"  notes         → всё остальное, достойное запоминания (привычки, расписание и т.д.)\n\n"
+            f"ВАЖНО:\n"
+            f"- Будь ЩЕДРЫМ: если что-то МОЖЕТ быть достойно запоминания, включи это.\n"
+            f"- Извлекай из реплик И пользователя, И Voice AI.\n"
+            f"- Пропусти: погоду, напоминания, результаты поиска, разовые команды.\n"
+            f"- Значения пиши кратко на русском языке независимо от языка разговора.\n\n"
+            f"Формат:\n"
+            f'{{"identity":{{"name":{{"value":"Али"}}}},\n'
+            f' "preferences":{{"favorite_color":{{"value":"синий"}}}},\n'
+            f' "projects":{{"mark_xxv":{{"value":"ассистент Voice AI - Lite"}}}},\n'
+            f' "relationships":{{"friend_yusuf":{{"value":"близкий друг"}}}},\n'
+            f' "wishes":{{"buy_guitar":{{"value":"хочет акустическую гитару"}}}},\n'
+            f' "notes":{{"works_at_night":{{"value":"обычно активен поздно ночью"}}}}}}\n\n'
+            f"Разговор:\n{combined}\n\nJSON:",
+            system="Верни ТОЛЬКО валидный JSON. Без markdown, без пояснений, без лишнего текста.",
             max_tokens=1024,
             temperature=0.2,
         )

@@ -368,12 +368,12 @@ class DiscordBotService:
     def _generate_reply(self, prompt: str) -> str:
         prompt = (prompt or "").strip()
         if not prompt:
-            return "Tell me what you need help with."
+            return "Расскажи, с чем тебе нужна помощь."
 
         system_prompt = (
-            "You are Voice Echo inside Discord. "
-            "Be concise, accurate, and helpful. "
-            "Keep replies friendly and under 250 words unless the user asks for detail."
+            "Ты — Voice Echo в Discord. "
+            "Будь кратким, точным и полезным. "
+            "Отвечай дружелюбно и объёмом до 250 слов, если пользователь не просит подробностей."
         )
 
         try:
@@ -386,4 +386,4 @@ class DiscordBotService:
         except Exception as exc:
             logger.warning("Local AI Discord reply failed: %s", exc)
 
-        return "I couldn’t reach the local AI model right now."
+        return "Не удалось связаться с локальной ИИ-моделью прямо сейчас."

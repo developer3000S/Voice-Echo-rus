@@ -158,13 +158,13 @@ def _summarize_with_llm(transcript: str, video_url: str) -> str:
     truncated = transcript[:max_chars] + ("..." if len(transcript) > max_chars else "")
 
     return client.chat(
-        f"Please summarize this YouTube video transcript:\n\n{truncated}",
+        f"Кратко перескажи эту расшифровку YouTube-видео:\n\n{truncated}",
         system=(
-            "You are Voice AI - Lite, an AI assistant. "
-            "Summarize YouTube video transcripts clearly and concisely. "
-            "Structure: 1-sentence overview, then 3-5 key points. "
+            "Ты — Voice AI - Lite, ИИ-ассистент. "
+            "Делай краткие и ясные пересказы расшифровок YouTube-видео. "
+            "Структура: обзор в одном предложении, затем 3-5 ключевых моментов. "
             "Будь лаконичным. Обращайся к пользователю на «ты». "
-            "Match the language of the transcript."
+            "Соответствуй языку расшифровки."
         ),
         max_tokens=2048,
     )

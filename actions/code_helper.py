@@ -126,19 +126,19 @@ def _detect_intent(description: str, file_path: str, code: str) -> str:
             if code:
                 ctx.append("an inline code snippet is provided")
             prompt = (
-                "Classify a coding assistant request into exactly ONE intent word.\n"
-                "The request may be written in ANY language.\n\n"
-                f"Request: {desc}\n"
-                + (f"Context: {'; '.join(ctx)}\n" if ctx else "")
-                + "\nIntents:\n"
-                "  write        = create new code from scratch\n"
-                "  edit         = modify an existing file\n"
-                "  explain      = describe what given code/file does\n"
-                "  run          = execute an existing file\n"
-                "  build        = write code, run it, and iterate until it works\n"
-                "  screen_debug = analyze an error currently visible on the user's screen\n"
-                "  optimize     = refactor / clean up / speed up existing code\n\n"
-                "Reply with ONLY the intent word, nothing else."
+                "Классифицируй запрос к ассистенту-кодеру ровно в ОДНО слово-интент.\n"
+                "Запрос может быть написан на ЛЮБОМ языке.\n\n"
+                f"Запрос: {desc}\n"
+                + (f"Контекст: {'; '.join(ctx)}\n" if ctx else "")
+                + "\nИнтенты:\n"
+                "  write        = создать новый код с нуля\n"
+                "  edit         = изменить существующий файл\n"
+                "  explain      = описать, что делает данный код/файл\n"
+                "  run          = выполнить существующий файл\n"
+                "  build        = написать код, выполнить его и итерировать, пока не заработает\n"
+                "  screen_debug = проанализировать ошибку, которую сейчас видно на экране пользователя\n"
+                "  optimize     = отрефакторить / почистить / ускорить существующий код\n\n"
+                "Ответь ТОЛЬКО словом-интентом, больше ничего."
             )
             ans = _local_llm().generate_content(prompt).text.strip().lower()
             ans = ans.strip("`'\". \n")
@@ -158,18 +158,18 @@ def _write(description: str, language: str, output_path: str, player=None) -> tu
     lang  = language or "python"
     model = _local_llm()
 
-    prompt = f"""You are an expert {lang} developer.
-Write clean, working, well-commented {lang} code for the description below.
+    prompt = f"""Ты — экспертный {lang}-разработчик.
+Напиши чистый, рабочий, хорошо прокомментированный {lang}-код по описанию ниже.
 
-Rules:
-- Output ONLY the code. No explanation, no markdown, no backticks.
-- Add helpful inline comments.
-- Handle errors and edge cases properly.
-- Use modern best practices.
+Правила:
+- Выводи ТОЛЬКО код. Без пояснений, без markdown, без обратных кавычек.
+- Добавляй полезные комментарии в строках.
+- Обрабатывай ошибки и граничные случаи.
+- Используй современные лучшие практики.
 
-Description: {description}
+Описание: {description}
 
-Code:"""
+Код:"""
 
     response = model.generate_content(prompt)
     code     = _clean_code(response.text)
@@ -180,19 +180,19 @@ Code:"""
 
 def _fix_code(code: str, error_output: str, description: str) -> str:
     model  = _local_llm()
-    prompt = f"""You are an expert debugger.
-The code below failed with the following error. Fix it.
-Return ONLY the corrected code — no explanation, no markdown, no backticks.
+    prompt = f"""Ты — экспертный отладчик.
+Код ниже упал со следующей ошибкой. Исправь его.
+Верни ТОЛЬКО исправленный код — без пояснений, без markdown, без обратных кавычек.
 
-Original goal: {description}
+Исходная цель: {description}
 
-Error:
+Ошибка:
 {error_output[:2000]}
 
-Broken code:
+Сломанный код:
 {code}
 
-Fixed code:"""
+Исправленный код:"""
 
     response = model.generate_content(prompt)
     return _clean_code(response.text)
@@ -314,16 +314,16 @@ def _edit_action(file_path, instruction, player) -> str:
         player.write_log("[Code] Editing file...")
 
     model  = _local_llm()
-    prompt = f"""You are an expert code editor.
-Apply the following change to the code below.
-Return ONLY the complete updated code — no explanation, no markdown, no backticks.
+    prompt = f"""Ты — экспертный редактор кода.
+Примени следующее изменение к коду ниже.
+Верни ТОЛЬКО полный обновлённый код — без пояснений, без markdown, без обратных кавычек.
 
-Change: {instruction}
+Изменение: {instruction}
 
-Original code:
+Исходный код:
 {content}
 
-Updated code:"""
+Обновлённый код:"""
 
     try:
         response = model.generate_content(prompt)
@@ -348,14 +348,14 @@ def _explain_action(file_path, code, player) -> str:
         player.write_log("[Code] Analyzing code...")
 
     model  = _local_llm()
-    prompt = f"""Explain what this code does in simple, clear language.
-Focus on: what it does, how it works, and any important details.
-Be concise — 3 to 6 sentences maximum.
+    prompt = f"""Объясни, что делает этот код, простым и ясным языком.
+Сосредоточься на том, что он делает, как работает и любых важных деталях.
+Будь краток — максимум от 3 до 6 предложений.
 
-Code:
+Код:
 {code[:4000]}
 
-Explanation:"""
+Объяснение:"""
 
     try:
         response = model.generate_content(prompt)
@@ -390,19 +390,19 @@ def _optimize_action(file_path, code, language, output_path, player) -> str:
     lang  = language or "python"
     model = _local_llm()
 
-    prompt = f"""You are an expert {lang} developer and code reviewer.
-Optimize the following code for:
-1. Performance — eliminate unnecessary operations, use efficient data structures
-2. Readability — clear variable names, proper formatting, logical structure
-3. Best practices — modern {lang} patterns, error handling, type hints if applicable
-4. Remove dead code, redundant comments, and unnecessary complexity
+    prompt = f"""Ты — экспертный {lang}-разработчик и ревьюер кода.
+Оптимизируй следующий код по критериям:
+1. Производительность — устрани лишние операции, используй эффективные структуры данных
+2. Читаемость — понятные имена переменных, правильное форматирование, логичная структура
+3. Лучшие практики — современные {lang}-паттерны, обработка ошибок, аннотации типов где уместно
+4. Удали мёртвый код, избыточные комментарии и ненужную сложность
 
-Return ONLY the optimized code — no explanation, no markdown, no backticks.
+Верни ТОЛЬКО оптимизированный код — без пояснений, без markdown, без обратных кавычек.
 
-Original code:
+Исходный код:
 {code[:6000]}
 
-Optimized code:"""
+Оптимизированный код:"""
 
     try:
         response  = model.generate_content(prompt)
@@ -451,23 +451,23 @@ def _screen_debug_action(description, file_path, player, speak=None) -> str:
             print(f"[Code] ⚠️ Could not read file: {err}")
 
     try:
-        user_question = description or "What error or problem do you see on the screen? How can it be fixed?"
+        user_question = description or "Какую ошибку или проблему ты видишь на экране? Как её можно исправить?"
 
         context = ""
         if file_content:
-            context = f"\n\nAdditionally, here is the related file content:\n```\n{file_content[:4000]}\n```"
+            context = f"\n\nДополнительно, вот содержимое связанного файла:\n```\n{file_content[:4000]}\n```"
 
-        analysis_prompt = f"""You are an expert programmer and debugger analyzing a screenshot.
+        analysis_prompt = f"""Ты — экспертный программист и отладчик, анализирующий скриншот.
 
-User's question: {user_question}{context}
+Вопрос пользователя: {user_question}{context}
 
-Please:
-1. Identify any errors, exceptions, or problems visible on the screen
-2. Explain what is causing the problem in simple terms
-3. Provide a concrete fix or solution
-4. If there's code visible, show the corrected version
+Пожалуйста:
+1. Определи любые ошибки, исключения или проблемы, видимые на экране
+2. Объясни простыми словами, что вызывает проблему
+3. Предложи конкретное исправление или решение
+4. Если виден код, покажи исправленную версию
 
-Be specific and actionable. If you see an error message, quote it exactly."""
+Будь конкретным и применимым. Если видишь сообщение об ошибке, процитируй его точно."""
 
         analysis = llm.vision_from_file(analysis_prompt, str(screenshot_path)).strip()
         print(f"[Code] ✅ Screen analysis complete")

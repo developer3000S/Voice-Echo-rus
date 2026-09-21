@@ -100,7 +100,7 @@ def _instagram_loop():
     
     username, password = _load_credentials()
     if not username or not password:
-        print("[InstagramChat] Missing credentials in config/api_keys.json. Stopping daemon.")
+        ig_log("[InstagramChat] Credentials not set in config/api_keys.json. Daemon inactive — add instagram_username / instagram_password to enable.")
         _running = False
         return
 
@@ -167,13 +167,22 @@ def _instagram_loop():
             
         time.sleep(POLL_INTERVAL)
 
+def _has_credentials() -> bool:
+    username, password = _load_credentials()
+    return bool(username) and bool(password)
+
+
 def start_daemon():
     global _thread, _running
-    ig_log("[InstagramChat] start_daemon() was invoked!")
     if not INSTAGRAPI_AVAILABLE:
-        ig_log("[InstagramChat] instagrapi not installed. Run 'pip install instagrapi'")
+        ig_log("[InstagramChat] instagrapi not installed. Daemon inactive.")
         return
-        
+
+    if not _has_credentials():
+        ig_log("[InstagramChat] Credentials not set in config/api_keys.json. Daemon inactive — add instagram_username / instagram_password to enable.")
+        return
+
+    ig_log("[InstagramChat] start_daemon() was invoked!")
     if _running:
         ig_log("[InstagramChat] Daemon is already running.")
         return

@@ -213,12 +213,13 @@ def _load_system_prompt() -> str:
             identity_str += ".\n"
             
         identity_str += f"Твой текущий режим поведения: {mode}.\n"
-        
+
         custom = identity.get_custom_instructions()
         if custom:
             identity_str += f"Пользовательские инструкции: {custom}\n\n"
-            
-        return identity_str + base_prompt
+
+        from llm_client import language_instruction
+        return identity_str + language_instruction() + "\n\n" + base_prompt
     except Exception as e:
         print(f"Error injecting identity: {e}")
         return base_prompt
@@ -569,11 +570,11 @@ class VoiceLive:
         self.ui.on_remote_clicked = self._make_remote_key
         self._last_activity = time.monotonic()
         self._idle_prompts = [
-            "Hey, you there?",
-            "Yo, get alive.",
-            "How may I help, bro?",
-            "Need anything?",
-            "I'm here if you want me.",
+            "Эй, ты тут?",
+            "Ну что, просыпаемся.",
+            "Чем могу помочь, бро?",
+            "Что-нибудь нужно?",
+            "Я тут, если что.",
         ]
         self._idle_speech_thread = threading.Thread(target=self._idle_speech_loop, daemon=True)
         self._idle_speech_thread.start()
@@ -1234,23 +1235,24 @@ class VoiceLive:
         return True
 
     def _rewrite_reply_text(self, user_text: str, event: dict) -> str:
+        from llm_client import language_instruction
         prompt = (
-            "You are a friendly assistant helping a user rewrite their draft reply for a chat message. "
-            "Keep the same meaning and intent, expand the wording slightly, and make it sound natural and human. "
-            "Do not mention the notification, app, or any internal system details. "
-            "Return only the rewritten reply text.\n\n"
-            "Notification context:\n"
-            f"App: {event.get('app', '')}\n"
-            f"Sender: {event.get('title', '')}\n"
-            f"Preview: {event.get('preview', '')}\n\n"
-            "User draft reply:\n"
+            "Ты — дружелюбный ассистент, который помогает пользователю переписать черновик ответа в чате. "
+            "Сохрани тот же смысл и намерение, немного разверни формулировку, чтобы ответ звучал естественно и по-человечески. "
+            "Не упоминай уведомление, приложение и внутренние системные детали. "
+            "Верни только переписанный текст ответа.\n\n"
+            "Контекст уведомления:\n"
+            f"Приложение: {event.get('app', '')}\n"
+            f"Отправитель: {event.get('title', '')}\n"
+            f"Превью: {event.get('preview', '')}\n\n"
+            "Черновик ответа пользователя:\n"
             f"{user_text}\n\n"
-            "Reply text:"
+            "Текст ответа:"
         )
         try:
             return _local_text_reply(
                 prompt,
-                system="You are a friendly assistant. Rewrite the reply naturally and humanely.",
+                system=f"Ты дружелюбный ассистент. Перепиши ответ естественно и по-человечески. {language_instruction()}",
                 temperature=0.6,
             ) or user_text
         except Exception:
@@ -1301,19 +1303,22 @@ class VoiceLive:
                 self.ui.set_state("LISTENING")
 
     def _parse_ig_reply_intent(self, text: str) -> tuple[str, str]:
+        from llm_client import language_instruction
         system_prompt = (
-            "You are an intent parser. The user received an Instagram DM. I asked: 'What should I reply, or should I take over?'. "
-            "The user responded, possibly in Russian. Determine their intent.\n"
-            "1. If they want me to take over/handle it, return TAKE_OVER.\n"
-            "2. If they want to cancel/skip, return CANCEL.\n"
-            "3. If they dictate a specific message to send (e.g. 'tell them I am busy', 'say hi'), return MANUAL_REPLY and the exact text.\n"
-            "4. If they are just greeting me (e.g. 'hi') or making small talk, return IGNORE.\n"
-            "Output ONLY valid JSON: {\"intent\": \"...\", \"reply_text\": \"...\"}"
+            "Ты — определитель намерений. Пользователь получил личное сообщение в Instagram. "
+            "Ты спросил: «Что ответить, или мне взять переписку на себя?». "
+            "Пользователь ответил, возможно на русском. Определи его намерение.\n"
+            "1. Если он хочет, чтобы ты взял переписку на себя — верни TAKE_OVER.\n"
+            "2. Если он хочет отменить/пропустить — верни CANCEL.\n"
+            "3. Если он диктует конкретное сообщение для отправки (например, «скажи, что я занят», «привет») — "
+            "верни MANUAL_REPLY и точный текст сообщения.\n"
+            "4. Если он просто поздоровался с тобой (например, «привет») или ведёт лёгкую беседу — верни IGNORE.\n"
+            "Выводи только валидный JSON: {\"intent\": \"...\", \"reply_text\": \"...\"}"
         )
         try:
             data = llm.chat_json(
-                f"{system_prompt}\n\nUser Response: {text}",
-                system="Return ONLY valid JSON.",
+                f"{system_prompt}\n\nОтвет пользователя: {text}",
+                system=f"Верни только валидный JSON. {language_instruction()}",
             )
             return data.get("intent", "IGNORE"), data.get("reply_text", "")
         except Exception:
@@ -1614,6 +1619,10 @@ class VoiceLive:
                         self._update_memory_after_task(text, summary)
                     except Exception:
                         pass
+                try:
+                    self.speak(summary)
+                except Exception as e:
+                    print(f"[VOICE ECHO] ⚠️ Voice reply failed: {e}")
 
             get_queue().submit(
                 goal=text,
@@ -1670,6 +1679,10 @@ class VoiceLive:
                 self.ui.finish_task_workspace(reply, "Ответ доставлен.", 100)
             except Exception:
                 pass
+            try:
+                self.speak(reply)
+            except Exception as e:
+                print(f"[VOICE ECHO] ⚠️ Voice reply failed: {e}")
             if not self.ui.muted:
                 self.ui.set_state("LISTENING")
         except Exception as e:
@@ -1940,8 +1953,6 @@ def main():
         except Exception:
             pass
 
-        print(f"DEBUG: start_ig_daemon is {start_ig_daemon}")
-        
         if start_ig_daemon:
             from actions.instagram_chat import set_ig_prompt_callback
             def _ig_handler(thread_id, username, text, is_auto):

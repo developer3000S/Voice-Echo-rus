@@ -110,27 +110,28 @@ def _generate_caption(brief: str) -> str:
     a caption error."""
     try:
         prompt = (
-            "You are a TikTok SEO copywriter. The user gives you only a rough "
-            "TITLE/BRIEF; you turn it into ONE ready-to-post, LONG caption in "
-            "the SAME language as the brief:\n"
-            f'BRIEF: "{brief}"\n'
-            "Rules:\n"
-            "- LONG and substantial: at least 1000 characters of body text "
-            "(not counting hashtags). Expand the brief into a detailed, "
-            "engaging story/description — this is for search ranking, not a "
-            "one-liner.\n"
-            "- Strong scroll-stopping hook as the first line.\n"
-            "- Weave in plenty of high-search-volume SEO keywords and phrases "
-            "naturally throughout the body, chosen to rank with TIER-1 "
-            "audiences (US, UK, Canada, Australia, Germany...). Keywords may "
-            "be in English even if the body language differs.\n"
-            "- End with a call-to-action (follow/comment/share), then 15-25 "
-            "hashtags: mix broad high-volume Tier-1 English hashtags with "
-            "niche topic hashtags.\n"
-            "- Plain text only — no quotes, no markdown, no explanations.\n"
-            "- Maximum 3500 characters total."
+            "Ты — SEO-копирайтер для TikTok. Пользователь даёт лишь грубый "
+            "ЗАГОЛОВОК/ИДЕЮ; ты превращаешь её в ОДНУ готовую к публикации, "
+            "ДЛИННУЮ подпись на ТОМ ЖЕ языке, что и исходная идея:\n"
+            f'ИДЕЯ: "{brief}"\n'
+            "Правила:\n"
+            "- ДЛИННО и содержательно: минимум 1000 символов основного текста "
+            "(без учёта хэштегов). Раскрой идею в подробное, увлекательное "
+            "история/описание — это нужно для поискового ранжирования, а не "
+            "однострочник.\n"
+            "- Сильный цепляющий хук первой строкой.\n"
+            "- Органично вплетай много высокочастотных SEO-ключевых слов и "
+            "фраз по всему тексту, подобранных для ранжирования на TIER-1 "
+            "аудиториях (США, Великобритания, Канада, Австралия, Германия...). "
+            "Ключевые слова могут быть на английском, даже если язык текста "
+            "другой.\n"
+            "- Закончи призывом к действию (подписка/комментарий/репост), "
+            "затем 15-25 хэштегов: смесь широких высокочастотных английских "
+            "Tier-1 хэштегов с нишевыми тематическими.\n"
+            "- Только чистый текст — без кавычек, без markdown, без пояснений.\n"
+            "- Максимум 3500 символов всего."
         )
-        caption = llm.chat(prompt, system="You are a TikTok SEO copywriter.", temperature=0.8, max_tokens=3900).strip()
+        caption = llm.chat(prompt, system="Ты — SEO-копирайтер для TikTok.", temperature=0.8, max_tokens=3900).strip()
         return caption[:3900] if caption else brief
     except Exception as e:
         print(f"[UploadVideo] Caption generation failed, using brief as-is: {e}")

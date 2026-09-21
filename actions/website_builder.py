@@ -459,17 +459,17 @@ def _generate_spec(parameters: dict[str, Any]) -> dict[str, Any]:
         )
 
     prompt = f"""
-Create a structured JSON spec for a website project generator.
+Создай структурированную JSON-спецификацию для генератора веб-проектов.
 
-Rules:
-- Return only valid JSON.
-- Keep the project practical and premium.
-- Stay concise. No markdown, no commentary.
-- Prefer a single focused experience, but include multiple pages if useful.
-- Choose a distinct layout mode that fits the brief. Do not reuse the same section order every time.
-- Pick one layout mode from: split, editorial, command_center, gallery, minimal, article.
-- The site should feel composed from the brief, not copied from a starter template.
-- If the brief sounds like an app or dashboard, use an app-like layout.
+Правила:
+- Возвращай только валидный JSON.
+- Держи проект практичным и премиальным.
+- Будь краток. Без markdown, без комментариев.
+- Предпочитай одно сфокусированное впечатление, но добавь несколько страниц, если это уместно.
+- Выбери выразительный режим макета, подходящий к описанию. Не повторяй один и тот же порядок секций каждый раз.
+- Выбери один режим макета из: split, editorial, command_center, gallery, minimal, article.
+- Сайт должен ощущаться созданным из описания, а не скопированным из стартового шаблона.
+- Если описание похоже на приложение или дашборд, используй app-подобный макет.
 
 Schema:
 {{
@@ -516,8 +516,8 @@ Schema:
   "notes": ["string"]
 }}
 
-Project name: {site_name}
-Brief: {brief}
+Имя проекта: {site_name}
+Описание: {brief}
 """
 
     result: dict[str, Any] = {}
@@ -1238,30 +1238,30 @@ def _generate_code_bundle(parameters: dict[str, Any]) -> dict[str, Any]:
         return _fallback_code_bundle(parameters)
 
     prompt = f"""
-You are a senior frontend engineer. Create a fresh website from scratch and return only file outputs.
+Ты — старший фронтенд-инженер. Создай новый сайт с нуля и верни только файлы на вывод.
 
-Hard rules:
-- Do not mention Voice, Codex, or any assistant branding in the site content.
-- Do not use a starter template or placeholder filler.
-- Make the site feel specific to the brief.
-- Use semantic HTML, responsive CSS, and working JavaScript.
-- If the brief is for a tool or app, include real interactive behavior.
-- If the brief is for an article or editorial site, make it read like a magazine piece.
-- If the brief is for a grocery or checklist app, include add/remove/complete behavior and localStorage.
-- Write only the files below, nothing else.
+Строгие правила:
+- Не упоминай Voice, Codex или какой-либо ассистент-брендинг в содержимом сайта.
+- Не используй стартовый шаблон или заглушки-плейсхолдеры.
+- Сделай сайт специфичным именно для этого описания.
+- Используй семантичный HTML, адаптивный CSS и рабочий JavaScript.
+- Если описание — для инструмента или приложения, добавь настоящее интерактивное поведение.
+- Если описание — для статьи или редакционного сайта, сделай чтение похожим на журнальный материал.
+- Если описание — для списка покупок или чек-листа, добавь поведение добавить/удалить/выполнить и localStorage.
+- Пиши только файлы ниже, ничего больше.
 
-Output format:
+Формат вывода:
 FILE: index.html
 ```html
-...full html...
+...полный html...
 ```
 FILE: styles.css
 ```css
-...full css...
+...полный css...
 ```
 FILE: script.js
 ```javascript
-...full js...
+...полный js...
 ```
 FILE: site-data.json
 ```json
@@ -1272,11 +1272,11 @@ FILE: README.md
 ...readme...
 ```
 
-The code must be complete and ready to open.
+Код должен быть полным и готовым к открытию.
 
-Brief: {brief}
-Site name: {title}
-Kind: {kind}
+Описание: {brief}
+Имя сайта: {title}
+Тип: {kind}
 """
 
     result: dict[str, Any] = {}
