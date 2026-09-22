@@ -9781,13 +9781,17 @@ class SystemConnectivityPage(QWidget):
                 + ("enabled (Vosk + Piper, offline). Restart to apply." if checked else "disabled. Restart to apply.")
             )
 
-    def _change_dashboard_viz(self, index: int):
-        variant = self._viz_combo.itemData(index) or "line"
-        self._set_setting("dashboard_viz", variant)
+    def _apply_dashboard_viz(self, variant):
+        variant = variant if variant in MetricScope.VARIANTS else "line"
         if self._ctrl() and hasattr(self._ctrl(), "_win"):
             win = self._ctrl()._win
             if hasattr(win, "_metric_scope"):
                 win._metric_scope.set_variant(variant)
+
+    def _change_dashboard_viz(self, index: int):
+        variant = self._viz_combo.itemData(index) or "line"
+        self._set_setting("dashboard_viz", variant)
+        self._apply_dashboard_viz(variant)
         if self._ctrl() and hasattr(self._ctrl(), "write_log"):
             self._ctrl().write_log(f"SYS: Визуализация панели переключена на «{variant}».")
 
@@ -9936,6 +9940,7 @@ class SystemConnectivityPage(QWidget):
             ):
                 if widget is not None:
                     widget.blockSignals(False)
+        self._apply_dashboard_viz(app.get("dashboard_viz", "line"))
         enabled = bool(discord.get("enabled", False))
         token = (discord.get("bot_token") or "").strip()
         if enabled and token:
