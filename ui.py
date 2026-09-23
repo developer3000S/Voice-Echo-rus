@@ -660,6 +660,7 @@ def _default_app_settings() -> dict:
         "developer_mode_enabled": False,
         "developer_mode_workspace": "",
         "dashboard_viz": "line",
+        "voice_viz": "wave",
     }
 
 
@@ -2014,6 +2015,211 @@ class MetricScope(QWidget):
                 f"{name} {value:.0f}",
             )
 
+class VoiceVisualizer(QWidget):
+    """Визуализация голосового сообщения для вкладки «Панель».
+
+    Оживает, пока Voice Echo говорит (Piper TTS): анимируется в такт
+    синтезируемой речи. Варианты отрисовки: wave — симметричная волновая
+    развёртка, bars — эквалайзер, orb — пульсирующая сфера. Выбор хранится
+    в настройках (voice_viz) и применяется на лету.
+    """
+
+    VARIANTS = ("wave", "bars", "orb")
+
+    def __init__(self, variant: str = "wave", parent=None):
+        super().__init__(parent)
+        self._variant = "wave"
+        self._speaking = False
+        self._phase = 0.0
+        self._timer = QTimer(self)
+        self._timer.setInterval(50)
+        self._timer.timeout.connect(self._tick)
+        self.setMinimumSize(240, 90)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.set_variant(variant)
+
+    def set_variant(self, variant: str) -> None:
+        self._variant = variant if variant in self.VARIANTS else "wave"
+        self.update()
+
+    def set_speaking(self, speaking: bool) -> None:
+        """Включить/выключить анимацию в соответствии с состоянием TTS."""
+        if speaking == self._speaking:
+            return
+        self._speaking = speaking
+        if speaking:
+            self._timer.start()
+        else:
+            self._timer.stop()
+            self._phase = 0.0
+            self.update()
+
+    def _tick(self) -> None:
+        self._phase += 0.18
+        self.update()
+
+    # -- отрисовка -----------------------------------------------------
+
+    def paintEvent(self, _):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        W, H = self.width(), self.height()
+        p.setBrush(QBrush(qcol(C.PANEL2)))
+        p.setPen(QPen(qcol(C.BORDER_A), 1))
+        p.drawRoundedRect(QRectF(1, 1, W - 2, H - 2), 10, 10)
+
+        variant = self._variant
+        if variant == "bars":
+            self._draw_bars(p, W, H)
+        elif variant == "orb":
+            self._draw_orb(p, W, H)
+        else:
+            self._draw_wave(p, W, H)
+
+        p.setFont(QFont("Courier New", 8, QFont.Weight.Bold))
+        p.setPen(QPen(qcol(C.TEXT_DIM), 1))
+        title = {"wave": "ГОЛОС • ВОЛНА", "bars": "ГОЛОС • ЭКВАЛАЙЗЕР", "orb": "ГОЛОС • СФЕРА"}[variant]
+        p.drawText(QRectF(10, 6, W - 20, 16), Qt.AlignmentFlag.AlignLeft, title)
+        if not self._speaking:
+            p.setPen(QPen(qcol(C.TEXT_DIM), 1))
+            p.drawText(
+                QRectF(10, 6, W - 20, 16),
+                Qt.AlignmentFlag.AlignRight,
+                "ТИХО",
+            )
+
+    def _draw_wave(self, p: QPainter, W: int, H: int) -> None:
+        mid = H / 2 + 6
+        amp_max = (H - 46) / 2
+        if amp_max <= 2:
+            return
+        amp = amp_max if self._speaking else 1.6
+        x0, x1 = 12, W - 12
+        if x1 <= x0:
+            return
+        steps = max(48, int((x1 - x0) / 4))
+        pts_top, pts_bot = [], []
+        for i in range(steps + 1):
+            t = i / steps
+            x = x0 + (x1 - x0) * t
+            wobble = math.sin(self._phase + t * math.pi * 4)
+            wobble += 0.45 * math.sin(self._phase * 1.7 + t * math.pi * 9)
+            wobble += 0.25 * math.sin(self._phase * 0.6 + t * math.pi * 2)
+            y = mid + amp * wobble / 1.7
+            pts_top.append(QPointF(x, y))
+            pts_bot.append(QPointF(x, 2 * mid - y))
+        p.setPen(QPen(qcol(C.PRI), 1.8))
+        p.drawPolyline(pts_top)
+        p.drawPolyline(pts_bot)
+        p.setPen(QPen(qcol(C.PRI_DIM), 1))
+        p.drawLine(QPointF(x0, mid), QPointF(x1, mid))
+
+    def _draw_bars(self, p: QPainter, W: int, H: int) -> None:
+        n = 28
+        x0, x1 = 12, W - 12
+        if x1 <= x0:
+            return
+        slot = (x1 - x0) / n
+        bw = slot * 0.55
+        base = H - 22
+        max_h = H - 46
+        if max_h <= 2:
+            return
+        for i in range(n):
+            cx = x0 + slot * (i + 0.5)
+            if self._speaking:
+                h = max_h * abs(
+                    math.sin(self._phase + i * 0.55)
+                    + 0.35 * math.sin(self._phase * 1.6 + i * 0.31)
+                ) / 1.35
+            else:
+                h = max_h * 0.04
+            p.setBrush(QBrush(qcol(C.PRI)))
+            p.setPen(Qt.PenStyle.NoPen)
+            p.drawRoundedRect(QRectF(cx - bw / 2, base - h, bw, max(h, 2)), 3, 3)
+
+    def _draw_orb(self, p: QPainter, W: int, H: int) -> None:
+        cx, cy = W / 2, (H + 10) / 2
+        radius_base = min(W, H) / 2 - 30
+        if radius_base <= 6:
+            return
+        pulse = 1.0 + (0.22 * math.sin(self._phase * 1.3) if self._speaking else 0.0)
+        radius = max(radius_base * pulse, 4.0)
+        gradient = QRadialGradient(cx, cy, radius)
+        gradient.setColorAt(0.0, qcol(C.PRI))
+        gradient.setColorAt(0.65, qcol(C.PRI_DIM))
+        gradient.setColorAt(1.0, qcol(C.PANEL2))
+        p.setBrush(QBrush(gradient))
+        p.setPen(Qt.PenStyle.NoPen)
+        p.drawEllipse(QPointF(cx, cy), radius, radius)
+        # Кольца эха вокруг сферы
+        for k, scale in enumerate((1.35, 1.7, 2.05)):
+            ring = radius_base * scale
+            alpha = 90 - k * 28
+            ring_col = QColor(qcol(C.PRI))
+            ring_col.setAlpha(max(alpha if self._speaking else 26, 12))
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            p.setPen(QPen(ring_col, 1.2))
+            p.drawEllipse(QPointF(cx, cy), ring, ring)
+
+
+class VoiceWaveIndicator(QWidget):
+    """Компактный индикатор звучащего голосового сообщения для бабблов чата.
+
+    Рисует анимированные столбики-эквалайзер, пока ассистент озвучивает
+    сообщение, и плоскую линию в состоянии покоя.
+    """
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._active = False
+        self._phase = 0.0
+        self._timer = QTimer(self)
+        self._timer.setInterval(60)
+        self._timer.timeout.connect(self._tick)
+        self.setFixedHeight(22)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.hide()
+
+    def set_active(self, active: bool) -> None:
+        if active == self._active:
+            return
+        self._active = active
+        self.setVisible(active)
+        if active:
+            self._timer.start()
+        else:
+            self._timer.stop()
+            self._phase = 0.0
+            self.update()
+
+    def _tick(self) -> None:
+        self._phase += 0.25
+        self.update()
+
+    def paintEvent(self, _):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        W, H = self.width(), self.height()
+        n = 7
+        x0, x1 = 2, W - 2
+        if x1 <= x0:
+            return
+        slot = (x1 - x0) / n
+        bw = slot * 0.5
+        mid = H / 2
+        max_h = H - 6
+        for i in range(n):
+            cx = x0 + slot * (i + 0.5)
+            if self._active:
+                h = max_h * abs(math.sin(self._phase + i * 0.9)) / 1.0
+            else:
+                h = 2
+            p.setBrush(QBrush(qcol(C.PRI)))
+            p.setPen(Qt.PenStyle.NoPen)
+            p.drawRoundedRect(QRectF(cx - bw / 2, mid - h / 2, bw, max(h, 2)), 2, 2)
+
+
 class MessageCard(QFrame):
     def __init__(self, role: str, name: str, text: str, stamp: str, parent=None):
         super().__init__(parent)
@@ -2542,6 +2748,12 @@ class ChatBubble(QFrame):
 
         outer.addWidget(self._browser)
 
+        if role == "assistant":
+            self._voice_indicator = VoiceWaveIndicator()
+            outer.addWidget(self._voice_indicator)
+        else:
+            self._voice_indicator = None
+
         if attachments:
             for attachment in attachments:
                 title = str(attachment.get("name") or attachment.get("title") or attachment.get("path") or "Attachment")
@@ -2553,6 +2765,11 @@ class ChatBubble(QFrame):
 
     def _render_text(self, text: str, final: bool = True):
         self._browser.setText(_markdown_to_html(text or "", self._role))
+
+    def set_voice_active(self, active: bool) -> None:
+        """Подсветить сообщение как звучащее (анимация голосового индикатора)."""
+        if self._voice_indicator is not None:
+            self._voice_indicator.set_active(active)
 
     def _start_typing_animation(self):
         self._typing_timer = QTimer(self)
@@ -2791,6 +3008,19 @@ class ConversationFeed(QScrollArea):
     def scroll_to_bottom(self):
         bar = self.verticalScrollBar()
         bar.setValue(bar.maximum())
+
+    def set_voice_active(self, active: bool) -> None:
+        """Подсветить последнее сообщение ассистента как звучащее.
+
+        Активируется состоянием SPEAKING: индикатор-эквалайзер внутри баббла
+        анимируется, пока Piper TTS озвучивает именно это сообщение.
+        """
+        for i in range(self._layout.count() - 1, -1, -1):
+            item = self._layout.itemAt(i)
+            widget = item.widget() if item is not None else None
+            if isinstance(widget, ChatBubble) and widget._role == "assistant":
+                widget.set_voice_active(active)
+                break
 
     def load_messages(self, messages: list[dict[str, Any]]):
         self.clear_messages()
@@ -3798,6 +4028,10 @@ class InlineChatWorkspace(QFrame):
             self._store.record_chat("assistant", text, conversation_id=convo_id, attachments=attachments)
             self._feed.add_message("file", "Files", text, stamp, attachments=attachments)
         self._refresh_history()
+
+    def set_voice_active(self, active: bool) -> None:
+        """Переключить индикатор звучащего сообщения в ленте чата."""
+        self._feed.set_voice_active(active)
 
     def append_log(self, text: str):
         raw = (text or "").strip()
@@ -6923,8 +7157,8 @@ class MainWindow(QMainWindow):
 
 
         self._btn_dashboard.clicked.connect(lambda: self._center_stack.setCurrentIndex(0))
-        self._btn_chat.clicked.connect(lambda: self._center_stack.setCurrentIndex(4))
-        self._btn_settings.clicked.connect(lambda: self._center_stack.setCurrentIndex(5))
+        self._btn_chat.clicked.connect(self._toggle_chat_column)
+        self._btn_settings.clicked.connect(lambda: self._center_stack.setCurrentIndex(4))
 
         root.addLayout(body, stretch=1)
 
@@ -7246,6 +7480,14 @@ class MainWindow(QMainWindow):
         self._right_collapsed = not self._right_collapsed
         self._apply_sidebar_state()
 
+    def _toggle_chat_column(self):
+        """Переключает видимость колонки чата рядом с Панелью."""
+        if not hasattr(self, "_chat_column"):
+            return
+        self._chat_column.setVisible(not self._chat_column.isVisible())
+        self._btn_chat.setChecked(not self._chat_column.isVisible())
+        self._btn_chat.setToolTip("Скрыть чат" if self._chat_column.isVisible() else "Показать чат")
+
     def _apply_sidebar_state(self):
         if hasattr(self, "_left_content"):
             self._left_content.setVisible(not self._left_collapsed)
@@ -7333,11 +7575,13 @@ class MainWindow(QMainWindow):
             self._floating_gesture_card.move(cw.width() - self._floating_gesture_card.width() - 30, 20)
 
     def _update_metrics(self):
-        if not hasattr(self, "_bar_cpu"):
+        if not hasattr(self, "_bar_cpu") and not hasattr(self, "_metric_scope"):
             return
         snap = _metrics.snapshot()
         if hasattr(self, "_metric_scope"):
             self._metric_scope.push(snap)
+        if not hasattr(self, "_bar_cpu"):
+            return
 
         # CPU
         cpu = snap["cpu"]
@@ -7782,8 +8026,7 @@ class MainWindow(QMainWindow):
             return
         self._chat_source_queue.append(source or "local")
         if hasattr(self, "_command_card"):
-            preview = txt[:60] + ("…" if len(txt) > 60 else "")
-            self._command_card.set_body(preview)
+            self._command_card.set_body(txt)
             self._command_card.hide()
         if hasattr(self, "_result_card"):
             self._result_card.set_body("Ожидание ответа...")
@@ -7807,7 +8050,7 @@ class MainWindow(QMainWindow):
                     pass
         if hasattr(self, "_result_card") and low.startswith("voice echo:"):
             reply = raw.split(":", 1)[1].strip()
-            self._result_card.set_body(reply[:80] + ("…" if len(reply) > 80 else ""))
+            self._result_card.set_body(reply)
             self._result_card.hide()
             self._restart_card_hide_timer()
             source = self._chat_source_queue[0] if self._chat_source_queue else "local"
@@ -7938,6 +8181,14 @@ class MainWindow(QMainWindow):
         self._state = state
         self.hud.state = state
         self.hud.speaking = (state == "SPEAKING")
+        speaking = state == "SPEAKING"
+        if hasattr(self, "_voice_viz"):
+            self._voice_viz.set_speaking(speaking)
+        if hasattr(self, "_inline_workspace"):
+            try:
+                self._inline_workspace.set_voice_active(speaking)
+            except Exception:
+                pass
         if hasattr(self, "central") and hasattr(self.central, "set_ai_state"):
             self.central.set_ai_state(state)
         if hasattr(self, "_status_chip"):
@@ -8523,6 +8774,12 @@ class MainWindow(QMainWindow):
         self._metric_scope.setFixedHeight(190)
         stage.addWidget(self._metric_scope)
 
+        self._voice_viz = VoiceVisualizer(
+            variant=str(self._load_app_settings().get("voice_viz", "wave"))
+        )
+        self._voice_viz.setFixedHeight(110)
+        stage.addWidget(self._voice_viz)
+
         self._command_panel = QWidget()
         self._command_panel.setStyleSheet("background: transparent;")
         cmd_lay = QVBoxLayout(self._command_panel)
@@ -8535,23 +8792,33 @@ class MainWindow(QMainWindow):
         self._devices_page = VoiceConnectDevicesPage(self)
         self._center_stack = QStackedWidget()
         self._center_stack.setStyleSheet("background: transparent; border: none;")
-        self._center_stack.addWidget(w)
-        self._center_stack.addWidget(self._home_page)
-        self._center_stack.addWidget(self._devices_page)
-        self._settings_page = SystemConnectivityPage()
-        self._center_stack.addWidget(self._settings_page)
-        
-        chat_page = QWidget()
-        chat_page_lay = QVBoxLayout(chat_page)
-        chat_page_lay.setContentsMargins(10, 10, 10, 10)
+
+        dashboard_page = QWidget()
+        dashboard_page.setStyleSheet("background: transparent;")
+        dashboard_lay = QHBoxLayout(dashboard_page)
+        dashboard_lay.setContentsMargins(0, 0, 0, 0)
+        dashboard_lay.setSpacing(0)
+        dashboard_lay.addWidget(w, 2)
+
+        self._chat_column = QWidget()
+        self._chat_column.setMinimumWidth(300)
+        self._chat_column.setStyleSheet("background: transparent;")
+        chat_col_lay = QVBoxLayout(self._chat_column)
+        chat_col_lay.setContentsMargins(10, 10, 10, 10)
         self._inline_workspace = InlineChatWorkspace()
         self._inline_workspace.attach_requested.connect(self._browse_attachment)
         self._inline_workspace.mic_requested.connect(self._toggle_mute)
         self._inline_workspace.command_submitted.connect(self._send)
         self._log = self._inline_workspace
-        chat_page_lay.addWidget(self._inline_workspace)
-        self._center_stack.addWidget(chat_page)
-        
+        chat_col_lay.addWidget(self._inline_workspace)
+        dashboard_lay.addWidget(self._chat_column, 1)
+
+        self._center_stack.addWidget(dashboard_page)
+        self._center_stack.addWidget(self._home_page)
+        self._center_stack.addWidget(self._devices_page)
+        self._settings_page = SystemConnectivityPage()
+        self._center_stack.addWidget(self._settings_page)
+
         self._settings_hub_page = SettingsHubPage(lambda idx: self._center_stack.setCurrentIndex(idx))
         self._center_stack.addWidget(self._settings_hub_page)
 
@@ -9278,6 +9545,26 @@ class SystemConnectivityPage(QWidget):
         vl.addLayout(viz_row)
         lay.addWidget(viz_card)
 
+        # Voice message visualization
+        voice_viz_card = self._card(
+            "Визуализация голосового сообщения",
+            "Анимация на вкладке «Панель», пока Voice Echo озвучивает ответ.",
+        )
+        vvl = voice_viz_card.layout()
+        voice_viz_row = QHBoxLayout()
+        voice_viz_row.addWidget(QLabel("Тип визуализации"))
+        self._voice_viz_combo = QComboBox()
+        self._voice_viz_combo.addItem("Волна (осциллограмма)", "wave")
+        self._voice_viz_combo.addItem("Эквалайзер", "bars")
+        self._voice_viz_combo.addItem("Сфера", "orb")
+        current_voice_viz = self._load_app_settings().get("voice_viz", "wave")
+        vidx = self._voice_viz_combo.findData(current_voice_viz)
+        self._voice_viz_combo.setCurrentIndex(vidx if vidx >= 0 else 0)
+        self._voice_viz_combo.currentIndexChanged.connect(self._change_voice_viz)
+        voice_viz_row.addWidget(self._voice_viz_combo, 1)
+        vvl.addLayout(voice_viz_row)
+        lay.addWidget(voice_viz_card)
+
         self._auto_switch_btn = self._mk_toggle("Автоматически переключаться при сбое провайдера", bool(self._load_app_settings().get("auto_provider_switch", True)), self._toggle_auto_provider_switch)
         lay1.addWidget(self._auto_switch_btn)
         lay.addWidget(card)
@@ -9795,6 +10082,20 @@ class SystemConnectivityPage(QWidget):
         if self._ctrl() and hasattr(self._ctrl(), "write_log"):
             self._ctrl().write_log(f"SYS: Визуализация панели переключена на «{variant}».")
 
+    def _apply_voice_viz(self, variant):
+        variant = variant if variant in VoiceVisualizer.VARIANTS else "wave"
+        if self._ctrl() and hasattr(self._ctrl(), "_win"):
+            win = self._ctrl()._win
+            if hasattr(win, "_voice_viz"):
+                win._voice_viz.set_variant(variant)
+
+    def _change_voice_viz(self, index: int):
+        variant = self._voice_viz_combo.itemData(index) or "wave"
+        self._set_setting("voice_viz", variant)
+        self._apply_voice_viz(variant)
+        if self._ctrl() and hasattr(self._ctrl(), "write_log"):
+            self._ctrl().write_log(f"SYS: Визуализация голоса переключена на «{variant}».")
+
     def _toggle_attention_message_prompts(self, checked: bool):
         self._set_setting("attention_message_prompts", bool(checked))
         if self._ctrl() and hasattr(self._ctrl(), "write_log"):
@@ -9896,6 +10197,7 @@ class SystemConnectivityPage(QWidget):
             getattr(self, "_auto_switch_btn", None),
             getattr(self, "_local_voice_btn", None),
             getattr(self, "_viz_combo", None),
+            getattr(self, "_voice_viz_combo", None),
             getattr(self, "_attention_message_btn", None),
             getattr(self, "_attention_call_btn", None),
             getattr(self, "_startup_launch_btn", None),
@@ -9915,6 +10217,9 @@ class SystemConnectivityPage(QWidget):
             if getattr(self, "_viz_combo", None) is not None:
                 viz_idx = self._viz_combo.findData(app.get("dashboard_viz", "line"))
                 self._viz_combo.setCurrentIndex(viz_idx if viz_idx >= 0 else 0)
+            if getattr(self, "_voice_viz_combo", None) is not None:
+                voice_idx = self._voice_viz_combo.findData(app.get("voice_viz", "wave"))
+                self._voice_viz_combo.setCurrentIndex(voice_idx if voice_idx >= 0 else 0)
             self._attention_message_btn.setChecked(bool(app.get("attention_message_prompts", True)))
             self._attention_call_btn.setChecked(bool(app.get("attention_call_prompts", True)))
             self._startup_launch_btn.setChecked(bool(app.get("show_workspace_on_startup", False)))
@@ -9941,6 +10246,7 @@ class SystemConnectivityPage(QWidget):
                 if widget is not None:
                     widget.blockSignals(False)
         self._apply_dashboard_viz(app.get("dashboard_viz", "line"))
+        self._apply_voice_viz(app.get("voice_viz", "wave"))
         enabled = bool(discord.get("enabled", False))
         token = (discord.get("bot_token") or "").strip()
         if enabled and token:

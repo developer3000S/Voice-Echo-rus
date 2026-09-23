@@ -262,7 +262,8 @@ def _save_to_desktop(content: str, origin: str, destination: str) -> str:
 
     try:
         if is_windows():
-            subprocess.Popen(["notepad.exe", str(filepath)])
+            from actions.open_app import open_text_file
+            open_text_file(filepath)
         elif is_mac():
             subprocess.Popen(["open", "-t", str(filepath)])
         else:

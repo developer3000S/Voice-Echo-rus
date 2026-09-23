@@ -128,3 +128,32 @@ def test_refresh_syncs_widget_to_persisted_setting(qapp, tmp_path, monkeypatch):
 
     assert settings_page._viz_combo.currentData() == "radar"
     assert win._metric_scope._variant == "radar"
+
+
+def test_update_metrics_feeds_scope_without_bars(qapp, monkeypatch):
+    """Панель «Панель» не создаёт MetricBar, но визуализация должна жить.
+
+    _update_metrics() выходил по раннему return, когда _bar_cpu
+    отсутствует, и радар оставался с нулями.
+    """
+    ui_module = pytest.importorskip("ui", reason="требует полного импорта UI")
+
+    ui = ui_module.VoiceUI("/tmp/nonexistent_face.png")
+    win = ui._win
+    win.show()
+    qapp.processEvents()
+
+    assert not hasattr(win, "_bar_cpu"), "guard больше не должен блокировать виджет"
+    assert hasattr(win, "_metric_scope")
+
+    scope = win._metric_scope
+    scope.set_variant("radar")
+    for i in range(3):
+        win._update_metrics()
+        qapp.processEvents()
+
+    assert scope._latest["cpu"] > 0.0
+    assert scope._latest["mem"] > 0.0
+    assert len(scope._history["cpu"]) >= 3
+
+

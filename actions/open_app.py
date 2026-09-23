@@ -52,6 +52,19 @@ _APP_ALIASES = {
     "figma":              {"Windows": "Figma",                  "Darwin": "Figma",               "Linux": "figma"},
 }
 
+# Запросы на текстовые редакторы: если искомого нет в системе, подбираем запасной.
+_EDITOR_KEYS = {
+    "notepad", "блокнот", "notepad++", "np++", "gedit", "kate",
+    "mousepad", "xed", "pluma", "leafpad", "textedit", "nano", "wordpad",
+}
+
+# Предпочитаем Visual Studio Code, затем остальные доступные редакторы.
+_EDITOR_FALLBACKS = {
+    "Windows": ["code", "code.cmd", "notepad++", "wordpad"],
+    "Darwin":  ["code", "TextEdit"],
+    "Linux":   ["code", "gedit", "kate", "mousepad", "xed", "pluma", "leafpad", "nano"],
+}
+
 
 def _normalize(raw: str) -> str:
     system = platform.system()
@@ -218,6 +231,91 @@ _OS_LAUNCHERS = {
 }
 
 
+def _editor_available(app_name: str, system: str) -> bool:
+    """Доступен ли запрошенный текстовый редактор в системе."""
+    app_lower = (app_name or "").lower().strip()
+    if not app_lower:
+        return False
+    if shutil.which(app_lower) or shutil.which(f"{app_lower}.exe"):
+        return True
+    if system == "Windows":
+        # Блокнот может отсутствовать в PATH, но лежать в системных папках.
+        sysroot = os.environ.get("SystemRoot") or r"C:\Windows"
+        for folder in (sysroot, os.path.join(sysroot, "System32")):
+            if os.path.exists(os.path.join(folder, app_lower)) or os.path.exists(
+                os.path.join(folder, f"{app_lower}.exe")
+            ):
+                return True
+    if system == "Darwin":
+        # .app-бандлы обычно не входят в PATH.
+        for folder in ("/Applications", os.path.expanduser("~/Applications")):
+            if os.path.exists(os.path.join(folder, f"{app_name}.app")):
+                return True
+    return False
+
+
+def _resolve_editor_fallback(system: str) -> str | None:
+    """Подобрать доступный текстовый редактор.
+
+    Предпочитаем Visual Studio Code (`code`) — как более мощный редактор,
+    затем проверяем остальные варианты для текущей ОС.
+    """
+    for candidate in _EDITOR_FALLBACKS.get(system, ["code"]):
+        if shutil.which(candidate) or shutil.which(f"{candidate}.exe"):
+            return candidate
+    if system == "Darwin":
+        for app in ("Visual Studio Code", "TextEdit"):
+            for folder in ("/Applications", os.path.expanduser("~/Applications")):
+                if os.path.exists(os.path.join(folder, f"{app}.app")):
+                    return app
+    return None
+
+
+def open_text_file(filepath, prefer: str = "notepad") -> bool:
+    """Открыть текстовый файл в редакторе, проверив его наличие.
+
+    Если Блокнот (или иной запрошенный редактор) не установлен, файл
+    открывается в Visual Studio Code или другом доступном редакторе.
+    Возвращает True при успешном запуске.
+    """
+    filepath = str(filepath)
+    system = platform.system()
+    app = _normalize(prefer) if prefer else None
+
+    if app and not _editor_available(app, system):
+        fallback = _resolve_editor_fallback(system)
+        if fallback:
+            print(f"[open_app] ⚠️ {prefer} недоступен, использую {fallback}")
+            app = fallback
+
+    candidates = [c for c in (app, "code", "notepad", "gedit") if c]
+    for candidate in candidates:
+        binary = shutil.which(candidate) or shutil.which(f"{candidate}.exe")
+        if binary:
+            try:
+                subprocess.Popen([binary, filepath], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                return True
+            except Exception:
+                continue
+
+    # Запасной путь для macOS: open -t подбирает редактор по умолчанию.
+    if system == "Darwin":
+        try:
+            subprocess.Popen(["open", "-t", filepath])
+            return True
+        except Exception:
+            pass
+    elif system != "Windows":
+        try:
+            subprocess.Popen(["xdg-open", filepath])
+            return True
+        except Exception:
+            pass
+
+    print(f"[open_app] ⚠️ Не удалось открыть текстовый редактор для {filepath}")
+    return False
+
+
 def open_app(
     parameters=None,
     response=None,
@@ -236,18 +334,35 @@ def open_app(
         return f"Unsupported OS: {system}"
 
     normalized = _normalize(app_name)
+
+    # Если просят текстовый редактор — сначала проверяем, установлен ли он.
+    substituted = None
+    if app_name.lower().strip() in _EDITOR_KEYS and not _editor_available(normalized, system):
+        fallback = _resolve_editor_fallback(system)
+        if fallback:
+            substituted = fallback
+            normalized = fallback
+            print(f"[open_app] ⚠️ {app_name} недоступен, использую {fallback} ({system})")
+            if player:
+                player.write_log(f"[open_app] {app_name} недоступен → {fallback}")
+
     print(f"[open_app] 🚀 Launching: {app_name} → {normalized} ({system})")
 
-    if player:
+    if player and not substituted:
         player.write_log(f"[open_app] {app_name}")
 
     try:
         success = launcher(normalized)
 
         if success:
+            if substituted:
+                return (
+                    f"{app_name} is not installed on this system, sir, "
+                    f"so I opened {substituted} instead."
+                )
             return f"Opened {app_name} successfully, sir."
 
-        if normalized != app_name:
+        if normalized != app_name and not substituted:
             success = launcher(app_name)
             if success:
                 return f"Opened {app_name} successfully, sir."
