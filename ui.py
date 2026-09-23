@@ -10946,16 +10946,17 @@ class VoiceUI:
         self._win.discord_config_changed.connect(self._on_discord_config_changed)
         self._win.on_chat_event = self._on_chat_event
         self._app.aboutToQuit.connect(self._discord_service.stop)
+        self._voice_panel = VoicePanel()
         self._launcher = FloatingLauncher()
         self._command_bar = CommandBar()
         self._workspace_sidebar = WorkspaceSidebar()
         self._control_panel: LauncherControlPanel | None = None
         self._boot_overlay: BootSequenceOverlay | None = None
         self._app_settings_cache: dict | None = None
-        self._launcher.single_clicked.connect(self._toggle_command_bar)
-        self._launcher.double_clicked.connect(self._show_control_panel)
-        self._launcher.action_requested.connect(self._handle_launcher_action)
-        self._launcher.position_changed.connect(self._save_launcher_position)
+        self._voice_panel.single_clicked.connect(self._toggle_command_bar)
+        self._voice_panel.double_clicked.connect(self._show_control_panel)
+        self._voice_panel.action_requested.connect(self._handle_launcher_action)
+        self._voice_panel.position_changed.connect(self._save_launcher_position)
         self._command_bar.submitted.connect(self._submit_command)
         self._command_bar.attach_clicked.connect(self._browse_attachment)
         self._command_bar.mic_clicked.connect(self._toggle_mute)
@@ -12450,16 +12451,17 @@ class VoiceUI:
         self._win.discord_config_changed.connect(self._on_discord_config_changed)
         self._win.on_chat_event = self._on_chat_event
         self._app.aboutToQuit.connect(self._discord_service.stop)
+        self._voice_panel = VoicePanel()
         self._launcher = FloatingLauncher()
         self._command_bar = CommandBar()
         self._workspace_sidebar = WorkspaceSidebar()
         self._control_panel: LauncherControlPanel | None = None
         self._boot_overlay: BootSequenceOverlay | None = None
         self._app_settings_cache: dict | None = None
-        self._launcher.single_clicked.connect(self._toggle_command_bar)
-        self._launcher.double_clicked.connect(self._show_control_panel)
-        self._launcher.action_requested.connect(self._handle_launcher_action)
-        self._launcher.position_changed.connect(self._save_launcher_position)
+        self._voice_panel.single_clicked.connect(self._toggle_command_bar)
+        self._voice_panel.double_clicked.connect(self._show_control_panel)
+        self._voice_panel.action_requested.connect(self._handle_launcher_action)
+        self._voice_panel.position_changed.connect(self._save_launcher_position)
         self._command_bar.submitted.connect(self._submit_command)
         self._command_bar.attach_clicked.connect(self._browse_attachment)
         self._command_bar.mic_clicked.connect(self._toggle_mute)
