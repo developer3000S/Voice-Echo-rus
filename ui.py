@@ -2051,7 +2051,9 @@ class VoiceVisualizer(QWidget):
             self._variant = variant
             self._speaking = False  # Reset speaking state
             self._phase = 0.0  # Reset animation phase
-            self._timer.stop() if self._timer.isActive() else None
+            if self._timer.isActive():
+                self._timer.stop()
+            self._timer.start() if not self._timer.isActive() else None
             self.update()
                 
     def set_speaking(self, speaking: bool) -> None:
