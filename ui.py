@@ -2035,13 +2035,25 @@ class VoiceVisualizer(QWidget):
         self._timer.setInterval(50)
         self._timer.timeout.connect(self._tick)
         self.setMinimumSize(240, 90)
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.set_variant(variant)
 
     def set_variant(self, variant: str) -> None:
-        self._variant = variant if variant in self.VARIANTS else "wave"
-        self.update()
+        """Установить тип визуализации голосового сообщения.
 
+        Args:
+            variant (str): Тип визуализации ('wave', 'bars', 'orb').
+                Если указан неверный тип, будет использован 'wave'.
+        """
+        if variant not in self.VARIANTS:
+            variant = "wave"
+        if self._variant != variant:
+            self._variant = variant
+            self._speaking = False  # Reset speaking state
+            self._phase = 0.0  # Reset animation phase
+            self._timer.stop() if self._timer.isActive() else None
+            self.update()
+                
     def set_speaking(self, speaking: bool) -> None:
         """Включить/выключить анимацию в соответствии с состоянием TTS."""
         if speaking == self._speaking:
@@ -2788,6 +2800,14 @@ class ChatBubble(QFrame):
                 pass
             self._render_text(self._full_text, final=True)
 
+    def mousePressEvent(self, event):
+        super().mousePressEvent(event)
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._browser.setText(self._full_text)
+            self._browser.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+            self._browser.setMinimumHeight(0)
+            self.adjustSize()
+                
 
 class HistoryConversationItem(QFrame):
     clicked = pyqtSignal(str)
@@ -8766,19 +8786,18 @@ class MainWindow(QMainWindow):
         command_row.addWidget(self._command_card, alignment=Qt.AlignmentFlag.AlignVCenter)
         command_row.addWidget(hud_wrap, stretch=1)
         command_row.addWidget(self._result_card, alignment=Qt.AlignmentFlag.AlignVCenter)
-        stage.addLayout(command_row, stretch=1)
+        stage.addLayout(command_row)
+
+        self._voice_viz = VoiceVisualizer(
+            variant=str(self._load_app_settings().get("voice_viz", "wave"))
+        )
+        stage.addWidget(self._voice_viz, stretch=1)
 
         self._metric_scope = MetricScope(
             variant=str(self._load_app_settings().get("dashboard_viz", "line"))
         )
         self._metric_scope.setFixedHeight(190)
         stage.addWidget(self._metric_scope)
-
-        self._voice_viz = VoiceVisualizer(
-            variant=str(self._load_app_settings().get("voice_viz", "wave"))
-        )
-        self._voice_viz.setFixedHeight(110)
-        stage.addWidget(self._voice_viz)
 
         self._command_panel = QWidget()
         self._command_panel.setStyleSheet("background: transparent;")
