@@ -4,8 +4,8 @@ file_path = r'd:\TiTech Prabha Solution\Voice Echo\Voice Echo\Voice Echo-AI---Li
 with open(file_path, 'r', encoding='utf-8') as f:
     text = f.read()
 
-# Find and replace the FloatingLauncher class __init__ and paintEvent
-old_init = '''class FloatingLauncher(QWidget):
+# Find and replace the VoicePanel class __init__ and paintEvent
+old_init = '''class VoicePanel(QWidget):
     single_clicked = pyqtSignal()
     double_clicked = pyqtSignal()
     action_requested = pyqtSignal(str)
@@ -48,7 +48,7 @@ old_init = '''class FloatingLauncher(QWidget):
         self._press_pos = QPoint(0, 0)
         self._apply_state_style()'''
 
-new_init = '''class FloatingLauncher(QWidget):
+new_init = '''class VoicePanel(QWidget):
     single_clicked = pyqtSignal()
     double_clicked = pyqtSignal()
     action_requested = pyqtSignal(str)
@@ -228,4 +228,4 @@ text = text.replace(old_apply, new_apply)
 
 with open(file_path, 'w', encoding='utf-8') as f:
     f.write(text)
-print('SUCCESS: Replaced FloatingLauncher with animated version')
+print('SUCCESS: Replaced VoicePanel with animated version')

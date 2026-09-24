@@ -6691,7 +6691,7 @@ class MeetingOverlay(QWidget):
         self.minimize_requested.emit()
 
 
-class FloatingLauncher(QWidget):
+class VoicePanel(QWidget):
     single_clicked = pyqtSignal()
     double_clicked = pyqtSignal()
     action_requested = pyqtSignal(str)
@@ -10947,7 +10947,6 @@ class VoiceUI:
         self._win.on_chat_event = self._on_chat_event
         self._app.aboutToQuit.connect(self._discord_service.stop)
         self._voice_panel = VoicePanel()
-        self._launcher = FloatingLauncher()
         self._command_bar = CommandBar()
         self._workspace_sidebar = WorkspaceSidebar()
         self._control_panel: LauncherControlPanel | None = None
@@ -10983,11 +10982,11 @@ class VoiceUI:
         launcher_pos = self._load_app_settings().get("launcher_pos")
         if isinstance(launcher_pos, (list, tuple)) and len(launcher_pos) == 2:
             try:
-                self._launcher.show_at(int(launcher_pos[0]), int(launcher_pos[1]))
+                self._voice_panel.show_at(int(launcher_pos[0]), int(launcher_pos[1]))
             except Exception:
-                self._launcher.show_at()
+                self._voice_panel.show_at()
         else:
-            self._launcher.show_at()
+            self._voice_panel.show_at()
         if bool(self._load_app_settings().get("show_workspace_on_startup", False)):
             self._workspace_sidebar.show_workspace(animate=False)
         else:
@@ -11014,28 +11013,28 @@ class VoiceUI:
             self._win.show()
         self._win.raise_()
         self._win.activateWindow()
-        if self._launcher.isVisible():
+        if self._voice_panel.isVisible():
             try:
-                self._launcher.raise_()
-                self._launcher.activateWindow()
+                self._voice_panel.raise_()
+                self._voice_panel.activateWindow()
             except Exception:
                 pass
 
     def set_dashboard_page(self, enabled: bool):
         try:
             if enabled:
-                if not self._launcher.isVisible():
+                if not self._voice_panel.isVisible():
                     self._show_floating_icon()
             else:
                 self._command_bar.hide()
                 self._workspace_sidebar.hide_workspace(animate=False)
-                self._launcher.hide()
+                self._voice_panel.hide()
         except Exception:
             pass
 
     def hide_main(self):
         self._command_bar.hide()
-        self._launcher.hide()
+        self._voice_panel.hide()
         self._win.hide()
 
     def _load_app_settings(self) -> dict:
@@ -11108,7 +11107,7 @@ class VoiceUI:
             "muted": "Приглушён",
         }.get(state, "Готов")
         try:
-            self._launcher.set_state(state, detail)
+            self._voice_panel.set_state(state, detail)
         except Exception:
             pass
 
@@ -11319,15 +11318,15 @@ class VoiceUI:
             self._show_control_panel()
 
     def _on_minimized(self):
-        if self._launcher.isVisible():
-            self._launcher.raise_()
+        if self._voice_panel.isVisible():
+            self._voice_panel.raise_()
         self._command_bar.hide()
 
     def _toggle_command_bar(self):
         if self._command_bar.isVisible():
             self._command_bar.hide()
         else:
-            self._command_bar.show_near(self._launcher)
+            self._command_bar.show_near(self._voice_panel)
 
     def _toggle_workspace_sidebar(self):
         if self._workspace_sidebar.isVisible():
@@ -11337,7 +11336,7 @@ class VoiceUI:
 
     def _show_workspace_sidebar(self):
         self._workspace_sidebar.show_workspace()
-        self._launcher.hide()
+        self._voice_panel.hide()
 
     def _close_workspace_sidebar(self):
         self._workspace_sidebar.hide_workspace()
@@ -11347,11 +11346,11 @@ class VoiceUI:
         launcher_pos = self._load_app_settings().get("launcher_pos")
         if isinstance(launcher_pos, (list, tuple)) and len(launcher_pos) == 2:
             try:
-                self._launcher.show_at(int(launcher_pos[0]), int(launcher_pos[1]))
+                self._voice_panel.show_at(int(launcher_pos[0]), int(launcher_pos[1]))
                 return
             except Exception:
                 pass
-        self._launcher.show_at()
+        self._voice_panel.show_at()
 
     def _restart_app(self):
         try:
@@ -11382,7 +11381,7 @@ class VoiceUI:
             on_open=self._show_workspace_sidebar,
             on_close=self._close_workspace_sidebar,
             on_toggle_startup=self._toggle_workspace_on_startup,
-            on_hide_icon=self._launcher.hide,
+            on_hide_icon=self._voice_panel.hide,
             on_restart=self._restart_app,
             on_quit=self._app.quit,
             on_open_app=self.show_main,
@@ -11397,7 +11396,7 @@ class VoiceUI:
 
     def _position_control_panel(self, panel: LauncherControlPanel):
         try:
-            geo = self._launcher.geometry()
+            geo = self._voice_panel.geometry()
             panel.adjustSize()
             panel.move(max(20, geo.left() - panel.width() - 16), max(20, geo.top() - 10))
         except Exception:
@@ -11472,7 +11471,7 @@ class VoiceUI:
 
     def _open_app(self):
         self._command_bar.hide()
-        self._launcher.show_at()
+        self._voice_panel.show_at()
         self._win.show_app()
 
     @property
@@ -12452,7 +12451,6 @@ class VoiceUI:
         self._win.on_chat_event = self._on_chat_event
         self._app.aboutToQuit.connect(self._discord_service.stop)
         self._voice_panel = VoicePanel()
-        self._launcher = FloatingLauncher()
         self._command_bar = CommandBar()
         self._workspace_sidebar = WorkspaceSidebar()
         self._control_panel: LauncherControlPanel | None = None
@@ -12488,11 +12486,11 @@ class VoiceUI:
         launcher_pos = self._load_app_settings().get("launcher_pos")
         if isinstance(launcher_pos, (list, tuple)) and len(launcher_pos) == 2:
             try:
-                self._launcher.show_at(int(launcher_pos[0]), int(launcher_pos[1]))
+                self._voice_panel.show_at(int(launcher_pos[0]), int(launcher_pos[1]))
             except Exception:
-                self._launcher.show_at()
+                self._voice_panel.show_at()
         else:
-            self._launcher.show_at()
+            self._voice_panel.show_at()
         if bool(self._load_app_settings().get("show_workspace_on_startup", False)):
             self._workspace_sidebar.show_workspace(animate=False)
         else:
@@ -12519,28 +12517,28 @@ class VoiceUI:
             self._win.show()
         self._win.raise_()
         self._win.activateWindow()
-        if self._launcher.isVisible():
+        if self._voice_panel.isVisible():
             try:
-                self._launcher.raise_()
-                self._launcher.activateWindow()
+                self._voice_panel.raise_()
+                self._voice_panel.activateWindow()
             except Exception:
                 pass
 
     def set_dashboard_page(self, enabled: bool):
         try:
             if enabled:
-                if not self._launcher.isVisible():
+                if not self._voice_panel.isVisible():
                     self._show_floating_icon()
             else:
                 self._command_bar.hide()
                 self._workspace_sidebar.hide_workspace(animate=False)
-                self._launcher.hide()
+                self._voice_panel.hide()
         except Exception:
             pass
 
     def hide_main(self):
         self._command_bar.hide()
-        self._launcher.hide()
+        self._voice_panel.hide()
         self._win.hide()
 
     def _load_app_settings(self) -> dict:
@@ -12614,7 +12612,7 @@ class VoiceUI:
             "muted": "Приглушён",
         }.get(state, "Готов")
         try:
-            self._launcher.set_state(state, detail)
+            self._voice_panel.set_state(state, detail)
         except Exception:
             pass
 
@@ -12825,15 +12823,15 @@ class VoiceUI:
             self._show_control_panel()
 
     def _on_minimized(self):
-        if self._launcher.isVisible():
-            self._launcher.raise_()
+        if self._voice_panel.isVisible():
+            self._voice_panel.raise_()
         self._command_bar.hide()
 
     def _toggle_command_bar(self):
         if self._command_bar.isVisible():
             self._command_bar.hide()
         else:
-            self._command_bar.show_near(self._launcher)
+            self._command_bar.show_near(self._voice_panel)
 
     def _toggle_workspace_sidebar(self):
         if self._workspace_sidebar.isVisible():
@@ -12843,7 +12841,7 @@ class VoiceUI:
 
     def _show_workspace_sidebar(self):
         self._workspace_sidebar.show_workspace()
-        self._launcher.hide()
+        self._voice_panel.hide()
 
     def _close_workspace_sidebar(self):
         self._workspace_sidebar.hide_workspace()
@@ -12853,11 +12851,11 @@ class VoiceUI:
         launcher_pos = self._load_app_settings().get("launcher_pos")
         if isinstance(launcher_pos, (list, tuple)) and len(launcher_pos) == 2:
             try:
-                self._launcher.show_at(int(launcher_pos[0]), int(launcher_pos[1]))
+                self._voice_panel.show_at(int(launcher_pos[0]), int(launcher_pos[1]))
                 return
             except Exception:
                 pass
-        self._launcher.show_at()
+        self._voice_panel.show_at()
 
     def _restart_app(self):
         try:
@@ -12888,7 +12886,7 @@ class VoiceUI:
             on_open=self._show_workspace_sidebar,
             on_close=self._close_workspace_sidebar,
             on_toggle_startup=self._toggle_workspace_on_startup,
-            on_hide_icon=self._launcher.hide,
+            on_hide_icon=self._voice_panel.hide,
             on_restart=self._restart_app,
             on_quit=self._app.quit,
             on_open_app=self.show_main,
@@ -12903,7 +12901,7 @@ class VoiceUI:
 
     def _position_control_panel(self, panel: LauncherControlPanel):
         try:
-            geo = self._launcher.geometry()
+            geo = self._voice_panel.geometry()
             panel.adjustSize()
             panel.move(max(20, geo.left() - panel.width() - 16), max(20, geo.top() - 10))
         except Exception:
@@ -12994,7 +12992,7 @@ class VoiceUI:
 
     def _open_app(self):
         self._command_bar.hide()
-        self._launcher.show_at()
+        self._voice_panel.show_at()
         self._win.show_app()
 
     @property
