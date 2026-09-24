@@ -2053,7 +2053,6 @@ class VoiceVisualizer(QWidget):
             self._phase = 0.0  # Reset animation phase
             if self._timer.isActive():
                 self._timer.stop()
-            self._timer.start() if not self._timer.isActive() else None
             self.update()
                 
     def set_speaking(self, speaking: bool) -> None:
@@ -10254,6 +10253,7 @@ class SystemConnectivityPage(QWidget):
                 getattr(self, "_auto_switch_btn", None),
                 getattr(self, "_local_voice_btn", None),
                 getattr(self, "_viz_combo", None),
+                getattr(self, "_voice_viz_combo", None),
                 getattr(self, "_attention_message_btn", None),
                 getattr(self, "_attention_call_btn", None),
                 getattr(self, "_startup_launch_btn", None),
